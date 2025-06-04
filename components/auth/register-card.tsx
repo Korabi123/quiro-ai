@@ -123,11 +123,13 @@ export const RegisterCard = ({
 
   return (
     <CardWrapper
-      title="Sign up to Acme co"
+      title="Sign up to quiro"
       description="Welcome! Please sign up to continue."
       footerRef={redirectParam ? "loginWithRedirect" : "login"}
       param={redirectParam!}
       ref={animateRef}
+      logoSrc="./branding/logo-standalone-png.png"
+      hasLogo
     >
       {showSocial && (
         <>
@@ -204,7 +206,7 @@ export const RegisterCard = ({
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="pb-4">
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <div className="relative">
@@ -238,6 +240,22 @@ export const RegisterCard = ({
               </FormItem>
             )}
           />
+
+          <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
+            By signing up, you agree to our{" "}
+            <a href="/legal/terms-conditions" className="text-blue-600 underline">
+              Terms and Conditions
+            </a>
+            ,{" "}
+            <a href="/legal/privacy-policy" className="text-blue-600 underline">
+              Privacy Policy
+            </a>{" "}
+            &{" "}
+            <a href="/legal/cookies-policy" className="text-blue-600 underline">
+              Cookies Policy
+            </a>
+            .
+          </span>
           <Button
             effect={"ringHover"}
             size="sm"

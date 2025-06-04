@@ -38,7 +38,7 @@ export const RecentLoginEmail = ({
     <Html>
       <Head />
       <Body style={main}>
-        <Preview>APP_NAME recent login</Preview>
+        <Preview>Recent login to your quiro account</Preview>
         <Container>
           {/* <Section style={logo}>
             <Img src="https://react-email-demo-qv38cga5x-resend.vercel.app/static/yelp-logo.png" />
@@ -72,7 +72,7 @@ export const RecentLoginEmail = ({
                     textAlign: 'center',
                   }}
                 >
-                  We noticed a recent login to your APP_NAME account.
+                  We noticed a recent login to your quiro account.
                 </Heading>
 
                 <Text style={paragraph}>
@@ -123,7 +123,7 @@ export const RecentLoginEmail = ({
               color: 'rgb(0,0,0, 0.7)',
             }}
           >
-            © 2025 | APP_NAME | APP_WEBSITE
+            © 2025 | quiro | https://quiro.ai
           </Text>
         </Container>
       </Body>

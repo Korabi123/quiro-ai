@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     const { data, error } = await resend.emails.send({
       from: 'no-reply@korabimeri.work.gd',
       to: [email],
-      subject: 'Recent login to your APP_NAME account',
+      subject: 'Recent login to your quiro account',
       react: RecentLoginEmail({
         userFirstName: name,
         loginDate: new Date(),

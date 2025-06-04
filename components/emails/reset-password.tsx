@@ -97,7 +97,7 @@ export const ResetPasswordEmail = ({
               color: 'rgb(0,0,0, 0.7)',
             }}
           >
-            © 2025 | APP_NAME | APP_WEBSITE
+            © 2025 | quiro | https://quiro.ai
           </Text>
         </Container>
       </Body>

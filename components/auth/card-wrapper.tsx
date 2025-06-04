@@ -35,7 +35,7 @@ export const CardWrapper = ({
         {hasLogo && (
           <img
             src={logoSrc}
-            className="rounded-full size-14 self-center mb-4"
+            className="size-12 self-center mb-4"
             alt="Logo"
             width={100}
             height={100}

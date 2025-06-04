@@ -88,6 +88,8 @@ export const ResetPasswordCard = () => {
       footerRef={redirectParam ? "registerWithRedirect" : "register"}
       param={redirectParam!}
       ref={animateRef}
+      hasLogo
+      logoSrc="./branding/logo-standalone-png.png"
     >
       <div ref={animateRef}>{error && <ErrorCard error={error} />}</div>
       <Form {...form}>

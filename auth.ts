@@ -52,10 +52,10 @@ export const auth = betterAuth({
       });
     }
   },
-  appName: "APP_NAME",
+  appName: "quiro",
   plugins: [
     twoFactor({
-      issuer: "APP_NAME",
+      issuer: "quiro",
       otpOptions: {
         async sendOTP({ user, otp }, request) {
           await resend.emails.send({

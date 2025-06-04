@@ -37,6 +37,7 @@ import { SplitOTP } from "../ui/split-otp";
 import { useAutoSubmit } from "@/hooks/use-auto-submit";
 import { passkey } from "better-auth/plugins/passkey";
 import { toast } from "sonner";
+import { Checkbox } from "../luxe/checkbox";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -251,11 +252,13 @@ export const LoginCard = ({
 
   return (
     <CardWrapper
-      title="Sign In to Acme co"
+      title="Sign In to quiro"
       description="Welcome back! Please sign in to continue."
       footerRef={redirectParam ? "registerWithRedirect" : "register"}
       param={redirectParam!}
       ref={animateRef}
+      logoSrc="./branding/logo-standalone-png.png"
+      hasLogo
     >
       {!isVerifyOtpBoxOpen && !isForgotPassword ? (
         <>
