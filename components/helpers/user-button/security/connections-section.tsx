@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AFTER_LOGIN } from "@/routes";
 
 export const ConnectionsSection = ({
   user,
@@ -297,7 +298,7 @@ export const ConnectionsSection = ({
                       await authClient.linkSocial(
                         {
                           provider: "google",
-                          callbackURL: "/profile",
+                          callbackURL: AFTER_LOGIN,
                         },
                         {
                           onError: (ctx) => {
@@ -317,7 +318,7 @@ export const ConnectionsSection = ({
                       await authClient.linkSocial(
                         {
                           provider: "github",
-                          callbackURL: "/profile",
+                          callbackURL: AFTER_LOGIN,
                         },
                         {
                           onError: (ctx) => {

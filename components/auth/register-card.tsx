@@ -88,7 +88,7 @@ export const RegisterCard = ({
   const onGithub = async () => {
     authClient.signIn.social({
       provider: "github",
-      callbackURL: redirectParam ? new URL(redirectParam).pathname : "/profile"
+      callbackURL: redirectParam ? new URL(redirectParam).pathname : AFTER_LOGIN
     }, {
       onRequest: () => {
         setIsLoading(true);
@@ -106,7 +106,7 @@ export const RegisterCard = ({
   const onGoogle = async () => {
     authClient.signIn.social({
       provider: "google",
-      callbackURL: redirectParam ? new URL(redirectParam).pathname : "/profile"
+      callbackURL: redirectParam ? new URL(redirectParam).pathname : AFTER_LOGIN
     }, {
       onRequest: () => {
         setIsLoading(true);

@@ -145,7 +145,7 @@ export const LoginCard = ({
         provider: "github",
         callbackURL: redirectParam
           ? new URL(redirectParam).pathname
-          : "/profile",
+          : AFTER_LOGIN,
       },
       {
         onRequest: () => {
@@ -168,7 +168,7 @@ export const LoginCard = ({
         provider: "google",
         callbackURL: redirectParam
           ? new URL(redirectParam).pathname
-          : "/profile",
+          : AFTER_LOGIN,
       },
       {
         onRequest: () => {

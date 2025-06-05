@@ -17,13 +17,11 @@ import * as React from 'react';
 interface Props {
   userFirstName?: string;
   resetLink?: string;
-  loginIp?: string;
 }
 
 export const ResetPasswordEmail = ({
   userFirstName,
   resetLink,
-  loginIp,
 }: Props) => {
 
   return (
@@ -32,9 +30,9 @@ export const ResetPasswordEmail = ({
       <Body style={main}>
         <Preview>Your password reset link...</Preview>
         <Container>
-          {/* <Section style={logo}>
-            <Img src="https://react-email-demo-qv38cga5x-resend.vercel.app/static/yelp-logo.png" />
-          </Section> */}
+          <Section style={logo}>
+            <Img src="https://qddzgieaky.ufs.sh/f/hl4IFmPz4YLsmVIe3VCh3VU48acCvjpQsgDurN5z0JZYOKkH" />
+          </Section>
 
           <Section style={content}>
             <Row>

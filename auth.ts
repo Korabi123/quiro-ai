@@ -9,8 +9,14 @@ import { multiSession, twoFactor } from "better-auth/plugins";
 import { passkey } from "better-auth/plugins/passkey";
 import ResetPasswordEmail from "./components/emails/reset-password";
 
+import { stripe } from "@better-auth/stripe";
+import Stripe from "stripe";
+
 const prisma = new PrismaClient();
 const resend = new Resend(process.env.RESEND_API_KEY);
+const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-05-28.basil",
+});
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -67,9 +73,14 @@ export const auth = betterAuth({
         }
       }
     }),
+    stripe({
+      stripeClient,
+      stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
+      createCustomerOnSignUp: true,
+    }),
     passkey({
       rpID: "localhost",
-      rpName: "BetterAuth Demo",
+      rpName: "quiro",
       origin: "http://localhost:3000",
     }),
     multiSession(),

@@ -40,9 +40,9 @@ export const RecentLoginEmail = ({
       <Body style={main}>
         <Preview>Recent login to your quiro account</Preview>
         <Container>
-          {/* <Section style={logo}>
-            <Img src="https://react-email-demo-qv38cga5x-resend.vercel.app/static/yelp-logo.png" />
-          </Section> */}
+          <Section style={logo}>
+            <Img src="https://qddzgieaky.ufs.sh/f/hl4IFmPz4YLsmVIe3VCh3VU48acCvjpQsgDurN5z0JZYOKkH" />
+          </Section>
 
           <Section style={content}>
             <Row>

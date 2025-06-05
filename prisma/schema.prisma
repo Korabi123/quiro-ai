@@ -29,6 +29,8 @@ model User {
 
   passkeys Passkey[]
 
+  stripeCustomerId String?
+
   @@unique([email])
   @@map("user")
 }

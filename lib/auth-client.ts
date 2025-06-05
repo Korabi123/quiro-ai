@@ -1,3 +1,4 @@
+import { stripeClient } from "@better-auth/stripe/client";
 import { twoFactorClient } from "better-auth/plugins";
 import { passkeyClient } from "better-auth/client/plugins";
 import { multiSessionClient } from "better-auth/client/plugins";
@@ -7,5 +8,8 @@ export const authClient = createAuthClient({
     twoFactorClient(),
     passkeyClient(),
     multiSessionClient(),
+    stripeClient({
+      subscription: true,
+    })
   ]
 });
