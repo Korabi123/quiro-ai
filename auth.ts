@@ -77,6 +77,40 @@ export const auth = betterAuth({
       stripeClient,
       stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
       createCustomerOnSignUp: true,
+      subscription: {
+        enabled: true,
+        plans: [
+          {
+            name: "basic",
+            priceId: "price_1RWvCtGIU78OhkESsOV9YJQs",
+            limits: {
+              agents: 3,
+              callTranscripts: 1,
+              chats: 10,
+              monthlyProblems: 1,
+              callRec: 0,
+              skillEval: 0,
+              tailoredTips: 0,
+              dailyProblems: 0,
+              support: 0,
+            }
+          },
+          {
+            name: "pro",
+            priceId: "price_1RWvJyGIU78OhkESZnnMhSe",
+            limits: {
+              agents: Infinity,
+              callTranscripts: Infinity,
+              chats: Infinity,
+              callRec: Infinity,
+              skillEval: Infinity,
+              tailoredTips: Infinity,
+              dailyProblems: Infinity,
+              support: Infinity,
+            }
+          },
+        ]
+      }
     }),
     passkey({
       rpID: "localhost",

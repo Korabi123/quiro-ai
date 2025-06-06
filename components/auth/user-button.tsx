@@ -1,13 +1,5 @@
 "use client";
 
-import axios from "axios";
-
-import { FcGoogle } from "react-icons/fc";
-
-import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,60 +16,25 @@ import {
   DialogTrigger,
   DialogHeader,
 } from "@/components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 import {
-  ArrowRight,
-  Ellipsis,
-  Eye,
-  EyeOff,
   Loader,
   PlusCircle,
   UserIcon,
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "@prisma/client";
 import { authClient } from "@/lib/auth-client";
-import { UploadButton } from "../uploadthing";
 import { useRouter } from "next/navigation";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Checkbox } from "../ui/checkbox";
-import { ErrorCard } from "./error-card";
-import QrCode from "react-qr-code";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from "../ui/input-otp";
-import { Badge } from "../ui/badge";
 
-import { UAParser } from "ua-parser-js";
-import { Account, Session } from "better-auth";
-import { toast } from "sonner";
+import { Session } from "better-auth";
 import { cn } from "@/lib/utils";
-import { FaGithub } from "react-icons/fa";
 import { ProfileSection } from "../helpers/user-button/profile-section";
 import { SecuritySection } from "../helpers/user-button/security/security-section";
+import { BillingSection } from "../helpers/user-button/billing/billing-section";
 
 export const UserButton = ({
   user,
@@ -336,6 +293,8 @@ export const UserButton = ({
           <ProfileSection user={user} />
           <Separator className="h-[2px] bg-border/50" />
           <SecuritySection user={user} />
+          <Separator className="h-[2px] bg-border/50" />
+          <BillingSection user={user} />
         </div>
       </DialogContent>
     </Dialog>

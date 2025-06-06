@@ -11,7 +11,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { User } from "@prisma/client";
 import { Account } from "better-auth";
 import { ArrowRight, Ellipsis, Loader } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,6 +29,9 @@ export const ConnectionsSection = ({
   const [isDeleteConnectionBoxOpen, setIsDeleteConnectionBoxOpen] = useState<"github" | "google" | "closed">("closed");
 
   const passkeys = authClient.useListPasskeys();
+
+  const bottomCardsRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const getConnections = async () => {
@@ -95,7 +98,7 @@ export const ConnectionsSection = ({
         ref={animate}
         className="flex md:flex-row flex-col md:gap-0 gap-8 justify-between"
       >
-        <p className="text-sm font-medium">Connected Accounts</p>
+        <p ref={topRef} className="text-sm font-medium">Connected Accounts</p>
         <div
           ref={animate}
           className="flex flex-col gap-1 md:items-end md:w-[350px] md:ml-0 ml-4"
@@ -167,6 +170,11 @@ export const ConnectionsSection = ({
                               setIsDeleteConnectionBoxOpen(
                                 provider === "github" ? "github" : "google"
                               );
+                              setTimeout(() => {
+                                bottomCardsRef.current?.scrollIntoView({
+                                  behavior: "smooth",
+                                });
+                              }, 200);
                             }}
                           >
                             <p className="text-sm text-destructive">Remove</p>
@@ -175,98 +183,114 @@ export const ConnectionsSection = ({
                       </DropdownMenu>
                     </div>
                     {isDeleteConnectionBoxOpen === "github" && (
-                      <Card
-                        className={cn(
-                          "my-4 shadow-md w-full bg-muted-foreground/5 border-zinc-600/15 md:max-w-[350px]",
-                          isDeleteConnectionBoxOpen === "github" &&
-                            provider !== "github" &&
-                            "hidden"
-                        )}
-                      >
-                        <CardHeader className="w-full flex flex-col">
-                          <CardTitle className="text-sm tracking-tight">
-                            Remove Connection
-                          </CardTitle>
-                          <CardDescription className="text-xs">
-                            Are you sure you want to remove this connection?
-                            <br />
-                            This action cannot be undone.
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <Button
-                            disabled={isLoading}
-                            onClick={() =>
-                              setIsDeleteConnectionBoxOpen("closed")
-                            }
-                            variant={"ghost"}
-                            size={"sm"}
-                            className="mt-4 mr-2"
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            ref={animate}
-                            onClick={() => onGithubDelete()}
-                            variant={"destructive"}
-                            disabled={isLoading}
-                            size={"sm"}
-                            className="mt-4 mr-2"
-                          >
-                            {isLoading && (
-                              <Loader className="size-2 text-white animate-spin" />
-                            )}
-                            {!isLoading && "Delete"}
-                          </Button>
-                        </CardContent>
-                      </Card>
+                      <>
+                        <Card
+                          className={cn(
+                            "my-4 shadow-md w-full bg-muted-foreground/5 border-zinc-600/15 md:max-w-[350px]",
+                            isDeleteConnectionBoxOpen === "github" &&
+                              provider !== "github" &&
+                              "hidden"
+                          )}
+                        >
+                          <CardHeader className="w-full flex flex-col">
+                            <CardTitle className="text-sm tracking-tight">
+                              Remove Connection
+                            </CardTitle>
+                            <CardDescription className="text-xs">
+                              Are you sure you want to remove this connection?
+                              <br />
+                              This action cannot be undone.
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <Button
+                              disabled={isLoading}
+                              onClick={() => {
+                                setIsDeleteConnectionBoxOpen("closed")
+                                setTimeout(() => {
+                                  topRef.current?.scrollIntoView({
+                                    behavior: "smooth",
+                                  });
+                                }, 200);
+                              }}
+                              variant={"ghost"}
+                              size={"sm"}
+                              className="mt-4 mr-2"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              ref={animate}
+                              onClick={() => onGithubDelete()}
+                              variant={"destructive"}
+                              disabled={isLoading}
+                              size={"sm"}
+                              className="mt-4 mr-2"
+                            >
+                              {isLoading && (
+                                <Loader className="size-2 text-white animate-spin" />
+                              )}
+                              {!isLoading && "Delete"}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        <div ref={bottomCardsRef} />
+                      </>
                     )}
                     {isDeleteConnectionBoxOpen === "google" && (
-                      <Card
-                        className={cn(
-                          "my-4 shadow-md w-full bg-muted-foreground/5 border-zinc-600/15 md:max-w-[350px]",
-                          isDeleteConnectionBoxOpen === "google" &&
-                            provider !== "google" &&
-                            "hidden"
-                        )}
-                      >
-                        <CardHeader className="w-full flex flex-col">
-                          <CardTitle className="text-sm tracking-tight">
-                            Remove Connection
-                          </CardTitle>
-                          <CardDescription className="text-xs">
-                            Are you sure you want to remove this connection?
-                            <br />
-                            This action cannot be undone.
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <Button
-                            disabled={isLoading}
-                            onClick={() =>
-                              setIsDeleteConnectionBoxOpen("closed")
-                            }
-                            variant={"ghost"}
-                            size={"sm"}
-                            className="mt-4 mr-2"
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            ref={animate}
-                            onClick={onGoogleDelete}
-                            variant={"destructive"}
-                            disabled={isLoading}
-                            size={"sm"}
-                            className="mt-4 mr-2"
-                          >
-                            {isLoading && (
-                              <Loader className="size-2 text-white animate-spin" />
-                            )}
-                            {!isLoading && "Delete"}
-                          </Button>
-                        </CardContent>
-                      </Card>
+                      <>
+                        <Card
+                          className={cn(
+                            "my-4 shadow-md w-full bg-muted-foreground/5 border-zinc-600/15 md:max-w-[350px]",
+                            isDeleteConnectionBoxOpen === "google" &&
+                              provider !== "google" &&
+                              "hidden"
+                          )}
+                        >
+                          <CardHeader className="w-full flex flex-col">
+                            <CardTitle className="text-sm tracking-tight">
+                              Remove Connection
+                            </CardTitle>
+                            <CardDescription className="text-xs">
+                              Are you sure you want to remove this connection?
+                              <br />
+                              This action cannot be undone.
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <Button
+                              disabled={isLoading}
+                              onClick={() => {
+                                setIsDeleteConnectionBoxOpen("closed")
+                                setTimeout(() => {
+                                  topRef.current?.scrollIntoView({
+                                    behavior: "smooth",
+                                  });
+                                }, 200);
+                              }}
+                              variant={"ghost"}
+                              size={"sm"}
+                              className="mt-4 mr-2"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              ref={animate}
+                              onClick={onGoogleDelete}
+                              variant={"destructive"}
+                              disabled={isLoading}
+                              size={"sm"}
+                              className="mt-4 mr-2"
+                            >
+                              {isLoading && (
+                                <Loader className="size-2 text-white animate-spin" />
+                              )}
+                              {!isLoading && "Delete"}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        <div ref={bottomCardsRef} />
+                      </>
                     )}
                   </div>
                 );

@@ -11,7 +11,7 @@ import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { ArrowRight, Ellipsis, Loader } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UAParser } from "ua-parser-js";
@@ -36,11 +36,7 @@ export const PasskeySection = () => {
   const [isLoading, setIsLoading] = useState(false);
   const passkeys = authClient.useListPasskeys();
 
-  // if (passkeys.isPending) {
-  //   setIsLoading(true);
-  // } else {
-  //   setIsLoading(false);
-  // }
+  const bottomCardsRef = useRef<HTMLDivElement>(null);
 
   const renamePasskeyForm = useForm<z.infer<typeof renamePasskeySchema>>({
     resolver: zodResolver(renamePasskeySchema),
@@ -139,7 +135,7 @@ export const PasskeySection = () => {
                     return (
                       <>
                         <div
-                          key={index}
+                          key={passkey.id}
                           className="flex -mt-[1px] items-center justify-between self-start gap-4 w-full"
                         >
                           <div className="flex flex-col gap-2">
@@ -168,15 +164,25 @@ export const PasskeySection = () => {
                                 className="cursor-pointer px-3 py-1 text-zinc-600 focus:text-zinc-800 transition-all"
                                 onClick={() => {
                                   setIsRenamePasskeyBoxOpen(passkey.id);
+                                  setTimeout(() => {
+                                    bottomCardsRef.current?.scrollIntoView({
+                                      behavior: "smooth",
+                                    });
+                                  }, 200);
                                 }}
                               >
                                 <p className="text-sm">Rename</p>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="cursor-pointer px-3 py-1 text-destructive/80 focus:text-red-500 focus:bg-destructive/5"
-                                onClick={() =>
+                                onClick={() => {
                                   setIsDeletePasskeyBoxOpen(passkey.id)
-                                }
+                                  setTimeout(() => {
+                                    bottomCardsRef.current?.scrollIntoView({
+                                      behavior: "smooth",
+                                    });
+                                  }, 200);
+                                }}
                               >
                                 <p className="text-sm">Remove</p>
                               </DropdownMenuItem>
@@ -184,147 +190,156 @@ export const PasskeySection = () => {
                           </DropdownMenu>
                         </div>
                         {isRenamePasskeyBoxOpen !== false && (
-                          <Card
-                            className={cn(
-                              "shadow-md w-full md:max-w-[350px]",
-                              isRenamePasskeyBoxOpen !== passkey.id && "hidden"
-                            )}
-                          >
-                            <CardHeader className="w-full flex flex-col">
-                              <CardTitle className="text-sm tracking-tight">
-                                Rename Passkey
-                              </CardTitle>
-                              <CardDescription className="text-xs">
-                                You can change the passkey name to make it
-                                easier to find.
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                              <Form {...renamePasskeyForm}>
-                                <form className="space-y-6 flex flex-col">
-                                  <FormField
-                                    control={renamePasskeyForm.control}
-                                    name="name"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        {/* <FormLabel className="text-sm">
-                                      Name
-                                    </FormLabel> */}
-                                        <FormControl>
-                                          <Input
-                                            {...field}
-                                            placeholder="Name"
-                                            autoCorrect="off"
-                                            autoComplete="off"
-                                            disabled={isLoading}
-                                          />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <div className="flex items-center">
-                                    <Button
-                                      size={"sm"}
-                                      variant={"ghost"}
-                                      type="button"
-                                      disabled={isLoading}
-                                      className="mt-4 mr-2 text-xs"
-                                      onClick={() => {
-                                        setIsRenamePasskeyBoxOpen(false);
-                                        setError("");
-                                      }}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button
-                                      size={"sm"}
-                                      type="button"
-                                      disabled={isLoading}
-                                      className="mt-4"
-                                      onClick={() => {
-                                        onRenamePasskeySubmit(
-                                          renamePasskeyForm.getValues(),
-                                          passkey.id
-                                        );
-                                      }}
-                                    >
-                                      {isLoading && (
-                                        <Loader className="mr-1 size-2 text-muted-foreground animate-spin" />
+                          <>
+                            <Card
+                              className={cn(
+                                "shadow-md w-full md:max-w-[350px]",
+                                isRenamePasskeyBoxOpen !== passkey.id &&
+                                  "hidden"
+                              )}
+                            >
+                              <CardHeader className="w-full flex flex-col">
+                                <CardTitle className="text-sm tracking-tight">
+                                  Rename Passkey
+                                </CardTitle>
+                                <CardDescription className="text-xs">
+                                  You can change the passkey name to make it
+                                  easier to find.
+                                </CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                <Form {...renamePasskeyForm}>
+                                  <form className="space-y-6 flex flex-col">
+                                    <FormField
+                                      control={renamePasskeyForm.control}
+                                      name="name"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormControl>
+                                            <Input
+                                              {...field}
+                                              placeholder="Name"
+                                              autoCorrect="off"
+                                              autoComplete="off"
+                                              disabled={isLoading}
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
                                       )}
-                                      Save
-                                    </Button>
-                                  </div>
-                                </form>
-                              </Form>
-                            </CardContent>
-                          </Card>
+                                    />
+                                    <div className="flex items-center">
+                                      <Button
+                                        size={"sm"}
+                                        variant={"ghost"}
+                                        type="button"
+                                        disabled={isLoading}
+                                        className="mt-4 mr-2 text-xs"
+                                        onClick={() => {
+                                          setIsRenamePasskeyBoxOpen(false);
+                                          setError("");
+                                        }}
+                                      >
+                                        Cancel
+                                      </Button>
+                                      <Button
+                                        size={"sm"}
+                                        type="button"
+                                        disabled={isLoading}
+                                        className="mt-4"
+                                        onClick={() => {
+                                          onRenamePasskeySubmit(
+                                            renamePasskeyForm.getValues(),
+                                            passkey.id
+                                          );
+                                        }}
+                                      >
+                                        {isLoading && (
+                                          <Loader className="mr-1 size-2 text-muted-foreground animate-spin" />
+                                        )}
+                                        Save
+                                      </Button>
+                                    </div>
+                                  </form>
+                                </Form>
+                              </CardContent>
+                            </Card>
+                            <div ref={bottomCardsRef} />
+                          </>
                         )}
                         {isDeletePasskeyBoxOpen !== false && (
-                          <Card
-                            className={cn(
-                              "shadow-md w-full bg-muted-foreground/5 border-zinc-600/15 md:max-w-[350px]",
-                              isDeletePasskeyBoxOpen !== passkey.id && "hidden"
-                            )}
-                          >
-                            <CardHeader className="w-full flex flex-col">
-                              <CardTitle className="text-sm tracking-tight">
-                                Delete Passkey
-                              </CardTitle>
-                              <CardDescription className="text-xs">
-                                Are you sure you want to delete this passkey?
-                                <br />
-                                This action cannot be undone.
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                              <Button
-                                disabled={isLoading}
-                                onClick={() => setIsDeletePasskeyBoxOpen(false)}
-                                variant={"ghost"}
-                                size={"sm"}
-                                className="mt-4 mr-2"
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                ref={animate}
-                                onClick={() => {
-                                  authClient.passkey.deletePasskey(
-                                    {
-                                      id: passkey.id,
-                                    },
-                                    {
-                                      onRequest: () => {
-                                        setIsLoading(true);
+                          <>
+                            <Card
+                              className={cn(
+                                "shadow-md w-full bg-muted-foreground/5 border-zinc-600/15 md:max-w-[350px]",
+                                isDeletePasskeyBoxOpen !== passkey.id &&
+                                  "hidden"
+                              )}
+                            >
+                              <CardHeader className="w-full flex flex-col">
+                                <CardTitle className="text-sm tracking-tight">
+                                  Delete Passkey
+                                </CardTitle>
+                                <CardDescription className="text-xs">
+                                  Are you sure you want to delete this passkey?
+                                  <br />
+                                  This action cannot be undone.
+                                </CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                <Button
+                                  disabled={isLoading}
+                                  onClick={() =>
+                                    setIsDeletePasskeyBoxOpen(false)
+                                  }
+                                  variant={"ghost"}
+                                  size={"sm"}
+                                  className="mt-4 mr-2"
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  ref={animate}
+                                  onClick={() => {
+                                    authClient.passkey.deletePasskey(
+                                      {
+                                        id: passkey.id,
                                       },
-                                      onSuccess: () => {
-                                        setIsLoading(false);
-                                        setIsDeletePasskeyBoxOpen(false);
-                                        window.location.reload();
-                                        setTimeout(() => {
-                                          toast.success("Successfully deleted");
-                                        }, 1000);
-                                      },
-                                      onError: (ctx) => {
-                                        setError(ctx.error.message);
-                                        setIsLoading(false);
-                                      },
-                                    }
-                                  );
-                                }}
-                                variant={"destructive"}
-                                disabled={isLoading}
-                                size={"sm"}
-                                className="mt-4 mr-2 shadow-inner"
-                              >
-                                {isLoading && (
-                                  <Loader className="size-2 text-white animate-spin" />
-                                )}
-                                {!isLoading && "Delete"}
-                              </Button>
-                            </CardContent>
-                          </Card>
+                                      {
+                                        onRequest: () => {
+                                          setIsLoading(true);
+                                        },
+                                        onSuccess: () => {
+                                          setIsLoading(false);
+                                          setIsDeletePasskeyBoxOpen(false);
+                                          window.location.reload();
+                                          setTimeout(() => {
+                                            toast.success(
+                                              "Successfully deleted"
+                                            );
+                                          }, 1000);
+                                        },
+                                        onError: (ctx) => {
+                                          setError(ctx.error.message);
+                                          setIsLoading(false);
+                                        },
+                                      }
+                                    );
+                                  }}
+                                  variant={"destructive"}
+                                  disabled={isLoading}
+                                  size={"sm"}
+                                  className="mt-4 mr-2 shadow-inner"
+                                >
+                                  {isLoading && (
+                                    <Loader className="size-2 text-white animate-spin" />
+                                  )}
+                                  {!isLoading && "Delete"}
+                                </Button>
+                              </CardContent>
+                            </Card>
+                            <div ref={bottomCardsRef} />
+                          </>
                         )}
                       </>
                     );
