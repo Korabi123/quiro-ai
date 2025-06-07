@@ -35,6 +35,8 @@ import { cn } from "@/lib/utils";
 import { ProfileSection } from "../helpers/user-button/profile-section";
 import { SecuritySection } from "../helpers/user-button/security/security-section";
 import { BillingSection } from "../helpers/user-button/billing/billing-section";
+import { Subscription } from "@better-auth/stripe";
+import { Badge } from "../ui/badge";
 
 export const UserButton = ({
   user,
@@ -45,6 +47,7 @@ export const UserButton = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
 
   const [animate] = useAutoAnimate();
 
@@ -58,7 +61,12 @@ export const UserButton = ({
         // @ts-expect-error Just a simple type error
         .then((res) => setSessions(res.data));
     }
+    const getSubscription = async () => {
+      await authClient.subscription.list()
+        .then((res) => setSubscription(res?.data?.[0] ?? null));
+    }
     getSessions();
+    getSubscription();
   }, []);
 
   if (!user) {
@@ -92,7 +100,17 @@ export const UserButton = ({
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <p className="text-sm font-[460]">{user.name}</p>
+                <span className="text-sm font-[460] inline-flex items-center gap-2">
+                  {user.name}
+                  {subscription !== null && (
+                    <Badge
+                      className="py-1 px-3 text-xs font-medium rounded-full bg-gradient-to-r from-yellow-300 to-pink-500 text-white border border-white/20 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700"
+                      variant="outline"
+                    >
+                      {subscription?.plan.charAt(0).toUpperCase() + subscription?.plan?.slice(1)}
+                    </Badge>
+                  )}
+                </span>
                 <p className="text-xs font-[460]">{user.email}</p>
               </div>
             </div>

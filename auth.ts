@@ -73,6 +73,7 @@ export const auth = betterAuth({
         }
       }
     }),
+
     stripe({
       stripeClient,
       stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
@@ -81,35 +82,45 @@ export const auth = betterAuth({
         enabled: true,
         plans: [
           {
-            name: "basic",
-            priceId: "price_1RWvCtGIU78OhkESsOV9YJQs",
-            limits: {
-              agents: 3,
-              callTranscripts: 1,
-              chats: 10,
-              monthlyProblems: 1,
-              callRec: 0,
-              skillEval: 0,
-              tailoredTips: 0,
-              dailyProblems: 0,
-              support: 0,
-            }
-          },
-          {
             name: "pro",
-            priceId: "price_1RWvJyGIU78OhkESZnnMhSe",
-            limits: {
-              agents: Infinity,
-              callTranscripts: Infinity,
-              chats: Infinity,
-              callRec: Infinity,
-              skillEval: Infinity,
-              tailoredTips: Infinity,
-              dailyProblems: Infinity,
-              support: Infinity,
-            }
+            priceId: process.env.STRIPE_PRO_SUB_ID,
+            lookupKey: process.env.STRIPE_PRO_SUB_LOOKUP,
           },
-        ]
+        ],
+
+        onSubscriptionComplete: async ({ event, subscription, stripeSubscription, plan }) => {
+          const user = await prisma.user.findFirst({
+            where: {
+              stripeCustomerId: subscription.stripeCustomerId,
+            }
+          });
+
+          if (user) {
+            await resend.emails.send({
+              to: user.email,
+              from: 'no-reply@korabimeri.work.gd',
+              subject: `You're now a member of quiro ${plan.name}`,
+              text: `Your quiro ${plan.name} subscription is now active. Reference ID: ${subscription.referenceId}`,
+            });
+          }
+        },
+
+        onSubscriptionCancel: async ({ event, subscription, stripeSubscription, cancellationDetails }) => {
+          const user = await prisma.user.findFirst({
+            where: {
+              stripeCustomerId: subscription.stripeCustomerId,
+            }
+          });
+
+          if (user) {
+            await resend.emails.send({
+              to: user.email,
+              from: 'no-reply@korabimeri.work.gd',
+              subject: 'Your quiro subscription has been canceled',
+              text: `Your quiro subscription has been canceled`,
+            });
+          }
+        }
       }
     }),
     passkey({
