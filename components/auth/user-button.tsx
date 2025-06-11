@@ -80,7 +80,7 @@ export const UserButton = ({
       }}
     >
       <DropdownMenu>
-        <DropdownMenuTrigger className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-1 focus-visible:border-ring/20">
+        <DropdownMenuTrigger className="focus-visible:outline-none active:ring-2 active:ring-ring/25 active:ring-offset-2 focus-visible:ring-2 focus-visible:ring-ring/25 rounded-full ring-offset-2 transition-all">
           <Avatar>
             {/* @ts-expect-error Just a simple type error */}
             <AvatarImage src={user?.image} />
@@ -104,7 +104,7 @@ export const UserButton = ({
                   {user.name}
                   {subscription !== null && (
                     <Badge
-                      className="py-1 px-3 text-xs font-medium rounded-full bg-gradient-to-r from-yellow-300 to-pink-500 text-white border border-white/20 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700"
+                      className="py-1 px-3 text-xs font-medium rounded-full bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white border border-white/20 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700"
                       variant="outline"
                     >
                       {subscription?.plan.charAt(0).toUpperCase() + subscription?.plan?.slice(1)}

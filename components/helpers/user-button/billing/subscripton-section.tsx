@@ -9,7 +9,7 @@ import { AFTER_LOGIN } from "@/routes";
 import { Subscription } from "@better-auth/stripe";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { User } from "@prisma/client";
-import { ArrowRight, ArrowUpDown, Check, Loader2, Settings, XIcon } from "lucide-react";
+import { ArrowRight, ArrowUpDown, Check, Loader, Loader2, Settings, XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -59,53 +59,65 @@ export const SubscriptionSection = ({ user }: Props) => {
               {!isManageBoxOpen ? (
                 <div className="flex flex-col gap-2 md:w-[65%] w-full pr-2">
                   <div className="flex items-center p-2 px-4 bg-amber-50/5 rounded-xl border border-border/50 shadow-sm w-full justify-between">
-                    <p className="text-sm">
+                    <p className="text-sm font-medium">
                       quiro{" "}
-                      {subscription === null
-                        ? "Free"
-                        : subscription?.plan?.charAt(0).toUpperCase() +
-                          subscription?.plan?.slice(1)}
+                      <span
+                        className={cn(
+                          subscription === null
+                            ? ""
+                            : "text-transparent bg-clip-text bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] pr-[1px]"
+                        )}
+                      >
+                        {subscription === null
+                          ? "Free"
+                          : subscription?.plan?.charAt(0).toUpperCase() +
+                            subscription?.plan?.slice(1)}
+                      </span>
                     </p>
                     <p className="text-sm inline-flex items-center">
-                      <Badge
-                        className={cn(
-                          "py-1 px-3 text-xs font-medium rounded-full",
-                          subscription?.status === "active" &&
-                            !subscription?.cancelAtPeriodEnd &&
-                            "bg-green-100 text-green-800 border border-green-300 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700",
-                          subscription?.status === "canceled" ||
-                            (subscription?.cancelAtPeriodEnd &&
-                              "bg-red-100 text-red-800 border border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"),
-                          subscription?.status === "incomplete" &&
-                            "bg-yellow-100 text-yellow-800 border border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-700",
-                          !["active", "canceled", "incomplete"].includes(
-                            subscription?.status!
-                          ) &&
-                            "bg-gray-100 text-gray-800 border border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
-                        )}
-                        variant="outline"
-                      >
-                        {subscription?.status === "canceled" ||
-                        subscription?.cancelAtPeriodEnd
-                          ? "Canceled"
-                          : // @ts-expect-error Just a simple type error
-                            subscription?.status.charAt(0).toUpperCase() + subscription?.status.slice(1)}
-                      </Badge>
-                      <Button
-                        className="ml-8 group"
-                        variant={"ghost"}
-                        size="xs"
-                        onClick={() => {
-                          setIsManageBoxOpen(true);
-                          setTimeout(() => {
-                            bottomCardsRef.current?.scrollIntoView({
-                              behavior: "smooth",
-                            });
-                          }, 200);
-                        }}
-                      >
-                        <Settings className="size-3 stroke-[1.6] text-muted-foreground group-hover:text-zinc-700 transition" />
-                      </Button>
+                      {subscription?.status && subscription !== null && (
+                        <Badge
+                          className={cn(
+                            "py-1 px-3 text-xs font-medium rounded-full",
+                            subscription?.status === "active" &&
+                              !subscription?.cancelAtPeriodEnd &&
+                              "bg-green-100 text-green-800 border border-green-300 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700",
+                            subscription?.status === "canceled" ||
+                              (subscription?.cancelAtPeriodEnd &&
+                                "bg-red-100 text-red-800 border border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"),
+                            subscription?.status === "incomplete" &&
+                              "bg-yellow-100 text-yellow-800 border border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-700",
+                            !["active", "canceled", "incomplete"].includes(
+                              subscription?.status!
+                            ) &&
+                              "bg-gray-100 text-gray-800 border border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
+                          )}
+                          variant="outline"
+                        >
+                          {subscription?.status === "canceled" ||
+                          subscription?.cancelAtPeriodEnd
+                            ? "Canceled"
+                            : subscription?.status.charAt(0).toUpperCase() +
+                              subscription?.status.slice(1)}
+                        </Badge>
+                      )}
+                      {subscription?.status && subscription !== null && (
+                        <Button
+                          className="ml-8 group"
+                          variant={"ghost"}
+                          size="xs"
+                          onClick={() => {
+                            setIsManageBoxOpen(true);
+                            setTimeout(() => {
+                              bottomCardsRef.current?.scrollIntoView({
+                                behavior: "smooth",
+                              });
+                            }, 200);
+                          }}
+                        >
+                          <Settings className="size-3 stroke-[1.6] text-muted-foreground group-hover:text-zinc-700 transition" />
+                        </Button>
+                      )}
                     </p>
                   </div>
 
@@ -130,11 +142,17 @@ export const SubscriptionSection = ({ user }: Props) => {
                   </Button>
                 </div>
               ) : (
-                <Card ref={bottomCardsRef} className="shadow-md md:w-[65%] w-full">
+                <Card
+                  ref={bottomCardsRef}
+                  className="shadow-md md:w-[65%] w-full"
+                >
                   <CardHeader className="w-full flex flex-row items-center justify-between">
                     <CardTitle className="text-sm tracking-tight">
-                      quiro {/* @ts-expect-error Just a simple type error */}
-                      {subscription?.plan.charAt(0).toUpperCase() + subscription?.plan?.slice(1)}
+                      quiro {" "}
+                      <span className={cn(subscription === null ? "" : "text-transparent bg-clip-text bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] pr-[1px]")}>
+                        {/* @ts-expect-error Just a simple type error */}
+                        {subscription?.plan.charAt(0).toUpperCase() + subscription?.plan?.slice(1)}
+                      </span>
                     </CardTitle>
                     <CardDescription className="pb-1">
                       <span className="font-semibold text-zinc-600">
@@ -144,7 +162,7 @@ export const SubscriptionSection = ({ user }: Props) => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="grid gap-3 text-sm text-muted-foreground pt-4">
-                    {subscription?.status && (
+                    {subscription?.status && subscription !== null && (
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-zinc-700 dark:text-zinc-300">
                           Status
@@ -229,12 +247,13 @@ export const SubscriptionSection = ({ user }: Props) => {
                           }
                           variant="destructive"
                           size="xs"
+                          effect={"gooeyRight"}
                           className="text-sm w-full"
                           onClick={async () => {
                             await authClient.subscription.cancel(
                               {
                                 subscriptionId: subscription.id,
-                                returnUrl: `${AFTER_LOGIN}?canceled=true`,
+                                returnUrl: `${AFTER_LOGIN}`,
                               },
                               {
                                 onRequest: () => {
@@ -251,7 +270,7 @@ export const SubscriptionSection = ({ user }: Props) => {
                           }}
                         >
                           {loading ? (
-                            <Loader2 className="size-4 animate-spin" />
+                            <Loader className="size-4 animate-spin" />
                           ) : (
                             "Cancel Subscription"
                           )}
@@ -264,9 +283,10 @@ export const SubscriptionSection = ({ user }: Props) => {
                           disabled={
                             loading === "restore" || subscription === null
                           }
-                          variant="outline"
+                          variant="default"
                           size="xs"
-                          className="text-sm w-full"
+                          className="text-sm w-full bg-green-400 hover:bg-green-500 hover:ring-2 hover:ring-green-500/50 hover:ring-offset-[1.5px] transition-all"
+                          effect={"shineHover"}
                           onClick={async () => {
                             await authClient.subscription.restore(
                               {
@@ -291,14 +311,13 @@ export const SubscriptionSection = ({ user }: Props) => {
                           }}
                         >
                           {loading === "restore" ? (
-                            <Loader2 className="size-4 animate-spin" />
+                            <Loader className="size-4 animate-spin" />
                           ) : (
                             "Restore Subscription"
                           )}
                         </Button>
                       )}
                     <Button
-                      disabled={subscription === null ? true : false}
                       variant={"secondary"}
                       size="xs"
                       className="text-sm w-full"
@@ -374,13 +393,18 @@ export const SubscriptionSection = ({ user }: Props) => {
                     variant={"default"}
                     size="xs"
                     className="text-sm"
-                    onClick={() => {
-                      setIsUpgradeBoxOpen(false);
-                      setTimeout(() => {
-                        topRef.current?.scrollIntoView({
-                          behavior: "smooth",
-                        });
-                      }, 200);
+                    onClick={async () => {
+                      await authClient.subscription.cancel(
+                        {
+                          subscriptionId: subscription?.id,
+                          returnUrl: `${AFTER_LOGIN}`,
+                        },
+                        {
+                          onError: (ctx) => {
+                            toast.error(ctx.error.message);
+                          },
+                        }
+                      );
                     }}
                   >
                     {subscription === null
@@ -392,7 +416,10 @@ export const SubscriptionSection = ({ user }: Props) => {
               <Card className="shadow-md w-full">
                 <CardHeader className="w-full flex flex-row items-center justify-between">
                   <CardTitle className="text-sm tracking-tight">
-                    quiro Pro
+                    quiro{" "}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] pr-[1px]">
+                      Pro
+                    </span>
                   </CardTitle>
                   <CardDescription className="pb-1">
                     <span className="font-semibold text-zinc-600">3€</span>
