@@ -41,9 +41,17 @@ import { Badge } from "../ui/badge";
 export const UserButton = ({
   user,
   session,
+  showExtraInfo = false,
+  className = "",
+  textStyles = "",
+  align = "center",
 }: {
   user: User;
   session: Session;
+  showExtraInfo?: boolean;
+  className?: string;
+  textStyles?: string;
+  align?: "start" | "center" | "end";
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -80,7 +88,7 @@ export const UserButton = ({
       }}
     >
       <DropdownMenu>
-        <DropdownMenuTrigger className="focus-visible:outline-none active:ring-2 active:ring-ring/25 active:ring-offset-2 focus-visible:ring-2 focus-visible:ring-ring/25 rounded-full ring-offset-2 transition-all">
+        <DropdownMenuTrigger className={cn("inline-flex items-center focus-visible:outline-none active:ring-2 active:ring-ring/25 active:ring-offset-2 focus-visible:ring-2 focus-visible:ring-ring/25 rounded-full ring-offset-2 transition-all", className)}>
           <Avatar>
             {/* @ts-expect-error Just a simple type error */}
             <AvatarImage src={user?.image} />
@@ -88,8 +96,14 @@ export const UserButton = ({
               <UserIcon className="size-4" />
             </AvatarFallback>
           </Avatar>
+          {showExtraInfo && (
+            <span className={cn("ml-2 text-start text-sm font-medium text-black/50", textStyles)}>
+              {user?.name} <br />
+              {user?.email}
+            </span>
+          )}
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="md:w-96 w-80 rounded-xl shadow-lg p-0">
+        <DropdownMenuContent align={align} className="md:w-96 w-80 rounded-xl shadow-lg p-0">
           <DropdownMenuLabel className="p-3 px-6">
             <div className="flex items-center gap-4">
               <Avatar>
@@ -107,7 +121,8 @@ export const UserButton = ({
                       className="py-1 px-3 text-xs font-medium rounded-full bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white border border-white/20 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700"
                       variant="outline"
                     >
-                      {subscription?.plan.charAt(0).toUpperCase() + subscription?.plan?.slice(1)}
+                      {subscription?.plan.charAt(0).toUpperCase() +
+                        subscription?.plan?.slice(1)}
                     </Badge>
                   )}
                 </span>
@@ -199,6 +214,7 @@ export const UserButton = ({
                         "p-3 px-6 cursor-pointer",
                         activeSession && "hidden"
                       )}
+                      disabled={isLoading}
                       onClick={async () => {
                         await authClient.multiSession.setActive(
                           {

@@ -312,7 +312,7 @@ export const ConnectionsSection = ({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="start"
-                  className="rounded-xl shadow-lg min-w-[180px] py-[0.5px]"
+                  className="rounded-xl shadow-lg min-w-[180px] p-0"
                 >
                   <DropdownMenuItem
                     className="cursor-pointer"

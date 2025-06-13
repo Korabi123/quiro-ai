@@ -213,7 +213,7 @@ export const TwoFactorSection = ({
                 )}
                 <DropdownMenuContent
                   align="center"
-                  className="rounded-xl shadow-lg"
+                  className="rounded-xl shadow-lg p-0"
                   onClick={() => {
                     setIsTwoFactorBoxOpen(true);
                   }}
