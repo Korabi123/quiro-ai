@@ -98,7 +98,9 @@ export const ConnectionsSection = ({
         ref={animate}
         className="flex md:flex-row flex-col md:gap-0 gap-8 justify-between"
       >
-        <p ref={topRef} className="text-sm font-medium">Connected Accounts</p>
+        <p ref={topRef} className="text-sm font-medium">
+          Connected Accounts
+        </p>
         <div
           ref={animate}
           className="flex flex-col gap-1 md:items-end md:w-[350px] md:ml-0 ml-4"
@@ -108,9 +110,9 @@ export const ConnectionsSection = ({
           )}
           {isLoading ? (
             <div className="flex flex-col gap-2">
-              <Skeleton className="min-w-[350px] h-7 rounded-md" />
-              <Skeleton className="min-w-[350px] h-7 rounded-md" />
-              <Skeleton className="min-w-[125px] max-w-[125px] h-9 rounded-md" />
+              <Skeleton className="min-w-[350px] h-7 rounded-xl" />
+              <Skeleton className="min-w-[350px] h-7 rounded-xl" />
+              <Skeleton className="min-w-[125px] max-w-[125px] h-9 rounded-xl" />
             </div>
           ) : (
             <>
@@ -206,7 +208,7 @@ export const ConnectionsSection = ({
                             <Button
                               disabled={isLoading}
                               onClick={() => {
-                                setIsDeleteConnectionBoxOpen("closed")
+                                setIsDeleteConnectionBoxOpen("closed");
                                 setTimeout(() => {
                                   topRef.current?.scrollIntoView({
                                     behavior: "smooth",
@@ -261,7 +263,7 @@ export const ConnectionsSection = ({
                             <Button
                               disabled={isLoading}
                               onClick={() => {
-                                setIsDeleteConnectionBoxOpen("closed")
+                                setIsDeleteConnectionBoxOpen("closed");
                                 setTimeout(() => {
                                   topRef.current?.scrollIntoView({
                                     behavior: "smooth",
@@ -298,23 +300,19 @@ export const ConnectionsSection = ({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant={"ghost"}
+                    className="w-full group"
+                    variant="ghost"
                     size="sm"
-                    className={cn(
-                      "text-sm self-start -mt-[7.5px]",
-                      // @ts-expect-error Just a simple type error
-                      passkeys.data?.length > 0 ? "-ml-3" : "md:ml-auto"
-                    )}
-                    effect={"expandIcon"}
-                    icon={ArrowRight}
-                    iconPlacement="right"
                   >
-                    Add connection
+                    <span className="mr-auto w-full flex flex-row items-center text-start">
+                      Add connection
+                      <ArrowRight className="size-5 -ml-5 group-hover:flex text-transparent group-hover:ml-3 group-hover:text-zinc-400 transition-all" />
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="start"
-                  className="rounded-lg shadow-lg min-w-[180px] py-[0.5px]"
+                  className="rounded-xl shadow-lg min-w-[180px] py-[0.5px]"
                 >
                   <DropdownMenuItem
                     className="cursor-pointer"

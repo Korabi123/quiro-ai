@@ -148,16 +148,29 @@ export const SubscriptionSection = ({ user }: Props) => {
                 >
                   <CardHeader className="w-full flex flex-row items-center justify-between">
                     <CardTitle className="text-sm tracking-tight">
-                      quiro {" "}
-                      <span className={cn(subscription === null ? "" : "text-transparent bg-clip-text bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] pr-[1px]")}>
+                      quiro{" "}
+                      <span
+                        className={cn(
+                          subscription === null
+                            ? ""
+                            : "text-transparent bg-clip-text bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] pr-[1px]"
+                        )}
+                      >
                         {/* @ts-expect-error Just a simple type error */}
-                        {subscription?.plan.charAt(0).toUpperCase() + subscription?.plan?.slice(1)}
+                        {subscription?.plan.charAt(0).toUpperCase() +
+                          subscription?.plan?.slice(1)}
                       </span>
                     </CardTitle>
                     <CardDescription className="pb-1">
-                      <span className="font-semibold text-zinc-600">
-                        {subscription?.plan === "pro" ? "3€" : "0€"}
-                      </span>
+                      {subscription?.plan === "pro" ? (
+                        <>
+                          <span className="font-semibold text-zinc-600">
+                            3€
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-semibold text-zinc-600">0€</span>
+                      )}
                       /month
                     </CardDescription>
                   </CardHeader>
@@ -422,6 +435,9 @@ export const SubscriptionSection = ({ user }: Props) => {
                     </span>
                   </CardTitle>
                   <CardDescription className="pb-1">
+                    <span className="line-through text-muted-foreground">
+                      10€
+                    </span>{" "}
                     <span className="font-semibold text-zinc-600">3€</span>
                     /month
                   </CardDescription>

@@ -197,7 +197,7 @@ export const TwoFactorSection = ({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="center"
-                      className="rounded-lg shadow-lg py-1 px-3 min-w-fit"
+                      className="rounded-xl shadow-lg py-1 px-3 min-w-fit"
                     >
                       <DropdownMenuItem
                         className="cursor-pointer p-0"
@@ -213,7 +213,7 @@ export const TwoFactorSection = ({
                 )}
                 <DropdownMenuContent
                   align="center"
-                  className="rounded-lg shadow-lg"
+                  className="rounded-xl shadow-lg"
                   onClick={() => {
                     setIsTwoFactorBoxOpen(true);
                   }}

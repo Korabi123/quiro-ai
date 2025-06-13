@@ -122,7 +122,7 @@ export const ProfileSection = ({
                 )}
                 <div className="space-x-2 flex items-center">
                   <UploadButton
-                    className="ut-button:h-8 ut-button:w-20 ut-button:bg-transparent ut-button:border ut-button:text-black/60 hover:ut-button:bg-black/5 hover:ut-button:text-black ut-button:transition-all focus-visible:ut-button:ring-[4px] focus-visible:ut-button:ring-ring/20 ut-label:text-red-500 ut-allowed-content:hidden ut-button:text-xs"
+                    className="ut-button:h-9 ut-button:rounded-xl ut-button:w-20 ut-button:bg-transparent ut-button:border ut-button:text-black/60 hover:ut-button:bg-black/5 hover:ut-button:text-black ut-button:transition-all focus-visible:ut-button:ring-[4px] focus-visible:ut-button:ring-ring/20 ut-label:text-red-500 ut-allowed-content:hidden ut-button:text-xs"
                     endpoint="profilePic"
                     onClientUploadComplete={(res) => {
                       console.log("Files: ", res);

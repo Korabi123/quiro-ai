@@ -158,7 +158,7 @@ export const PasskeySection = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                               align="center"
-                              className="rounded-lg shadow-lg p-0 min-w-fit"
+                              className="rounded-xl shadow-lg p-0 min-w-fit"
                             >
                               <DropdownMenuItem
                                 className="cursor-pointer px-3 py-1 text-zinc-600 focus:text-zinc-800 transition-all"
@@ -176,7 +176,7 @@ export const PasskeySection = () => {
                               <DropdownMenuItem
                                 className="cursor-pointer px-3 py-1 text-destructive/80 focus:text-red-500 focus:bg-destructive/5"
                                 onClick={() => {
-                                  setIsDeletePasskeyBoxOpen(passkey.id)
+                                  setIsDeletePasskeyBoxOpen(passkey.id);
                                   setTimeout(() => {
                                     bottomCardsRef.current?.scrollIntoView({
                                       behavior: "smooth",
@@ -349,19 +349,15 @@ export const PasskeySection = () => {
             </>
           )}
           <Button
-            variant={"ghost"}
-            size="sm"
-            className={cn(
-              "text-sm self-start -mt-[4px]",
-              // @ts-expect-error Just a simple type error
-              passkeys.data?.length > 0 ? "-ml-3" : "md:ml-auto"
-            )}
-            effect={"expandIcon"}
-            icon={ArrowRight}
-            iconPlacement="right"
             onClick={onAddPasskey}
+            className="w-full group"
+            variant="ghost"
+            size="sm"
           >
-            Add passkey
+            <span className="mr-auto w-full flex flex-row items-center text-start">
+              Add passkey
+              <ArrowRight className="size-5 -ml-5 group-hover:flex text-transparent group-hover:ml-3 group-hover:text-zinc-400 transition-all" />
+            </span>
           </Button>
         </div>
       </div>
