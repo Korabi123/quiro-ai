@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 
 import localFont from "next/font/local";
 
@@ -68,7 +68,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "quiro AI",
-  description: "Your new AI assistant",
+  description: "Train for real interviews with daily coding problems, AI-powered mock calls, and tailored skill checks — all in one app.",
 };
 
 export default function RootLayout({

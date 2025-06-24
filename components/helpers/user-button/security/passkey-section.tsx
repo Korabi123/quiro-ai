@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UAParser } from "ua-parser-js";
 import { toast } from "sonner";
+import { ErrorCard } from "@/components/auth/error-card";
 
 const renamePasskeySchema = z.object({
   name: z
@@ -83,6 +84,10 @@ export const PasskeySection = () => {
   const onAddPasskey = async () => {
     await authClient.passkey.addPasskey({
       name: `${parsedAgent.os.name}, ${parsedAgent.browser.name}`,
+    }, {
+      onError: (ctx) => {
+        setError(ctx.error.message);
+      }
     });
   };
 
@@ -134,6 +139,11 @@ export const PasskeySection = () => {
 
                     return (
                       <>
+                        <div className={cn(!error ? "hidden" : "flex")} ref={animate}>
+                          {error && (
+                            <ErrorCard error={error} />
+                          )}
+                        </div>
                         <div
                           key={passkey.id}
                           className="flex -mt-[1px] items-center justify-between self-start gap-4 w-full"

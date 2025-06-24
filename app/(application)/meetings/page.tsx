@@ -1,16 +1,15 @@
 "use client";
 
-import { GeneratedAvatar } from "@/components/generated-avatar";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { MeetingFilters } from "@/components/meetings/filters";
+import { MeetingHeading } from "@/components/meetings/heading";
+import { MeetingsTable } from "@/components/meetings/meetings-table";
 
 const MeetingsPage = () => {
-  const [value, setValue] = useState("");
-
   return (
-    <div className="flex items-center gap-3">
-      <GeneratedAvatar seed={value} />
-      <Input className="w-[200px] font-medium" value={value} onChange={(e) => setValue(e.target.value)} />
+    <div className="flex flex-col gap-4 md:px-10 px-4 py-4">
+      <MeetingHeading />
+      <MeetingFilters />
+      <MeetingsTable />
     </div>
   );
 }

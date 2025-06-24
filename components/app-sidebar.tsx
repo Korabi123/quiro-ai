@@ -50,8 +50,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = session.data?.user;
 
   return (
-    <Sidebar variant="floating" {...props}>
-      <SidebarHeader>
+    <Sidebar {...props}>
+      <SidebarHeader className="p-2">
         <SidebarMenu>
           <SidebarMenuItem className="px-2">
             <a href="#">
@@ -65,8 +65,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <Separator className="bg-sidebar-border/50" />
-      <SidebarContent className="flex flex-col justify-between">
+      <Separator className="bg-sidebar-border/50 px-4" />
+      <SidebarContent className="flex p-2 flex-col justify-between">
         <SidebarGroup className="mt-2">
           <SidebarMenu className="gap-2">
             {routes.map((route) => (
