@@ -34,14 +34,19 @@ export async function PATCH(req: Request) {
 
     const vapiMeeting = vapiMeetingsByAgent[0];
 
+    console.log("transcript: ", vapiMeeting.artifact?.transcript);
+    console.log("summary: ", vapiMeeting.analysis?.summary);
+
     const meeting = await prismadb.meeting.update({
       where: {
         id: meetingId,
         userId: session.user.id,
       },
       data: {
-        vapiCallId: vapiMeeting.id,
-        status: "PROCESSING",
+        callTranscript: vapiMeeting.artifact?.transcript,
+        transcript: vapiMeeting.artifact?.transcript,
+        summary: vapiMeeting.analysis?.summary,
+        status: "COMPLETED",
       }
     });
 

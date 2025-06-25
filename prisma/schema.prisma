@@ -36,20 +36,21 @@ enum MeetingStatus {
 }
 
 model Meeting {
-  id            String   @id @default(cuid())
-  vapiCallId    String?  @unique
+  id              String   @id @default(cuid())
+  vapiCallId      String?  @unique
 
-  title         String
-  agentId       String
-  agent         Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transcript    String?
-  callTranscript String?
-  chats         Chat[]
-  status        MeetingStatus @default(UPCOMING)
+  title           String
+  agentId         String
+  agent           Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transcript      String?
+  callTranscript  String?
+  summary         String?
+  chats           Chat[]
+  status          MeetingStatus @default(UPCOMING)
 
   @@map("meeting")
 }

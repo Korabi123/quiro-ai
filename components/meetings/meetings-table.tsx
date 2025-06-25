@@ -77,6 +77,8 @@ export const MeetingsTable = () => {
                     "bg-blue-400/20 border-blue-400/50 text-blue-400",
                   meeting.status === "CANCELED" &&
                     "bg-red-400/20 border-red-400/50 text-red-400",
+                  meeting.status === "PROCESSING" &&
+                    "text-muted-foreground/70",
                   "p-2 min-w-[120px] flex justify-center"
                 )}
               >
@@ -90,7 +92,7 @@ export const MeetingsTable = () => {
                   <Video className="size-4 mr-2" />
                 )}
                 {meeting.status === "PROCESSING" && (
-                  <Loader className="size-4 mr-2 animate-spin" />
+                  <Loader className="size-4 mr-2 animate-spin text-muted-foreground/70" />
                 )}
                 {meeting.status === "CANCELED" && (
                   <CircleX className="size-4 mr-2" />

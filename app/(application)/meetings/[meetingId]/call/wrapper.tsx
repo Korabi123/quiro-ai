@@ -10,6 +10,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Vapi from "@vapi-ai/web";
 import axios from "axios";
 import { Loader } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -21,6 +22,8 @@ interface Props {
 
 export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
   const [animate] = useAutoAnimate();
+
+  const router = useRouter();
 
   const session = authClient.useSession();
   const { data: meeting, isLoading } = useMeeting(meetingId);
@@ -45,7 +48,22 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
       console.log('Call ended');
       setIsConnected(false);
       setIsSpeaking(false);
-      await axios.patch(`/api/meetings/update?meetingId=${meetingId}&vapiAgent=${assistantId}`, JSON.stringify(transcript));
+
+      toast.promise(axios.patch(`/api/meetings/update?meetingId=${meetingId}&vapiAgent=${assistantId}`), {
+        loading: "Ending meeting...",
+        success: () => {
+          setTimeout(() => {
+            axios.patch(`/api/meetings/details?meetingId=${meetingId}&vapiAgent=${assistantId}`);
+          }, 2500);
+
+          router.push("/meetings");
+
+          return "Meeting ended successfully";
+        },
+        error: () => {
+          return "Something went wrong";
+        },
+      })
     });
 
     vapiInstance.on('speech-start', () => {
