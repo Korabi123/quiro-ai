@@ -38,6 +38,7 @@ enum MeetingStatus {
 model Meeting {
   id              String   @id @default(cuid())
   vapiCallId      String?  @unique
+  recordingURL    String?
 
   title           String
   agentId         String

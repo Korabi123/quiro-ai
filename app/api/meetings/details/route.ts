@@ -47,6 +47,7 @@ export async function PATCH(req: Request) {
         transcript: vapiMeeting.artifact?.transcript,
         summary: vapiMeeting.analysis?.summary,
         status: "COMPLETED",
+        recordingURL: vapiMeeting.artifact?.stereoRecordingUrl,
       }
     });
 

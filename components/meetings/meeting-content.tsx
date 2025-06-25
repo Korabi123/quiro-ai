@@ -1,6 +1,16 @@
 "use client";
 
-import { BookOpenTextIcon, Captions, FileAudio2, Loader, Sparkle, Sparkles, UserIcon, Video, XCircle } from "lucide-react";
+import {
+  BookOpenTextIcon,
+  Captions,
+  FileAudio2,
+  Loader,
+  Sparkle,
+  Sparkles,
+  UserIcon,
+  Video,
+  XCircle,
+} from "lucide-react";
 import { MeetingEmptySvg } from "../svg/meeting-empty";
 import { Button } from "../ui/button";
 import { useMeeting } from "@/lib/meetings";
@@ -13,6 +23,7 @@ import { FaPagelines } from "react-icons/fa";
 import { GeneratedAvatar } from "../generated-avatar";
 import { authClient } from "@/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { AudioPlayer } from "../ui/audio-player";
 
 interface Props {
   meetingId: string;
@@ -23,7 +34,9 @@ export const MeetingContent = ({ meetingId }: Props) => {
   const { data: meeting, isLoading } = useMeeting(meetingId);
 
   const [isPending, startTransition] = useTransition();
-  const [tab, setTab] = useState<"summary" | "transcript" | "recording" | "askAI">("summary");
+  const [tab, setTab] = useState<
+    "summary" | "transcript" | "recording" | "askAI"
+  >("summary");
 
   const router = useRouter();
 
@@ -37,9 +50,8 @@ export const MeetingContent = ({ meetingId }: Props) => {
         },
         error: "Something went wrong",
       });
-    })
-  }
-
+    });
+  };
 
   return (
     <>
@@ -142,11 +154,23 @@ export const MeetingContent = ({ meetingId }: Props) => {
                   <>
                     <h1 className="text-2xl mt-2">{meeting?.title}</h1>
                     <div className="flex mt-2 items-center gap-2">
-                      {/* @ts-ignore */}
-                      <GeneratedAvatar seed={meeting?.agent?.name} className="size-5" />
-                      {/* @ts-ignore */}
-                      <p className="text-sm underline">{meeting?.agent?.name}</p>
-                      <p className="ml-1 text-sm">{meeting?.createdAt ? new Date(meeting.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</p>
+                      <GeneratedAvatar
+                        // @ts-ignore
+                        seed={meeting?.agent?.name}
+                        className="size-5"
+                      />
+                      <p className="text-sm underline">
+                        {/* @ts-ignore */}
+                        {meeting?.agent?.name}
+                      </p>
+                      <p className="ml-1 text-sm">
+                        {meeting?.createdAt
+                          ? new Date(meeting.createdAt).toLocaleDateString(
+                              "en-US",
+                              { year: "numeric", month: "long", day: "numeric" }
+                            )
+                          : "N/A"}
+                      </p>
                     </div>
                     <div>
                       <h3 className="text-lg">Overview</h3>
@@ -159,12 +183,14 @@ export const MeetingContent = ({ meetingId }: Props) => {
                 {tab === "transcript" && (
                   <>
                     <h1 className="text-2xl">Transcript</h1>
-                    <div>
-                      <div className="mt-2 flex flex-col gap-2">
-                        {meeting?.callTranscript &&
-                          meeting.callTranscript.split(/\s*(AI:|User:)\s*/).filter(Boolean).map((part, index, arr) => {
+                    <div className="mt-2 flex flex-col gap-2">
+                      {meeting?.callTranscript &&
+                        meeting.callTranscript
+                          .split(/\s*(AI:|User:)\s*/)
+                          .filter(Boolean)
+                          .map((part, index, arr) => {
                             if (part === "AI:" || part === "User:") {
-                              const speaker = part.replace(':', '');
+                              const speaker = part.replace(":", "");
                               const utterance = arr[index + 1];
                               if (utterance) {
                                 return (
@@ -191,8 +217,8 @@ export const MeetingContent = ({ meetingId }: Props) => {
                                       )}
                                       <p className="text-md">
                                         {speaker === "AI"
-                                          // @ts-ignore
-                                          ? meeting?.agent?.name
+                                          ? // @ts-ignore
+                                            meeting?.agent?.name
                                           : session?.data?.user.name || "User"}
                                       </p>
                                     </div>
@@ -205,9 +231,19 @@ export const MeetingContent = ({ meetingId }: Props) => {
                             }
                             return null;
                           })}
-                      </div>
                     </div>
                   </>
+                )}
+                {tab === "recording" && (
+                  <div className="flex flex-col gap-2">
+                    <h1 className="text-2xl">Recording</h1>
+                    <AudioPlayer
+                      src={meeting?.recordingURL!}
+                      controls
+                      autoPlay
+                      preload="auto"
+                    />
+                  </div>
                 )}
               </div>
             </div>
