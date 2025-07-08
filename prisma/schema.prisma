@@ -56,15 +56,22 @@ model Meeting {
   @@map("meeting")
 }
 
+enum ChatType {
+  USER
+  AI
+}
+
 model Chat {
   id            String   @id @default(cuid())
   content       String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   meetingId     String
   meeting       Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  type          ChatType
 
   @@map("chat")
 }

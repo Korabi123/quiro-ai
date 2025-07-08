@@ -364,7 +364,7 @@ export const LoginCard = ({
                           disabled={isLoading}
                           size={"sm"}
                           variant={"link"}
-                          className="mt-2 text-xs text-blue-500 after:bg-blue-600 hover:text-blue-600 focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-1 focus-visible:border-ring/20 transition-all"
+                          className="mt-2 text-xs text-[#ea721b] after:bg-[#ea721b]/70 hover:text-[#ea721b]/70 focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-1 focus-visible:border-ring/20 transition-all"
                           onClick={onResetPassword}
                           effect={"hoverUnderline"}
                         >
@@ -380,7 +380,7 @@ export const LoginCard = ({
                 effect={"ringHover"}
                 size="sm"
                 disabled={isLoading}
-                className="w-full bg-blue-500 hover:bg-blue-600 hover:ring-blue-600 shadow-inner"
+                className="w-full bg-[#2f2722] hover:bg-[#2f2722]/80 hover:ring-[#2f2722]/80 shadow-inner"
                 type="submit"
                 ref={animateRef}
               >
@@ -406,7 +406,7 @@ export const LoginCard = ({
                 disabled={isLoading}
                 size={"sm"}
                 variant={"link"}
-                className="mt-2 text-sm self-center text-blue-500 after:bg-blue-600 hover:text-blue-600 focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-1 focus-visible:border-ring/20 transition-all"
+                className="mt-2 text-sm self-center text-[#ea721b] after:bg-[#ea721b]/70 hover:text-[#ea721b]/70 focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-1 focus-visible:border-ring/20 transition-all"
                 onClick={onPasskeyLogin}
                 effect={"hoverUnderline"}
               >
@@ -448,7 +448,7 @@ export const LoginCard = ({
                     effect={"ringHover"}
                     size="xs"
                     disabled={isLoading}
-                    className="w-full bg-blue-500 hover:bg-blue-600 hover:ring-blue-600 shadow-inner"
+                    className="w-full bg-[#2f2722] hover:bg-[#2f2722]/80 hover:ring-[#2f2722]/80 shadow-inner"
                     type="button"
                     ref={animateRef}
                     onClick={() => {
@@ -477,7 +477,7 @@ export const LoginCard = ({
                     size={"sm"}
                     variant={"link"}
                     disabled={isLoading}
-                    className="text-sm self-center text-blue-500 after:bg-blue-600 hover:text-blue-600 focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-1 focus-visible:border-ring/20 transition-all"
+                    className="text-sm self-center text-[#ea721b] after:bg-[#ea721b]/70 hover:text-[#ea721b]/70 focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-1 focus-visible:border-ring/20 transition-all"
                     onClick={() => {
                       setIsVerifyOtpBoxOpen(false);
                       verifyForm.reset();
@@ -517,7 +517,7 @@ export const LoginCard = ({
                     effect={"ringHover"}
                     size="xs"
                     disabled={isLoading}
-                    className="w-full bg-blue-500 hover:bg-blue-600 hover:ring-blue-600 shadow-inner"
+                    className="w-full bg-[#2f2722] hover:bg-[#2f2722]/80 hover:ring-[#2f2722]/80 shadow-inner"
                     type="button"
                     ref={animateRef}
                     onClick={async () => {
@@ -563,7 +563,7 @@ export const LoginCard = ({
                     size={"sm"}
                     variant={"link"}
                     disabled={isLoading}
-                    className="text-sm self-center text-blue-500 after:bg-blue-600 hover:text-blue-600 focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-1 focus-visible:border-ring/20 transition-all"
+                    className="text-sm self-center text-[#ea721b] after:bg-[#ea721b]/70 hover:text-[#ea721b]/70 focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-1 focus-visible:border-ring/20 transition-all"
                     onClick={() => {
                       setIsForgotPassword(false);
                       emailConfirmationForm.reset();

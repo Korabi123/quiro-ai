@@ -19,6 +19,18 @@ export async function POST(req: Request) {
     "goT3UYdM9bhm0n2lmKQx",
     "pBZVCk298iJlHAcHQwLr",
     "BL7YSL1bAkmW8U0JnU8o",
+    "HDA9tsk27wYi3uq0fPcK",
+    "L0Dsvb3SLTyegXwtm47J",
+    "tnSpp4vdxKPjI9w0GnoV",
+    "UgBBYS2sOqTuMpoF3BR0",
+    "1hlpeD1ydbI2ow0Tt3EW",
+    "kdmDKE6EkgrWrrykO9Qt",
+    "rJ4KGss9TSKfyhkSuCRh",
+    "MGnihriF5kUNUiVoIdz1",
+    "omRordDZNt4Gy45cetUa",
+    "56AoDkrOh6qfVPDXZ7Pt",
+    "ZF6FPAbjXT4488VcRRnw",
+    "iMHt6G42evkXunaDU065"
   ];
 
   const voice = voiceArrs[Math.floor(Math.random() * voiceArrs.length)];
@@ -46,7 +58,7 @@ export async function POST(req: Request) {
         temperature: 0.7,
         messages: [{
           role: "system",
-          content: `Please first greet the user and then ask them to provide their name, you should follow these instructions: "${instructions}" but you have to be as natural as possible and speak in a human way.`,
+          content: `Please first greet the user and then ask them to provide their name, you should follow these instructions: "${instructions}" but you have to be as natural as possible and speak in a human way, avoid saying formatting terms outloud and just speak as if you were a real human, avoid saying anything that might be considered offensive or inappropriate.`,
         }]
       },
       voice: {

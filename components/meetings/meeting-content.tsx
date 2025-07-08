@@ -1,11 +1,13 @@
 "use client";
 
 import {
+  ArrowRightIcon,
   BookOpenTextIcon,
   Captions,
   FileAudio2,
   Loader,
-  Sparkle,
+  MessageCircleIcon,
+  SearchIcon,
   Sparkles,
   UserIcon,
   Video,
@@ -14,16 +16,17 @@ import {
 import { MeetingEmptySvg } from "../svg/meeting-empty";
 import { Button } from "../ui/button";
 import { useMeeting } from "@/lib/meetings";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, useMemo } from "react";
 import { toast } from "sonner";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { FaPagelines } from "react-icons/fa";
 import { GeneratedAvatar } from "../generated-avatar";
 import { authClient } from "@/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { AudioPlayer } from "../ui/audio-player";
+import { Input } from "@/components/ui/input";
+import { useChats } from "@/lib/chats";
 
 interface Props {
   meetingId: string;
@@ -37,8 +40,108 @@ export const MeetingContent = ({ meetingId }: Props) => {
   const [tab, setTab] = useState<
     "summary" | "transcript" | "recording" | "askAI"
   >("summary");
+  const [content, setContent] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const router = useRouter();
+
+  const { data: chats } = useChats(meetingId);
+
+  const endOfChatsRef = useRef<HTMLDivElement>(null);
+
+  const memoizedTranscript = useMemo(() => {
+    if (!meeting?.callTranscript) return null;
+
+    // @ts-ignore
+    const transcriptParts = meeting.callTranscript
+      .split(/\s*(AI:|User:)\s*/)
+      .filter(Boolean);
+    const structuredTranscript = [];
+    for (let i = 0; i < transcriptParts.length; i += 2) {
+      const speaker = transcriptParts[i]?.replace(":", "");
+      const utterance = transcriptParts[i + 1];
+      if (speaker && utterance) {
+        structuredTranscript.push({ speaker, utterance });
+      }
+    }
+
+    const filteredTranscript = structuredTranscript.filter((item) =>
+      item.utterance.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (filteredTranscript.length === 0) {
+      return <p className="text-center text-muted-foreground/70 mb-4">No results found for "{searchQuery}".</p>;
+    }
+
+    return filteredTranscript.map((item, index) => {
+        const { speaker, utterance } = item;
+        return (
+          <div key={index} className="border rounded-2xl p-3 bg-card">
+            <div className="flex items-center gap-2 mb-2">
+              {speaker === "AI" ? (
+                <GeneratedAvatar
+                  // @ts-ignore
+                  seed={meeting?.agent?.name}
+                  className="size-6"
+                />
+              ) : (
+                <Avatar className="size-6">
+                  <AvatarImage src={session.data?.user.image!} />
+                  <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
+                    <UserIcon className="size-4" />
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              <p className="text-md">
+                {speaker === "AI"
+                  ? // @ts-ignore
+                    meeting?.agent?.name
+                  : session?.data?.user.name || "User"}
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground/70">
+              {searchQuery
+                ? utterance
+                    .split(new RegExp(`(${searchQuery})`, "gi"))
+                    .map((part, i) =>
+                      part.toLowerCase() === searchQuery.toLowerCase() ? (
+                        <span key={i} className="bg-yellow-200">
+                          {part}
+                        </span>
+                      ) : (
+                        <span key={i}>{part}</span>
+                      )
+                    )
+                : utterance}
+            </p>
+          </div>
+        );
+      });
+  }, [
+    meeting?.callTranscript,
+    searchQuery,
+    session.data?.user.image,
+    session.data?.user.name,
+    // @ts-ignore
+    meeting?.agent?.name,
+  ]);
+
+  const onSubmit = () => {
+    setContent("");
+
+    startTransition(async () => {
+      try {
+        await axios.post(`/api/chats/create?meetingId=${meetingId}`, {
+          meetingId,
+          content,
+          type: "USER",
+          transcript: meeting?.callTranscript,
+        });
+      } catch (error) {
+        toast.error("Something went wrong");
+      }
+    });
+  };
 
   const onMeetingCancel = () => {
     startTransition(async () => {
@@ -52,6 +155,10 @@ export const MeetingContent = ({ meetingId }: Props) => {
       });
     });
   };
+
+  useEffect(() => {
+    endOfChatsRef.current?.scrollIntoView({ behavior: "smooth" });
+  });
 
   return (
     <>
@@ -182,67 +289,115 @@ export const MeetingContent = ({ meetingId }: Props) => {
                 )}
                 {tab === "transcript" && (
                   <>
-                    <h1 className="text-2xl">Transcript</h1>
+                    <h1 className="text-2xl mt-2">Transcript</h1>
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        placeholder="Search transcript..."
+                        className="mb-4 peer ps-9 pe-9"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                      <div className="text-muted-foreground/80 bottom-[28%] pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
+                        <SearchIcon size={16} />
+                      </div>
+                    </div>
                     <div className="mt-2 flex flex-col gap-2">
-                      {meeting?.callTranscript &&
-                        meeting.callTranscript
-                          .split(/\s*(AI:|User:)\s*/)
-                          .filter(Boolean)
-                          .map((part, index, arr) => {
-                            if (part === "AI:" || part === "User:") {
-                              const speaker = part.replace(":", "");
-                              const utterance = arr[index + 1];
-                              if (utterance) {
-                                return (
-                                  <div
-                                    key={index}
-                                    className="border rounded-2xl p-3 bg-card"
-                                  >
-                                    <div className="flex items-center gap-2 mb-2">
-                                      {speaker === "AI" ? (
-                                        <GeneratedAvatar
-                                          // @ts-ignore
-                                          seed={meeting?.agent?.name}
-                                          className="size-6"
-                                        />
-                                      ) : (
-                                        <Avatar className="size-6">
-                                          <AvatarImage
-                                            src={session.data?.user.image!}
-                                          />
-                                          <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
-                                            <UserIcon className="size-4" />
-                                          </AvatarFallback>
-                                        </Avatar>
-                                      )}
-                                      <p className="text-md">
-                                        {speaker === "AI"
-                                          ? // @ts-ignore
-                                            meeting?.agent?.name
-                                          : session?.data?.user.name || "User"}
-                                      </p>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground/70">
-                                      {utterance}
-                                    </p>
-                                  </div>
-                                );
-                              }
-                            }
-                            return null;
-                          })}
+                      {memoizedTranscript}
                     </div>
                   </>
                 )}
                 {tab === "recording" && (
                   <div className="flex flex-col gap-2">
-                    <h1 className="text-2xl">Recording</h1>
+                    <h1 className="text-2xl mt-2">Recording</h1>
                     <AudioPlayer
                       src={meeting?.recordingURL!}
                       controls
                       autoPlay
                       preload="auto"
                     />
+                  </div>
+                )}
+                {tab === "askAI" && (
+                  <div className="flex flex-col gap-2 max-h-[400px] h-[400px]">
+                    {chats?.length === 0 ? (
+                      <div className="w-full h-full flex flex-col gap-3 items-center justify-center p-4">
+                        <MessageCircleIcon className="size-16 text-muted-foreground/40" />
+                        <p className="text-muted-foreground/40">
+                          No chats yet. Ask AI to start a chat.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col p-2 gap-6 w-full h-full overflow-y-scroll">
+                        {chats?.map((chat) => (
+                          <>
+                            {chat.type === "AI" && (
+                              <div
+                                key={chat.id}
+                                className="self-start flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <GeneratedAvatar
+                                    // @ts-ignore
+                                    seed={meeting?.agent?.name}
+                                    className="size-6"
+                                  />
+                                  <p className="text-md">
+                                    {/* @ts-ignore */}
+                                    {meeting?.agent?.name}
+                                  </p>
+                                </div>
+                                <p className="text-sm text-muted-foreground/70">
+                                  {chat.content}
+                                </p>
+                              </div>
+                            )}
+                            {chat.type === "USER" && (
+                              <div
+                                key={chat.id}
+                                className="self-end flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="size-6">
+                                    <AvatarImage
+                                      src={session.data?.user.image!}
+                                    />
+                                    <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
+                                      <UserIcon className="size-4" />
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <p className="text-md">
+                                    {session.data?.user.name || "User"}
+                                  </p>
+                                </div>
+                                <p className="text-sm text-muted-foreground/70">
+                                  {chat.content}
+                                </p>
+                              </div>
+                            )}
+                            <div ref={endOfChatsRef} />
+                          </>
+                        ))}
+                      </div>
+                    )}
+                    <div className="p-2">
+                      <div className="relative">
+                        <Input
+                          onChange={(e) => setContent(e.target.value)}
+                          value={content}
+                          className="peer pe-9"
+                          placeholder="Ask AI..."
+                        />
+                        <button
+                          className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="Submit search"
+                          type="submit"
+                          onClick={onSubmit}
+                        >
+                          <ArrowRightIcon size={16} aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

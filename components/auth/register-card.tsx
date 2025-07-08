@@ -243,15 +243,15 @@ export const RegisterCard = ({
 
           <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
             By signing up, you agree to our{" "}
-            <a href="/legal/terms-conditions" className="text-blue-600 underline">
+            <a href="/legal/terms-conditions" className="text-[#ea721b] underline">
               Terms and Conditions
             </a>
             ,{" "}
-            <a href="/legal/privacy-policy" className="text-blue-600 underline">
+            <a href="/legal/privacy-policy" className="text-[#ea721b] underline">
               Privacy Policy
             </a>{" "}
             &{" "}
-            <a href="/legal/cookies-policy" className="text-blue-600 underline">
+            <a href="/legal/cookies-policy" className="text-[#ea721b] underline">
               Cookies Policy
             </a>
             .
@@ -260,7 +260,7 @@ export const RegisterCard = ({
             effect={"ringHover"}
             size="sm"
             disabled={isLoading}
-            className="w-full bg-blue-500 hover:bg-blue-600 hover:ring-blue-600 shadow-inner"
+            className="w-full bg-[#2f2722] hover:bg-[#2f2722]/80 hover:ring-[#2f2722]/80 shadow-inner"
             type="submit"
             ref={animateRef}
           >

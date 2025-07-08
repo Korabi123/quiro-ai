@@ -55,7 +55,7 @@ export const CardWrapper = ({
               type="button"
               size={"sm"}
               variant={"link"}
-              className="px-1 leading-4 text-[14px] font-[400px] text-blue-500 after:bg-blue-600 hover:text-blue-600"
+              className="px-1 leading-4 text-[14px] font-[400px] text-[#ea721b] after:bg-[#ea721b]/70 hover:text-[#ea721b]/70"
               onClick={() => window.location.replace("/login")}
               effect={"hoverUnderline"}
             >
@@ -70,7 +70,7 @@ export const CardWrapper = ({
               type="button"
               size={"sm"}
               variant={"link"}
-              className="px-1 leading-4 text-[14px] font-[400px] text-blue-500 after:bg-blue-600 hover:text-blue-600"
+              className="px-1 leading-4 text-[14px] font-[400px] text-[#ea721b] after:bg-[#ea721b]/70 hover:text-[#ea721b]/70"
               onClick={() => window.location.replace("/sign-up")}
               effect={"hoverUnderline"}
             >
@@ -85,7 +85,7 @@ export const CardWrapper = ({
               type="button"
               size={"sm"}
               variant={"link"}
-              className="px-1 leading-4 text-[14px] font-[400px] text-blue-500 after:bg-blue-600 hover:text-blue-600"
+              className="px-1 leading-4 text-[14px] font-[400px] text-[#ea721b] after:bg-[#ea721b]/70 hover:text-[#ea721b]/70"
               onClick={() =>
                 window.location.replace(
                   `/sign-up?redirect=${encodeURIComponent(param!)}`
@@ -104,7 +104,7 @@ export const CardWrapper = ({
               type="button"
               size={"sm"}
               variant={"link"}
-              className="px-1 leading-4 text-[14px] font-[400px] text-blue-500 after:bg-blue-600 hover:text-blue-600"
+              className="px-1 leading-4 text-[14px] font-[400px] text-[#ea721b] after:bg-[#ea721b]/70 hover:text-[#ea721b]/70"
               onClick={() =>
                 window.location.replace(
                   `/login?redirect=${encodeURIComponent(param!)}`
