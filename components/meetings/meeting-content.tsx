@@ -143,6 +143,18 @@ export const MeetingContent = ({ meetingId }: Props) => {
     });
   };
 
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "l" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        onSubmit();
+      }
+    }
+
+    document.addEventListener("keydown", down)
+    return () => document.removeEventListener("keydown", down)
+  }, [onSubmit])
+
   const onMeetingCancel = () => {
     startTransition(async () => {
       toast.promise(axios.patch(`/api/meetings/cancel?id=${meetingId}`), {
