@@ -183,7 +183,12 @@ export const MeetingHeading = ({
                       <Pencil />
                       Edit Meeting
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="rounded-none text-destructive focus:text-destructive focus:bg-destructive/10 transition-all">
+                    <DropdownMenuItem
+                      onClick={() =>
+                        onOpen("deleteMeeting", { meetingId: meetingId })
+                      }
+                      className="rounded-none text-destructive focus:text-destructive focus:bg-destructive/10 transition-all"
+                    >
                       <Trash2 />
                       Delete Meeting
                     </DropdownMenuItem>
