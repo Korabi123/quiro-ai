@@ -21,7 +21,7 @@ export async function GET(req: Request) {
       }
     });
 
-    return NextResponse.json(agents);
+    return NextResponse.json(agents, { status: 200 });
   } catch (error) {
     console.log("ERROR_GETTING_AGENTS: ", error);
     return new NextResponse("Internal server error", { status: 500 });

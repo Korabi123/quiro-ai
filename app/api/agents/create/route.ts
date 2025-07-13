@@ -76,7 +76,7 @@ export async function POST(req: Request) {
       }
     });
 
-    return NextResponse.json(agent, { status: 200 });
+    return NextResponse.json(agent, { status: 201 });
   } catch (error) {
     console.log("ERROR_CREATING_AGENT: ", error);
     return new NextResponse("Internal server error", { status: 500 });

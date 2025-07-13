@@ -25,12 +25,12 @@ export async function POST(req: Request) {
       }
     })
 
-    const client = new OpenAI({
+    const ai = new OpenAI({
       apiKey: process.env.AI_SECRET!,
       baseURL: "https://router.huggingface.co/v1",
     });
 
-    const response = await client.chat.completions.create({
+    const response = await ai.chat.completions.create({
       model: "deepseek-ai/DeepSeek-V3-0324",
       messages: [
         {
@@ -61,10 +61,10 @@ export async function POST(req: Request) {
         }
       });
 
-      return NextResponse.json({ aiChat });
+      return NextResponse.json({ aiChat }, { status: 201 });
     }, 500);
 
-    return NextResponse.json({ chat });
+    return NextResponse.json({ chat }, { status: 201 });
   } catch (error) {
     console.log("Error creating chat", error);
     return new NextResponse("Internal server error", { status: 500 });

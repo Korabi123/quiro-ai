@@ -7,8 +7,10 @@ import {
   ChevronsUpDown,
   Loader2,
   MoreVertical,
+  Pencil,
   Plus,
   SlashIcon,
+  Trash2,
 } from "lucide-react";
 import {
   Dialog,
@@ -65,6 +67,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { EditMeetingDialog } from "../dialogs/edit-meeting-dialog";
+import { useModalStore } from "@/hooks/use-modal-store";
 
 const formSchema = z.object({
   title: z.string().min(1),
@@ -76,6 +80,7 @@ interface Props {
   breadcrumb?: string | null | undefined;
   breadcrumbHref?: string | null | undefined;
   optionsHidden?: boolean;
+  meetingId?: string;
 }
 
 export const MeetingHeading = ({
@@ -83,6 +88,7 @@ export const MeetingHeading = ({
   breadcrumb = null,
   breadcrumbHref = null,
   optionsHidden = false,
+  meetingId,
 }: Props) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -95,6 +101,8 @@ export const MeetingHeading = ({
   const [open, setOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const { onOpen } = useModalStore();
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     startTransition(async () => {
@@ -158,16 +166,30 @@ export const MeetingHeading = ({
               </BreadcrumbList>
             </Breadcrumb>
             {!optionsHidden && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant={"ghost"} size={"icon"}>
-                    <MoreVertical />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="p-0">
-                  <DropdownMenuItem>Hi</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant={"ghost"} size={"icon"}>
+                      <MoreVertical />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="p-0">
+                    <DropdownMenuItem
+                      onClick={() =>
+                        onOpen("editMeeting", { meetingId: meetingId })
+                      }
+                      className="text-muted-foreground"
+                    >
+                      <Pencil />
+                      Edit Meeting
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="rounded-none text-destructive focus:text-destructive focus:bg-destructive/10 transition-all">
+                      <Trash2 />
+                      Delete Meeting
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             )}
           </>
         )}

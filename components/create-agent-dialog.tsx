@@ -2,11 +2,27 @@
 
 import * as z from "zod";
 
-import { Button } from "./ui/button"
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog"
+import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { GeneratedAvatar } from "./generated-avatar";
@@ -37,13 +53,16 @@ export const CreateAgentDialog = () => {
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     startTransition(async () => {
       try {
-        await axios.post("/api/agents/create", data).then(() => {
-          toast.success("Agent created successfully");
-          setOpen(false);
-          form.reset();
-        }).finally(() => {
-          mutate("/api/agents/get");
-        });
+        await axios
+          .post("/api/agents/create", data)
+          .then(() => {
+            toast.success("Agent created successfully");
+            setOpen(false);
+            form.reset();
+          })
+          .finally(() => {
+            mutate("/api/agents/get");
+          });
       } catch (error) {
         toast.error("Something went wrong");
       }
@@ -51,12 +70,18 @@ export const CreateAgentDialog = () => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => {
-      setOpen(open => !open);
-      form.reset();
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={() => {
+        setOpen((open) => !open);
+        form.reset();
+      }}
+    >
       <DialogTrigger asChild>
-        <Button type="button" className="p-0 h-auto bg-transparent text-[#ffd43e]/70 hover:text-[#ffd43e] hover:bg-transparent transition-all">
+        <Button
+          type="button"
+          className="p-0 h-auto bg-transparent text-[#ffd43e]/70 hover:text-[#ffd43e] hover:bg-transparent transition-all"
+        >
           Create a new agent
         </Button>
       </DialogTrigger>
@@ -142,4 +167,4 @@ export const CreateAgentDialog = () => {
       </DialogContent>
     </Dialog>
   );
-}
+};

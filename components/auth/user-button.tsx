@@ -61,7 +61,7 @@ export const UserButton = ({
 
   const router = useRouter();
 
-  console.log(sessions);
+  // console.log(sessions);
 
   useEffect(() => {
     const getSessions = async () => {
