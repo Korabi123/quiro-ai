@@ -7,6 +7,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
 
     const search = searchParams.get("search");
+    const id = searchParams.get("id");
 
     const session = await auth.api.getSession({
       headers: req.headers,
@@ -36,6 +37,17 @@ export async function GET(req: Request) {
       });
 
       return NextResponse.json(agents, { status: 200 });
+    }
+
+    if (id) {
+      const agent = await prismadb.agent.findFirst({
+        where: {
+          userId: session.user.id,
+          id,
+        },
+      });
+
+      return NextResponse.json(agent, { status: 200 });
     }
 
     const agents = await prismadb.agent.findMany({

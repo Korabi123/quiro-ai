@@ -27,3 +27,16 @@ export const useAgents = ({ search }: Props) => {
     isLoading
   }
 }
+
+export const useAgent = (agentId: string) => {
+  const { data, error, isLoading } = useSWR<Agent>(
+    `/api/agents/get?id=${agentId}`,
+    fetcher
+  );
+
+  return {
+    data,
+    error,
+    isLoading,
+  };
+}

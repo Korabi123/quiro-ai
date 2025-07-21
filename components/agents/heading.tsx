@@ -107,14 +107,14 @@ export const AgentHeading = ({
     startTransition(async () => {
       try {
         await axios
-          .post("/api/meetings/create", data)
+          .post("/api/agents/create", data)
           .then(() => {
             toast.success("Meeting created successfully");
             setDialogOpen((dialogOpen) => !dialogOpen);
             form.reset();
           })
           .finally(() => {
-            mutate("/api/meetings/get");
+            mutate("/api/agents/get");
           });
       } catch (error) {
         toast.error("Something went wrong");
@@ -151,7 +151,7 @@ export const AgentHeading = ({
               <BreadcrumbList>
                 <BreadcrumbItem className="font-semibold md:text-3xl text-xl">
                   <BreadcrumbLink asChild>
-                    <Link href="/meetings">My Agents</Link>
+                    <Link href="/agents">My Agents</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator>

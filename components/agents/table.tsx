@@ -29,11 +29,11 @@ export const AgentsTable = () => {
           </p>
         </div>
       )}
-      {agents?.map((agent) => (
+      {agents?.map((agent, index) => (
         <>
           <div
             onClick={() => router.push(`/agents/${agent.id}`)}
-            key={agent.id}
+            key={agent.id + index}
             className="flex cursor-pointer hover:bg-muted-foreground/10 only:rounded-2xl first:rounded-t-2xl last:rounded-b-2xl transition-all items-center justify-between w-full p-5"
           >
             <div className="flex flex-col gap-2">

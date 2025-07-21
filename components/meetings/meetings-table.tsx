@@ -9,20 +9,30 @@ import { cn } from "@/lib/utils";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
+import { useAgent } from "@/lib/agents";
 
-export const MeetingsTable = () => {
+interface Props {
+  className?: string;
+  agentId?: string;
+  variant?: "default" | "outline";
+}
+
+export const MeetingsTable = ({ className, agentId, variant = "default" }: Props) => {
   const router = useRouter();
 
   const [search, setSearch] = useQueryState("search");
   const [status, setStatus] = useQueryState("status");
   const [agent, setAgent] = useQueryState("agent");
-  const { data: meetings, isLoading } = useMeetings({  search, status, agent });
+  const { data: meetings, isLoading } = useMeetings(!agentId ? { search, status, agent } : { search, status, agent: agentId });
   const [animate] = useAutoAnimate();
 
   return (
     <div
       ref={animate}
-      className="mt-14 rounded-2xl border border-border/50 bg-muted-foreground/5"
+      className={cn(
+        variant === "default" ? "mt-14 rounded-2xl border border-border/50 bg-muted-foreground/5" : "border border-border/80 bg-white rounded-2xl",
+        className
+      )}
     >
       {isLoading && (
         <div className="flex items-center justify-center w-full p-5">
@@ -77,8 +87,7 @@ export const MeetingsTable = () => {
                     "bg-blue-400/20 border-blue-400/50 text-blue-400",
                   meeting.status === "CANCELED" &&
                     "bg-red-400/20 border-red-400/50 text-red-400",
-                  meeting.status === "PROCESSING" &&
-                    "text-muted-foreground/70",
+                  meeting.status === "PROCESSING" && "text-muted-foreground/70",
                   "p-2 min-w-[120px] flex justify-center"
                 )}
               >

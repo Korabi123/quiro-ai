@@ -11,15 +11,15 @@ export default function NotFound() {
       <div className="flex items-center justify-center gap-4">
         <h1 className="font-medium">404</h1>
         <p className="text-2xl font-medium tracking-tighter">
-          Meeting not found
+          Agent not found
         </p>
       </div>
       <Button
-        onClick={() => router.push("/meetings")}
+        onClick={() => router.push("/agents")}
         size={"sm"}
         className="text-sm"
       >
-        Back to Meetings
+        Back to Agents
       </Button>
     </div>
   );
