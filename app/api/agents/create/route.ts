@@ -65,6 +65,7 @@ export async function POST(req: Request) {
         provider: "11labs",
         voiceId: voice,
       },
+      maxDurationSeconds: 7200,
     });
 
     const agent = await prismadb.agent.create({
