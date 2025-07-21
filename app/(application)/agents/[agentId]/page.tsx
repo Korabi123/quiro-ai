@@ -23,7 +23,7 @@ const AgentByIdPage = async ({
   return (
     <div className="flex flex-col gap-4 md:px-10 px-4 py-4">
       <AgentHeading
-        meetingId={agentDB.id}
+        agentId={agentDB.id}
         secondary
         breadcrumb={agentDB.name}
         breadcrumbHref={agentDB.id}
