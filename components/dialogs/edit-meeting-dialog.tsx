@@ -57,7 +57,7 @@ export const EditMeetingDialog = () => {
 
   const [isFetching, setIsFetching] = useState(false);
 
-  const { data: agents } = useAgents();
+  const { data: agents } = useAgents({ search: "" });
   const meetingById = useMeeting(meetingData.meetingId!);
 
   const existingAgent = agents?.find(

@@ -4,12 +4,38 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+
+    const search = searchParams.get("search");
+
     const session = await auth.api.getSession({
       headers: req.headers,
     });
 
     if (!session) {
       return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    if (search) {
+      const agents = await prismadb.agent.findMany({
+        where: {
+          userId: session.user.id,
+          OR: [
+            {
+              name: {
+                contains: search,
+                mode: "insensitive"
+              },
+            },
+          ],
+        },
+        take: 10,
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      return NextResponse.json(agents, { status: 200 });
     }
 
     const agents = await prismadb.agent.findMany({

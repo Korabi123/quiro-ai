@@ -67,7 +67,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { EditMeetingDialog } from "../dialogs/edit-meeting-dialog";
 import { useModalStore } from "@/hooks/use-modal-store";
 
 const formSchema = z.object({
@@ -83,7 +82,7 @@ interface Props {
   meetingId?: string;
 }
 
-export const MeetingHeading = ({
+export const AgentHeading = ({
   secondary = false,
   breadcrumb = null,
   breadcrumbHref = null,
@@ -137,11 +136,11 @@ export const MeetingHeading = ({
       <div className="flex items-center justify-between w-full">
         {!secondary && (
           <>
-            <h1 className="font-semibold md:text-3xl text-xl">My Meetings</h1>
+            <h1 className="font-semibold md:text-3xl text-xl">My Agents</h1>
             <DialogTrigger asChild>
               <Button className="bg-[#ea721b] hover:bg-opacity-80 transition-all">
                 <Plus className="size-5" />
-                New Meeting
+                New Agent
               </Button>
             </DialogTrigger>
           </>
@@ -152,7 +151,7 @@ export const MeetingHeading = ({
               <BreadcrumbList>
                 <BreadcrumbItem className="font-semibold md:text-3xl text-xl">
                   <BreadcrumbLink asChild>
-                    <Link href="/meetings">My Meetings</Link>
+                    <Link href="/meetings">My Agents</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator>
@@ -181,7 +180,7 @@ export const MeetingHeading = ({
                       className="text-muted-foreground"
                     >
                       <Pencil />
-                      Edit Meeting
+                      Edit Agent
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() =>
@@ -190,7 +189,7 @@ export const MeetingHeading = ({
                       className="rounded-none text-destructive focus:text-destructive focus:bg-destructive/10 transition-all"
                     >
                       <Trash2 />
-                      Delete Meeting
+                      Delete Agent
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -200,8 +199,8 @@ export const MeetingHeading = ({
         )}
         <DialogContent className="md:w-[550px] w-full">
           <DialogHeader>
-            <DialogTitle>New Meeting</DialogTitle>
-            <DialogDescription>Create a new meeting</DialogDescription>
+            <DialogTitle>New Agent</DialogTitle>
+            <DialogDescription>Create a new agent</DialogDescription>
           </DialogHeader>
           <div className="mt-2">
             <Form {...form}>

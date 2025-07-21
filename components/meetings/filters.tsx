@@ -104,7 +104,7 @@ const StatusFilter = () => {
 const AgentFilter = () => {
   const [open, setOpen] = useState(false);
   const [agent, setAgent] = useQueryState("agent");
-  const agents = useAgents();
+  const agents = useAgents({ search: "" });
 
   return (
     <>
