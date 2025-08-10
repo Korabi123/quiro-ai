@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
-import { useAgent } from "@/lib/agents";
 
 interface Props {
   className?: string;

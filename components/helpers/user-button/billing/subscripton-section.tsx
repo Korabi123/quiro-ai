@@ -157,8 +157,7 @@ export const SubscriptionSection = ({ user }: Props) => {
                         )}
                       >
                         {/* @ts-expect-error Just a simple type error */}
-                        {subscription?.plan.charAt(0).toUpperCase() +
-                          subscription?.plan?.slice(1)}
+                        {subscription?.plan.charAt(0).toUpperCase() + subscription?.plan?.slice(1)}
                       </span>
                     </CardTitle>
                     <CardDescription className="pb-1">

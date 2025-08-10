@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 
-export type ModalStoreType = "editMeeting" | "deleteMeeting" | "createAgent" | "editAgent" | "deleteAgent";
+export type ModalStoreType = "editMeeting" | "deleteMeeting" | "createAgent" | "editAgent" | "deleteAgent" | "createReport" | "editReport" | "deleteReport";
 
 interface ModalStoreData {
   meetingId?: string;
   agentId?: string;
+  reportId?: string;
 }
 
 interface ModalStoreInterface {

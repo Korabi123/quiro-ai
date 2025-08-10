@@ -1,4 +1,5 @@
 import { CreateAgentDialog } from "../dialogs/create-agent"
+import { CreateReportDialog } from "../dialogs/create-report"
 import { DeleteAgentDialog } from "../dialogs/delete-agent"
 import { DeleteMeetingDialog } from "../dialogs/delete-meeting-dialog"
 import { EditAgentDialog } from "../dialogs/edit-agent"
@@ -12,6 +13,7 @@ export const DialogProvider = () => {
       <CreateAgentDialog />
       <EditAgentDialog />
       <DeleteAgentDialog />
+      <CreateReportDialog />
     </>
   )
 }

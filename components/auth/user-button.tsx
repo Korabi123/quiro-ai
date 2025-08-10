@@ -109,7 +109,7 @@ export const UserButton = ({
               )}
             >
               {user?.name}{" "}
-              {subscription !== null && (
+              {subscription?.status === "active" && (
                 <Badge
                   className="ml-1 py-1 px-3 text-xs font-medium rounded-full bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white border border-white/20 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700"
                   variant="outline"
