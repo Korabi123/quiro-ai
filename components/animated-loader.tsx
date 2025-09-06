@@ -9,7 +9,7 @@ export const AnimatedLoader = ({ className }: { className?: string }) => {
       src="/loader.lottie"
       loop
       autoplay
-      className={cn("aspect-auto w-[400px] h-auto", className)}
+      className={cn("aspect-auto w-[500px] h-auto", className)}
     />
   )
 };

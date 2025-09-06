@@ -84,6 +84,25 @@ export const ReportsTable = ({ className, variant = "default" }: Props) => {
               </span>
             </div>
             <div className="flex items-center space-x-2">
+              {report.summary && (() => {
+                // @ts-ignore
+                const scorePercentage = (report.score / report.maxPossibleScore) * 100;
+                let badgeColor = "";
+
+                if (scorePercentage < 50) {
+                  badgeColor = "bg-red-400/20 border-red-400/50 text-red-500";
+                } else if (scorePercentage < 75) {
+                  badgeColor = "bg-yellow-400/20 border-yellow-400/50 text-yellow-500";
+                } else {
+                  badgeColor = "bg-green-400/20 border-green-400/50 text-green-500";
+                }
+
+                return (
+                  <Badge variant={"outline"} className={cn("p-2", badgeColor)}>
+                    {report.score} / {report.maxPossibleScore} points
+                  </Badge>
+                );
+              })()}
               <Badge
                 variant={"outline"}
                 className={cn("p-2 min-w-[120px] flex justify-center", !report.score ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "bg-green-400/20 border-green-400/50 text-green-400")}
@@ -100,11 +119,6 @@ export const ReportsTable = ({ className, variant = "default" }: Props) => {
                   </>
                 )}
               </Badge>
-              {report.summary && (
-                <Badge variant={"outline"} className={cn("p-2")}>
-                  {report.score}
-                </Badge>
-              )}
             </div>
           </div>
           {report.id !== reports?.at(-1)?.id && (

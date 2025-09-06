@@ -1,16 +1,23 @@
-import { ReportContent } from "@/components/reports/content";
 import { ReportsHeading } from "@/components/reports/heading";
+import { authClient } from "@/lib/auth-client";
 import prismadb from "@/lib/prismadb";
 import { notFound } from "next/navigation";
+import { Wrapper } from "./wrapper";
 
-const ReportPage = async ({ params }: { params: Promise<{ reportId: string }> }) => {
+const StartReportPage = async ({ params }: { params: Promise<{ reportId: string }> }) => {
   const { reportId } = await params;
+  const session = await authClient.getSession();
 
   const reportDB = await prismadb.report.findUnique({
     where: {
       id: reportId,
+      userId: session?.data?.user.id,
     },
   });
+
+  // if (reportDB?.userId !== session?.data?.user.id) {
+  //   notFound();
+  // }
 
   if (!reportDB) {
     notFound();
@@ -19,14 +26,14 @@ const ReportPage = async ({ params }: { params: Promise<{ reportId: string }> })
   return (
     <div className="flex flex-col gap-4 md:px-10 px-4 py-4">
       <ReportsHeading
-        reportId={reportDB.id}
+        optionsHidden
         secondary
         breadcrumb={reportDB.name}
         breadcrumbHref={reportDB.id}
       />
-      <ReportContent reportId={reportDB.id} />
+      <Wrapper reportId={reportId} />
     </div>
   );
 }
 
-export default ReportPage;
+export default StartReportPage;

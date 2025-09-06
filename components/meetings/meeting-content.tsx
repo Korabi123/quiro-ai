@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { AudioPlayer } from "../ui/audio-player";
 import { Input } from "@/components/ui/input";
 import { useChats } from "@/lib/chats";
+import { Response } from '@/components/ai-elements/response';
 
 interface Props {
   meetingId: string;
@@ -359,9 +360,9 @@ export const MeetingContent = ({ meetingId }: Props) => {
                                     {meeting?.agent?.name}
                                   </p>
                                 </div>
-                                <p className="text-sm text-muted-foreground/70">
+                                <Response className="text-sm text-muted-foreground/70">
                                   {chat.content}
-                                </p>
+                                </Response>
                               </div>
                             )}
                             {chat.type === "USER" && (
@@ -382,9 +383,9 @@ export const MeetingContent = ({ meetingId }: Props) => {
                                     {session.data?.user.name || "User"}
                                   </p>
                                 </div>
-                                <p className="text-sm text-muted-foreground/70">
+                                <Response className="text-sm text-muted-foreground/70">
                                   {chat.content}
-                                </p>
+                                </Response>
                               </div>
                             )}
                             <div ref={endOfChatsRef} />

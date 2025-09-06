@@ -6,6 +6,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search");
+    const idParam = searchParams.get("id");
     const session = await auth.api.getSession(req);
 
     if (!session) {
@@ -23,13 +24,44 @@ export async function GET(req: Request) {
               },
             },
           ],
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          questions: true
         }
       });
 
       return NextResponse.json(reports);
     }
 
-    const reports = await prismadb.report.findMany();
+    if (idParam) {
+      const report = await prismadb.report.findUnique({
+        where: {
+          id: idParam,
+          userId: session.user.id,
+        },
+        include: {
+          questions: true,
+        },
+      });
+
+      if (!report) {
+        return new NextResponse("Report not found", { status: 404 });
+      }
+
+      return NextResponse.json(report);
+    }
+
+    const reports = await prismadb.report.findMany({
+      where: {
+        userId: session.user.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
     return NextResponse.json(reports);
   } catch (error) {

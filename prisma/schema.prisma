@@ -102,6 +102,7 @@ model Question {
   answer      String?
   type        QuestionType
   score       Int?
+  feedback    String?
 
   rubricId    String    @unique
   reportId    String
@@ -110,20 +111,23 @@ model Question {
 }
 
 model Report {
-  id          String    @id @default(cuid())
-  name        String
-  createdAt   DateTime  @default(now())
-  score       Int?      @default(0)
-  breakdown   String?
-  summary     String?
-  updatedAt   DateTime  @updatedAt
-  userId      String?
-  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  questions   Question[]
+  id               String   @id @default(cuid())
+  name             String
+  createdAt        DateTime @default(now())
+  score            Int?     @default(0)
+  maxPossibleScore Int?     @default(0)
 
-  type        ReportType
-  field       String
-  customType  String?
+  breakdown        String?
+  summary          String?
+
+  updatedAt        DateTime @updatedAt
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions        Question[]
+
+  type             ReportType
+  field            String?
+  customType       String?
 }
 
 model User {
