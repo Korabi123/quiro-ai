@@ -43,7 +43,11 @@ export async function GET(req: Request) {
           userId: session.user.id,
         },
         include: {
-          questions: true,
+          questions: {
+            include: {
+              rubric: true,
+            },
+          },
         },
       });
 

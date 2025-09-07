@@ -2,13 +2,21 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useReport } from "@/lib/reports";
-import { ClipboardPen, Loader } from "lucide-react";
+import { ArrowRightIcon, BookOpenTextIcon, Captions, ClipboardPen, Loader, MessageCircleIcon, Sparkles, UserIcon } from "lucide-react";
 import { ReportEmptySvg } from "../svg/report-empty";
 import { Button } from "../ui/button";
-import { useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Response } from "../ai-elements/response";
 import { Question } from "@prisma/client";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { GeneratedAvatar } from "../generated-avatar";
+import { Badge } from "../ui/badge";
+import { useChats } from "@/lib/chats";
+import { Input } from "../ui/input";
+import { toast } from "sonner";
+import axios from "axios";
 
 interface Props {
   reportId: string;
@@ -18,8 +26,63 @@ export const ReportContent = ({ reportId }: Props) => {
   const { data: report, isLoading } = useReport(reportId);
   const session = authClient.useSession();
   const [isPending, startTransition] = useTransition();
+  const [tab, setTab] = useState<
+    "summary" | "questionBreakdown" | "askAI"
+  >("summary");
+  const [content, setContent] = useState("");
+  const endOfChatsRef = useRef<HTMLDivElement>(null);
+
+  const { data: chats } = useChats(undefined, report?.id);
 
   const router = useRouter();
+  let badgeColor = "";
+
+  if (report !== undefined) {
+    // @ts-ignore
+    const scorePercentage = (report.score / report.maxPossibleScore) * 100;
+
+    if (scorePercentage < 50) {
+      badgeColor = "bg-red-400/20 border-red-400/50 text-red-500";
+    } else if (scorePercentage < 75) {
+      badgeColor = "bg-yellow-400/20 border-yellow-400/50 text-yellow-500";
+    } else {
+      badgeColor = "bg-green-400/20 border-green-400/50 text-green-500";
+    }
+  }
+
+  const onSubmit = () => {
+    setContent("");
+
+    startTransition(async () => {
+      try {
+        await axios.post(`/api/chats/create?reportId=${reportId}`, {
+          reportId: report?.id,
+          content,
+          type: "USER",
+          // @ts-ignore
+          transcript: `SUMMARY: ${report?.summary}\nBREAKDOWN: ${report?.breakdown}\nQUESTIONS AND FEEDBACK:\n${report?.questions.map((question: Question) => `${question.content}: ${question.answer}\n${question.feedback}\n`).join("\n")}`,
+        });
+      } catch (error) {
+        toast.error("Something went wrong");
+      }
+    });
+  };
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "l" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        onSubmit();
+      }
+    }
+
+    document.addEventListener("keydown", down)
+    return () => document.removeEventListener("keydown", down)
+  }, [onSubmit]);
+
+  useEffect(() => {
+    endOfChatsRef.current?.scrollIntoView({ behavior: "smooth" });
+  });
 
   return (
     <>
@@ -58,31 +121,232 @@ export const ReportContent = ({ reportId }: Props) => {
             </div>
           ) : (
             <div className="flex flex-col gap-10 mt-14">
-              <Response>
-                {report?.summary}
-              </Response>
-              <Response>
-                {report?.breakdown}
-              </Response>
-              {/* @ts-ignore */}
-              {report.questions.map((question: Question) => (
-                <div className="flex flex-col gap-3 p-4 border border-border/50 rounded-2xl">
-                  <p className="text-sm text-muted-foreground/70">
-                    {question.content}
-                  </p>
-                  <p className="text-sm text-muted-foreground/70">
-                    {question.answer}
-                  </p>
-                  <Response className="text-sm text-muted-foreground/70">
-                    {question.feedback}
-                  </Response>
-                  <p className="i">
-                    {/* @ts-ignore */}
-                    {question.score} out of {/* question.rubric.maxScore */}
-                  </p>
-                </div>
-              ))}
+              <div className="py-2 px-6 flex items-center rounded-2xl border border-border/50 bg-muted-foreground/5 gap-4">
+                <Button
+                  onClick={() => setTab("summary")}
+                  variant={"ghost"}
+                  className={cn(
+                    "hover:bg-transparent rounded-none p-1 text-muted-foreground/70",
+                    tab === "summary" &&
+                      "border-b-2 border-b-[#ea721b]/80 text-black"
+                  )}
+                >
+                  <BookOpenTextIcon />
+                  Summary
+                </Button>
+                <Button
+                  onClick={() => setTab("questionBreakdown")}
+                  variant={"ghost"}
+                  className={cn(
+                    "hover:bg-transparent rounded-none p-1 text-muted-foreground/70",
+                    tab === "questionBreakdown" &&
+                      "border-b-2 border-b-[#ea721b]/80 text-black"
+                  )}
+                >
+                  <Captions />
+                  Individual Question Breakdown
+                </Button>
+                <Button
+                  onClick={() => setTab("askAI")}
+                  variant={"ghost"}
+                  className={cn(
+                    "hover:bg-transparent rounded-none p-1 text-muted-foreground/70",
+                    tab === "askAI" &&
+                      "border-b-2 border-b-[#ea721b]/80 text-black"
+                  )}
+                >
+                  <Sparkles />
+                  Ask AI
+                </Button>
+              </div>
 
+              <div className="py-2 px-6 flex flex-col rounded-2xl border border-border/50 bg-muted-foreground/5 gap-4">
+                {tab === "summary" && (
+                  <>
+                    <h1 className="inline-flex items-center gap-2 text-2xl mt-2 mb-2">
+                      {report?.name}
+
+                      {report !== undefined && (
+                        <Badge
+                          variant={"outline"}
+                          className={cn("p-2 ml-2", badgeColor)}
+                        >
+                          {report.score} / {report.maxPossibleScore} points
+                        </Badge>
+                      )}
+                    </h1>
+                    <div className="flex mb-3 items-center gap-2">
+                      <p className="font-medium text-sm">
+                        {report.field}{" "}
+                        <span className="ml-2 border bg-slate-100 text-slate-800 border-slate-300/50 rounded-xl py-1 px-3 text-xs">
+                          {report.type === "ALL"
+                            ? "All skillsets"
+                            : report.type.slice(0, 1).toUpperCase() +
+                              report.type.slice(1).toLocaleLowerCase()}
+                        </span>
+                        {report.type === "CUSTOM" && (
+                          <span className="ml-2 border bg-slate-100 text-slate-800 border-slate-300/50 rounded-xl py-1 px-3 text-xs">
+                            {report?.customType!.slice(0, 1).toUpperCase() +
+                              report?.customType!.slice(1).toLocaleLowerCase()}
+                          </span>
+                        )}
+                      </p>
+                      <p className="ml-2 text-muted-foreground underline text-sm">
+                        {report?.createdAt
+                          ? new Date(report.createdAt).toLocaleDateString(
+                              "en-US",
+                              { year: "numeric", month: "long", day: "numeric" }
+                            )
+                          : "N/A"}
+                      </p>
+                    </div>
+                    <div className="space-y-5">
+                      <div>
+                        <h3 className="text-lg">Overview</h3>
+                        <Response className="mt-2 text-sm text-muted-foreground/70">
+                          {report?.summary}
+                        </Response>
+                      </div>
+                      <div>
+                        <h3 className="text-lg">Breakdown</h3>
+                        <Response className="mt-2 text-sm text-muted-foreground/70">
+                          {report?.breakdown}
+                        </Response>
+                      </div>
+                    </div>
+                  </>
+                )}
+                {tab === "questionBreakdown" && (
+                  <>
+                    <h1 className="text-2xl mt-2">
+                      Individual Question Breakdown
+                    </h1>
+                    <div className="mt-2 flex flex-col gap-2">
+                      {/* @ts-ignore */}
+                      {report?.questions.map((question: Question) => (
+                        <>
+                          <div
+                            key={question.id}
+                            className="border rounded-2xl p-3 bg-card"
+                          >
+                            <div className="flex items-center justify-between gap-2 mb-4">
+                              <p className="text-md">{question.content}</p>
+                              <p className="text-xs">
+                                {/* @ts-ignore */}
+                                {question.score} / {question.rubric?.maxScore}{" "}
+                                points
+                              </p>
+                            </div>
+                            <div className="mt-2 ml-2 flex items-start gap-2 mb-2">
+                              <Avatar className="size-6">
+                                <AvatarImage src={session.data?.user.image!} />
+                                <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
+                                  <UserIcon className="size-4" />
+                                </AvatarFallback>
+                              </Avatar>
+                              <p className="text-sm text-muted-foreground/70">
+                                {question.answer}
+                              </p>
+                            </div>
+                            <div className="flex ml-2 items-center gap-2 mb-2">
+                              <GeneratedAvatar
+                                // @ts-ignore
+                                seed="AnswerAI"
+                                className="size-6"
+                              />
+                              <p className="text-sm text-muted-foreground/70">
+                                {question.feedback}
+                              </p>
+                            </div>
+                          </div>
+                        </>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {tab === "askAI" && (
+                  <div className="flex flex-col gap-2 max-h-[400px] h-[400px]">
+                    {chats?.length === 0 ? (
+                      <div className="w-full h-full flex flex-col gap-3 items-center justify-center p-4">
+                        <MessageCircleIcon className="size-16 text-muted-foreground/40" />
+                        <p className="text-muted-foreground/40">
+                          No chats yet. Ask AI to start a chat.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col p-2 gap-6 w-full h-full overflow-y-scroll">
+                        {chats?.map((chat) => (
+                          <>
+                            {chat.type === "AI" && (
+                              <div
+                                key={chat.id}
+                                className="self-start flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <GeneratedAvatar
+                                    // @ts-ignore
+                                    seed={report?.name}
+                                    className="size-6"
+                                  />
+                                  <p className="text-md">
+                                    {/* @ts-ignore */}
+                                    {`${report?.name} AI`}
+                                  </p>
+                                </div>
+                                <Response className="text-sm text-muted-foreground/70">
+                                  {chat.content}
+                                </Response>
+                              </div>
+                            )}
+                            {chat.type === "USER" && (
+                              <div
+                                key={chat.id}
+                                className="self-end flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="size-6">
+                                    <AvatarImage
+                                      src={session.data?.user.image!}
+                                    />
+                                    <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
+                                      <UserIcon className="size-4" />
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <p className="text-md">
+                                    {session.data?.user.name || "User"}
+                                  </p>
+                                </div>
+                                <Response className="text-sm text-muted-foreground/70">
+                                  {chat.content}
+                                </Response>
+                              </div>
+                            )}
+                            <div ref={endOfChatsRef} />
+                          </>
+                        ))}
+                      </div>
+                    )}
+                    <div className="p-2">
+                      <div className="relative">
+                        <Input
+                          onChange={(e) => setContent(e.target.value)}
+                          value={content}
+                          className="peer pe-9"
+                          placeholder="Ask AI..."
+                        />
+                        <button
+                          className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="Submit search"
+                          type="submit"
+                          onClick={onSubmit}
+                        >
+                          <ArrowRightIcon size={16} aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </>

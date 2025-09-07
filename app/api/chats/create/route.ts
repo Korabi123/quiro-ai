@@ -5,14 +5,14 @@ import OpenAI from "openai";
 
 export async function POST(req: Request) {
   try {
-    const { meetingId, content, type, transcript } = await req.json();
+    const { meetingId, reportId, content, type, transcript } = await req.json();
     const session = await auth.api.getSession(req);
 
     if (!session) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    if (!meetingId || !content || !type || !transcript) {
+    if (!content || !type || !transcript) {
       return new NextResponse("Missing required fields", { status: 400 });
     };
 
@@ -21,6 +21,7 @@ export async function POST(req: Request) {
         type: "USER",
         userId: session.user.id,
         meetingId,
+        reportId,
         content,
       }
     })
@@ -36,10 +37,33 @@ export async function POST(req: Request) {
         {
           role: "system",
           content: `
-          You are an AI assistant that answers questions based solely on the following call transcript. Do not use outside knowledge or make assumptions. If the information is not mentioned or clearly implied in the transcript, respond with:
-          "That information was not mentioned in the call."
-          Be concise, accurate, and neutral. If helpful, refer to who said what or summarize relevant portions.
-          Transcript:
+          You are an AI assistant that helps answer questions based on the provided call transcript OR a report summary with its breakdowns.
+          Rules for Responses:
+
+          Grounded Answers Only
+
+          Use only the transcript or report summary/breakdowns to answer.
+
+          Do not use outside knowledge or assumptions.
+
+          If the information is not mentioned or clearly implied, say:
+          "That information was not mentioned in the call or the report."
+
+          Conversational Behavior
+
+          If the user greets you (e.g., "hello", "hi") or engages in small talk, respond warmly and naturally.
+
+          Always gently guide the conversation back to the call or report (e.g., “Hi there! I can help you with details from the call or the report. What would you like to know?”).
+
+          Style
+
+          Be concise, clear, and neutral.
+
+          When relevant, summarize or reference who said what in the transcript or specific parts of the report.
+
+          Avoid vague phrases like “good question” or “interesting” unless paired with useful guidance.
+
+          Transcript/Report Summary:
           ${transcript}`,
         },
         {
@@ -57,6 +81,7 @@ export async function POST(req: Request) {
           type: "AI",
           userId: session.user.id,
           meetingId,
+          reportId,
           content: finalResponse!,
         }
       });

@@ -10,18 +10,22 @@ export async function GET(req: Request) {
     });
 
     const meetingId = searchParams.get("meetingId");
+    const reportId = searchParams.get("reportId");
 
     if (!session) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    if (!meetingId) {
-      return new NextResponse("Missing meetingId", { status: 400 });
+    if (!meetingId && !reportId) {
+      return new NextResponse("Bad request - either meetingId or reportId is required", { status: 400 });
     }
 
     const chats = await prismadb.chat.findMany({
       where: {
-        meetingId,
+        OR: [
+          { meetingId: meetingId || undefined },
+          { reportId: reportId || undefined }
+        ]
       },
       orderBy: {
         createdAt: "asc",

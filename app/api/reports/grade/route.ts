@@ -107,7 +107,7 @@ export async function POST(req: Request) {
     //* Now parse
     const responseJ = JSON.parse(cleanResponse!);
 
-    // Persist results to DB
+    //* Persist results to DB
     if (responseJ?.results && Array.isArray(responseJ.results)) {
       for (const result of responseJ.results) {
         await prismadb.question.update({
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Persist overall grading summary at report level
+    //* Persist overall grading summary at report level
     await prismadb.report.update({
       where: { id: reportId },
       data: {
