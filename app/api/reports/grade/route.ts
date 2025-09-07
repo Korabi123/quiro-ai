@@ -64,6 +64,10 @@ export async function POST(req: Request) {
           - Be concise in feedback (1–2 sentences).
           - Be objective and avoid vague language like "good job" — explain why.
           - For the summary and breakdown, feel free to use markdown formatting and also go more in-depth, on the breakdown you can also include a list of strengths and weaknesses and how to improve.
+          - For the summary and breakdown:
+            - The summary should be a clear, high-level narrative.
+            - The breakdown must be returned as a **single string** (you may use bullet points or markdown lists inside the string).
+            - Do NOT output JSON objects for strengths/weaknesses; instead, embed them in markdown inside the string.
 
           ---
 
@@ -89,7 +93,6 @@ export async function POST(req: Request) {
             "summary": "High-level summary of performance",
             "breakdown": "Detailed breakdown of strengths and weaknesses"
           }
-
           `,
         },
       ],

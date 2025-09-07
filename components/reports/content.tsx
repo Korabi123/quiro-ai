@@ -2,7 +2,16 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useReport } from "@/lib/reports";
-import { ArrowRightIcon, BookOpenTextIcon, Captions, ClipboardPen, Loader, MessageCircleIcon, Sparkles, UserIcon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  BookOpenTextIcon,
+  Captions,
+  ClipboardPen,
+  Loader,
+  MessageCircleIcon,
+  Sparkles,
+  UserIcon,
+} from "lucide-react";
 import { ReportEmptySvg } from "../svg/report-empty";
 import { Button } from "../ui/button";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -26,9 +35,9 @@ export const ReportContent = ({ reportId }: Props) => {
   const { data: report, isLoading } = useReport(reportId);
   const session = authClient.useSession();
   const [isPending, startTransition] = useTransition();
-  const [tab, setTab] = useState<
-    "summary" | "questionBreakdown" | "askAI"
-  >("summary");
+  const [tab, setTab] = useState<"summary" | "questionBreakdown" | "askAI">(
+    "summary"
+  );
   const [content, setContent] = useState("");
   const endOfChatsRef = useRef<HTMLDivElement>(null);
 
@@ -69,15 +78,15 @@ export const ReportContent = ({ reportId }: Props) => {
   };
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "l" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
+    const down = (pressedKey: KeyboardEvent) => {
+      if (pressedKey.key === "l" && (pressedKey.metaKey || pressedKey.ctrlKey)) {
+        pressedKey.preventDefault();
         onSubmit();
       }
-    }
+    };
 
-    document.addEventListener("keydown", down)
-    return () => document.removeEventListener("keydown", down)
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
   }, [onSubmit]);
 
   useEffect(() => {
@@ -353,4 +362,4 @@ export const ReportContent = ({ reportId }: Props) => {
       )}
     </>
   );
-}
+};
