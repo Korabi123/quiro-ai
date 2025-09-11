@@ -5,6 +5,7 @@ import { DeleteMeetingDialog } from "../dialogs/delete-meeting-dialog"
 import { DeleteReportDialog } from "../dialogs/delete-report"
 import { EditAgentDialog } from "../dialogs/edit-agent"
 import { EditMeetingDialog } from "../dialogs/edit-meeting-dialog"
+import { EditReportDialog } from "../dialogs/edit-report"
 
 export const DialogProvider = () => {
   return (
@@ -15,6 +16,7 @@ export const DialogProvider = () => {
       <EditAgentDialog />
       <DeleteAgentDialog />
       <CreateReportDialog />
+      <EditReportDialog />
       <DeleteReportDialog />
     </>
   )
