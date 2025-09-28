@@ -48,6 +48,100 @@ const formSchema = z.object({
   customType: z.string().optional(),
 });
 
+let isSecondModalOpen = false;
+
+const SecondaryModal = ({
+  reportId,
+  type,
+  field,
+  customType
+}: {
+  reportId: string;
+  type: string;
+  field: string;
+  customType?: string;
+}) => {
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  const { isOpen, type: modalType, onClose } = useModalStore();
+
+  const isModalOpen = isOpen && modalType === "secondReportModal";
+
+  const onSubmit = () => {
+    startTransition(async () => {
+      try {
+        await axios
+          .patch("/api/reports/patch", {
+            name: field,
+            field: field,
+            type: type,
+            customType: customType,
+            reportId: reportId,
+          })
+          .then(() => {
+            toast.success("Report updated successfully");
+          })
+          .finally(() => {
+            onClose();
+            mutate(`/api/reports/get?id=${reportId}`);
+            router.push(`/reports/${reportId}/start`);
+            router.refresh();
+          });
+      } catch (error) {
+        toast.error("Something went wrong");
+      }
+    });
+  };
+
+  return (
+    <Dialog
+      open={isModalOpen}
+      onOpenChange={() => {
+        onClose();
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Are you sure you want to do this?</DialogTitle>
+          <DialogDescription>
+            By changing the type or field, you will have to take the report
+            again meaning, you lose all the data associated with the report.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button
+              onClick={() => {
+                isSecondModalOpen = false;
+              }}
+              variant={"outline"}
+              type="button"
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button
+            type="submit"
+            className="bg-[#ea721b] hover:bg-opacity-80 transition-all"
+            disabled={isPending}
+            onClick={onSubmit}
+          >
+            <Loader2
+              className={cn(
+                "text-transparent -mr-6 size-5 transition-all",
+                isPending && "mr-0 animate-spin text-white transition-all"
+              )}
+            />
+            Reset
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export const EditReportDialog = () => {
   const [isPending, startTransition] = useTransition();
   const [isFetching, setIsFetching] = useState(false);
@@ -58,23 +152,25 @@ export const EditReportDialog = () => {
   const router = useRouter();
   const [animate] = useAutoAnimate();
 
-  const { data: reportById, isLoading } = useReport(data.reportId!);
+  const { data: existingReport, isLoading } = useReport(data.reportId!);
+
+  const { onOpen } = useModalStore();
 
   useEffect(() => {
     if (isModalOpen) {
-      if (!reportById || isLoading) {
+      if (!existingReport || isLoading) {
         setIsFetching(true);
       } else {
         setIsFetching(false);
-        form.setValue("name", reportById.name);
-        form.setValue("field", reportById.field!);
-        form.setValue("type", reportById.type);
-        if (reportById.type === "CUSTOM" && reportById.customType) {
-          form.setValue("customType", reportById.customType);
+        form.setValue("name", existingReport.name);
+        form.setValue("field", existingReport.field!);
+        form.setValue("type", existingReport.type);
+        if (existingReport.type === "CUSTOM" && existingReport.customType) {
+          form.setValue("customType", existingReport.customType);
         }
       }
     }
-  }, [reportById, isLoading, isModalOpen]);
+  }, [existingReport, isLoading, isModalOpen]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -90,6 +186,19 @@ export const EditReportDialog = () => {
       if (formData.type === "CUSTOM" && !formData.customType) {
         form.setError("customType", { message: "Custom type is required" });
         return;
+      } else if (
+        formData.type !== existingReport?.type ||
+        formData.field !== existingReport.field
+      ) {
+        onOpen("secondReportModal", {
+          reportId: data.reportId,
+          report: {
+            name: existingReport?.name,
+            type: existingReport?.type,
+            field: existingReport?.field!,
+            customType: existingReport?.customType!,
+          }
+        });
       } else {
         try {
           await axios
@@ -258,6 +367,11 @@ export const EditReportDialog = () => {
           </Form>
         </div>
       </DialogContent>
+      <SecondaryModal
+        reportId={data.reportId!}
+        type={form.watch("type")}
+        field={form.watch("field")}
+      />
     </Dialog>
   );
 };

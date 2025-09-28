@@ -1,11 +1,26 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-export type ModalStoreType = "editMeeting" | "deleteMeeting" | "createAgent" | "editAgent" | "deleteAgent" | "createReport" | "editReport" | "deleteReport";
+export type ModalStoreType =
+  | "editMeeting"
+  | "deleteMeeting"
+  | "createAgent"
+  | "editAgent"
+  | "deleteAgent"
+  | "createReport"
+  | "editReport"
+  | "deleteReport"
+  | "secondReportModal";
 
 interface ModalStoreData {
   meetingId?: string;
   agentId?: string;
   reportId?: string;
+  report?: {
+    name?: string;
+    type?: "COMMUNICATION" | "TECHNICAL" | "LEADERSHIP" | "ALL" | "CUSTOM";
+    field?: string;
+    customType?: string;
+  };
 }
 
 interface ModalStoreInterface {
@@ -25,7 +40,7 @@ export const useModalStore = create<ModalStoreInterface>((set) => ({
       isOpen: true,
       type,
       data,
-    })
+    });
   },
   onClose: () => {
     set({
