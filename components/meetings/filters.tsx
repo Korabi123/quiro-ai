@@ -36,22 +36,27 @@ const StatusFilter = () => {
   const statuses = [
     {
       label: "Upcoming",
+      value: "UPCOMING",
       icon: ClockArrowUpIcon,
     },
     {
       label: "Completed",
+      value: "COMPLETED",
       icon: CircleCheck,
     },
     {
       label: "Active",
+      value: "ACTIVE",
       icon: Video,
     },
     {
       label: "Processing",
+      value: "PROCESSING",
       icon: Loader,
     },
     {
       label: "Canceled",
+      value: "CANCELED",
       icon: CircleX,
     }
   ]
@@ -72,10 +77,10 @@ const StatusFilter = () => {
         ): (
           <>
             {(() => {
-              const StatusIcon = statuses.find((s) => s.label === status)?.icon;
+              const StatusIcon = statuses.find((s) => s.value === status)?.icon;
               return StatusIcon ? <StatusIcon className="inline" /> : null;
             })()}
-            {status}
+            {statuses.find((s) => s.value === status)?.label}
             <ChevronsUpDown />
           </>
         )}
@@ -85,13 +90,13 @@ const StatusFilter = () => {
         <CommandList className="px-0 mx-0">
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup className="mx-0 font-normal">
-            {statuses.map((status) => (
+            {statuses.map((s) => (
               <CommandItem onSelect={() => {
-                setStatus(status.label)
+                setStatus(s.value)
                 setOpen(false)
-              }} key={status.label}>
-                <status.icon className="-ml-[0.5px] text-muted-foreground/70 size-8 mr-[1px]" />
-                <span>{status.label}</span>
+              }} key={s.value}>
+                <s.icon className="-ml-[0.5px] text-muted-foreground/70 size-8 mr-[1px]" />
+                <span>{s.label}</span>
               </CommandItem>
             ))}
           </CommandGroup>

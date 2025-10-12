@@ -51,23 +51,23 @@ export async function GET(req: Request) {
         },
       });
 
-      if (!report) {
-        return new NextResponse("Report not found", { status: 404 });
-      }
-
       return NextResponse.json(report);
     }
 
-    const reports = await prismadb.report.findMany({
+    // If no search or id, return all reports for the user
+    const allReports = await prismadb.report.findMany({
       where: {
         userId: session.user.id,
       },
       orderBy: {
         createdAt: "desc",
       },
+      include: {
+        questions: true
+      }
     });
 
-    return NextResponse.json(reports);
+    return NextResponse.json(allReports);
   } catch (error) {
     console.log("ERROR GETTING REPORTS: ", error);
     return new NextResponse("Internal Server Error", { status: 500 });

@@ -2,18 +2,8 @@ import useSWR from "swr";
 import { fetcher } from "./fetcher";
 import { Question, Report } from "@prisma/client";
 
-interface Props {
-  search?: string | null | undefined;
-}
-
-export const useReports = ({ search }: Props) => {
-  const queryParams = [];
-
-  if (search) {
-    queryParams.push(`search=${search}`);
-  }
-
-  const queryString = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+export const useReports = () => {
+  const queryString = "";
 
   const { data, error, isLoading } = useSWR<Report[]>(
     `/api/reports/get${queryString}`,

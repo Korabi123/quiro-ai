@@ -1,6 +1,7 @@
 "use client";
 
 import { useMeetings } from "@/lib/meetings";
+import { searchMeetings } from "@/lib/client-search";
 import { CircleCheck, CircleX, ClockArrowUpIcon, CornerDownRight, Loader, Video } from "lucide-react";
 import { GeneratedAvatar } from "../generated-avatar";
 import { Badge } from "../ui/badge";
@@ -9,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 
 interface Props {
   className?: string;
@@ -22,7 +24,18 @@ export const MeetingsTable = ({ className, agentId, variant = "default" }: Props
   const [search, setSearch] = useQueryState("search");
   const [status, setStatus] = useQueryState("status");
   const [agent, setAgent] = useQueryState("agent");
-  const { data: meetings, isLoading } = useMeetings(!agentId ? { search, status, agent } : { search, status, agent: agentId });
+  const { data: allMeetings, isLoading } = useMeetings();
+  
+  // Client-side filtering
+  const meetings = useMemo(() => {
+    if (!allMeetings) return [];
+    return searchMeetings(allMeetings, search || "", {
+      status: status || undefined,
+      // Include agent filter properly
+      agent: agent || undefined
+    });
+  }, [allMeetings, search, status, agent]);
+  
   const [animate] = useAutoAnimate();
 
   return (

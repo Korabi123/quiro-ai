@@ -8,12 +8,21 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
 import { useAgents } from "@/lib/agents";
+import { searchAgents } from "@/lib/client-search";
+import { useMemo } from "react";
 
 export const AgentsTable = () => {
   const router = useRouter();
 
   const [search, setSearch] = useQueryState("search");
-  const { data: agents, isLoading } = useAgents({ search });
+  const { data: allAgents, isLoading } = useAgents();
+  
+  // Client-side filtering
+  const agents = useMemo(() => {
+    if (!allAgents) return [];
+    return searchAgents(allAgents, search || "");
+  }, [allAgents, search]);
+  
   const [animate] = useAutoAnimate();
 
   return (
