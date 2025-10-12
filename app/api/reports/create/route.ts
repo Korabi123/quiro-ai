@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
 import prismadb from "@/lib/prismadb";
 import { NextResponse } from "next/server";
+import { withRateLimit } from "@/app/api/rate-limited-routes";
 
-export async function POST(req: Request) {
+export const POST = withRateLimit(async (req: Request) => {
   try {
     const { name, type, customType, field } = await req.json();
     const session = await auth.api.getSession(req);
@@ -34,4 +35,4 @@ export async function POST(req: Request) {
     console.log("ERROR CREATING REPORT: ", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
-}
+});

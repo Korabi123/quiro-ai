@@ -2,8 +2,9 @@ import { auth } from "@/auth";
 import prismadb from "@/lib/prismadb";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { withRateLimit } from "@/app/api/rate-limited-routes";
 
-export async function POST(req: Request) {
+export const POST = withRateLimit(async (req: Request) => {
   try {
     const { meetingId, reportId, content, type, transcript } = await req.json();
     const session = await auth.api.getSession(req);
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ chat }, { status: 201 });
   } catch (error) {
-    console.log("Error creating chat", error);
-    return new NextResponse("Internal server error", { status: 500 });
+    console.log("ERROR CREATING CHAT: ", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
-}
+});

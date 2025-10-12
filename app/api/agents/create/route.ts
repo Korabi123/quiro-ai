@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import prismadb from "@/lib/prismadb";
+import { withRateLimit } from "@/app/api/rate-limited-routes";
 
 import { VapiClient } from "@vapi-ai/server-sdk";
 
-export async function POST(req: Request) {
+export const POST = withRateLimit(async (req: Request) => {
   const vapi = new VapiClient({
     token: process.env.VAPI_TOKEN!,
   });
@@ -82,4 +83,4 @@ export async function POST(req: Request) {
     console.log("ERROR_CREATING_AGENT: ", error);
     return new NextResponse("Internal server error", { status: 500 });
   }
-}
+});
