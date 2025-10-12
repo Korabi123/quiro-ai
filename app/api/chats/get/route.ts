@@ -25,7 +25,7 @@ export async function GET(req: Request) {
         OR: [
           { meetingId: meetingId || undefined },
           { reportId: reportId || undefined }
-        ]
+        ],
       },
       orderBy: {
         createdAt: "asc",

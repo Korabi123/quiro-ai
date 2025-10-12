@@ -57,11 +57,11 @@ export const UserButton = ({
   const [sessions, setSessions] = useState<Session[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
 
+  const currentSession = authClient.useSession();
+
   const [animate] = useAutoAnimate();
 
   const router = useRouter();
-
-  // console.log(sessions);
 
   useEffect(() => {
     const getSessions = async () => {
@@ -181,7 +181,7 @@ export const UserButton = ({
               setTimeout(() => {
                 authClient.multiSession.revoke(
                   {
-                    sessionToken: session.token,
+                    sessionToken: currentSession.data?.session.token!,
                   },
                   {
                     onRequest: () => {

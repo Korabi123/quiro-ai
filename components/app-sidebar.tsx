@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { FaRobot } from "react-icons/fa";
 import { UserButton } from "./auth/user-button";
 import { authClient } from "@/lib/auth-client";
+import { Badge } from "./ui/badge";
+import { toast } from "sonner";
 
 const routes = [
   {
@@ -71,15 +73,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu className="gap-2">
             {routes.map((route) => (
               <SidebarMenuItem
-                onClick={() => router.push(route.url)}
+                onClick={() => {
+                  if (route.title === "Questions") {
+                    toast.info("Please be patient, we're working on this feature!");
+                  } else {
+                    router.push(route.url);
+                  }
+                }}
                 className={cn(
                   "p-2 px-3 inline-flex items-center gap-2 font-medium text-black/50 rounded-xl cursor-pointer hover:bg-black/5 transition-all",
                   pathname === route.url &&
-                    "bg-[#ffd43e]/25 hover:bg-[#ffd43e]/35 transition-all text-black"
+                    "bg-[#ffd43e]/25 hover:bg-[#ffd43e]/35 transition-all text-black",
+                  route.title === "Questions" &&
+                    "cursor-not-allowed text-black/50 hover:bg-transparent"
                 )}
               >
                 <route.icon className="size-5" />
                 {route.title}
+                {route.title === "Questions" && (
+                  <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">Coming Soon</Badge>
+                )}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>

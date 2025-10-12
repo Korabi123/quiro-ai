@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,15 +9,15 @@ datasource db {
 }
 
 model Agent {
-  id            String   @id @default(cuid())
-  vapiAgent     String   @unique
-  name          String
-  instructions  String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  meetings      Meeting[]
+  id           String    @id @default(cuid())
+  vapiAgent    String    @unique
+  name         String
+  instructions String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meetings     Meeting[]
 
   @@map("agent")
 }
@@ -30,22 +31,22 @@ enum MeetingStatus {
 }
 
 model Meeting {
-  id              String   @id @default(cuid())
-  vapiCallId      String?  @unique
-  recordingURL    String?
+  id           String  @id @default(cuid())
+  vapiCallId   String? @unique
+  recordingURL String?
 
-  title           String
-  agentId         String
-  agent           Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transcript      String?
-  callTranscript  String?
-  summary         String?
-  chats           Chat[]
-  status          MeetingStatus @default(UPCOMING)
+  title          String
+  agentId        String
+  agent          Agent         @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transcript     String?
+  callTranscript String?
+  summary        String?
+  chats          Chat[]
+  status         MeetingStatus @default(UPCOMING)
 
   @@map("meeting")
 }
@@ -56,18 +57,18 @@ enum ChatType {
 }
 
 model Chat {
-  id            String   @id @default(cuid())
-  content       String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  userId        String?
-  user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  meetingId     String?
-  meeting       Meeting?  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
-  reportId      String?
-  report        Report?  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meetingId String?
+  meeting   Meeting? @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  reportId  String?
+  report    Report?  @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
-  type          ChatType
+  type ChatType
 
   @@map("chat")
 }
@@ -88,28 +89,28 @@ enum QuestionType {
 }
 
 model Rubric {
-  id       String    @id @default(cuid())
-  criteria String
-  scoring  String
-  maxScore Int
+  id        String   @id @default(cuid())
+  criteria  String
+  scoring   String
+  maxScore  Int
   createdAt DateTime @default(now())
 
   question Question?
 }
 
 model Question {
-  id          String    @id @default(cuid())
-  content     String
-  createdAt   DateTime  @default(now())
-  answer      String?
-  type        QuestionType
-  score       Int?
-  feedback    String?
+  id        String       @id @default(cuid())
+  content   String
+  createdAt DateTime     @default(now())
+  answer    String?
+  type      QuestionType
+  score     Int?
+  feedback  String?
 
-  rubricId    String    @unique
-  reportId    String
-  rubric      Rubric    @relation(fields: [rubricId], references: [id], onDelete: Cascade)
-  report      Report    @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  rubricId String @unique
+  reportId String
+  rubric   Rubric @relation(fields: [rubricId], references: [id], onDelete: Cascade)
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 }
 
 model Report {
@@ -119,18 +120,18 @@ model Report {
   score            Int?     @default(0)
   maxPossibleScore Int?     @default(0)
 
-  breakdown        String?
-  summary          String?
+  breakdown String?
+  summary   String?
 
-  updatedAt        DateTime @updatedAt
-  userId           String?
-  user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  questions        Question[]
-  chats            Chat[]
+  updatedAt DateTime   @updatedAt
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions Question[]
+  chats     Chat[]
 
-  type             ReportType
-  field            String?
-  customType       String?
+  type       ReportType
+  field      String?
+  customType String?
 }
 
 model User {
@@ -151,13 +152,16 @@ model User {
 
   stripeCustomerId String?
 
-  sentChats Chat[]
+  sentChats       Chat[]
   createdMeetings Meeting[]
-  createdAgents Agent[]
-  createdReports Report[]
+  createdAgents   Agent[]
+  createdReports  Report[]
+
+  normalizedEmail String?
 
   @@unique([email])
   @@map("user")
+  @@unique([normalizedEmail])
 }
 
 model Session {
@@ -227,6 +231,8 @@ model Passkey {
   backedUp     Boolean
   transports   String?
   createdAt    DateTime?
+
+  aaguid String?
 
   @@map("passkey")
 }

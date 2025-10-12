@@ -55,7 +55,13 @@ export default function CookiesPolicy() {
           <ul className="list-disc pl-5 mt-2">
             <li><strong>Stripe</strong> – for payment processing</li>
             <li><strong>Google & GitHub</strong> – for authentication</li>
+            <li><strong>Vercel</strong> – for hosting and analytics</li>
+            <li><strong>OpenAI</strong> – for AI processing features</li>
+            <li><strong>Google AI</strong> – for AI processing features</li>
+            <li><strong>Vapi</strong> – for voice AI processing</li>
+            <li><strong>UploadThing</strong> – for file storage</li>
           </ul>
+          <p className="mt-2">These services help us provide core functionality and enhance your experience with our application.</p>
         </section>
 
         <section className="mb-8">
@@ -67,7 +73,19 @@ export default function CookiesPolicy() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-2">5. Changes to This Policy</h2>
+          <h2 className="text-2xl font-semibold mb-2">5. Technology-Specific Cookies</h2>
+          <p>
+            Our application uses Next.js and React, which may set cookies for:
+          </p>
+          <ul className="list-disc pl-5 mt-2">
+            <li>Session management</li>
+            <li>State persistence</li>
+            <li>Performance optimization</li>
+          </ul>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-2">6. Changes to This Policy</h2>
           <p>
             We may update this policy as needed. Changes will be posted on this page with a revised
             effective date.
@@ -75,7 +93,7 @@ export default function CookiesPolicy() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-2">6. Contact Us</h2>
+          <h2 className="text-2xl font-semibold mb-2">7. Contact Us</h2>
           <p>
             If you have any questions, contact us at:{" "}
             <a href="mailto:contact.korabimeri@gmail.com" className="text-blue-600 underline">

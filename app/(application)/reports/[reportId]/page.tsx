@@ -3,8 +3,14 @@ import { ReportsHeading } from "@/components/reports/heading";
 import prismadb from "@/lib/prismadb";
 import { notFound } from "next/navigation";
 
+import { headers } from "next/headers";
+import { auth } from "@/auth";
+
 const ReportPage = async ({ params }: { params: Promise<{ reportId: string }> }) => {
   const { reportId } = await params;
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
 
   const reportDB = await prismadb.report.findUnique({
     where: {
@@ -13,6 +19,10 @@ const ReportPage = async ({ params }: { params: Promise<{ reportId: string }> })
   });
 
   if (!reportDB) {
+    notFound();
+  }
+
+  if (reportDB.userId !== session?.user.id) {
     notFound();
   }
 

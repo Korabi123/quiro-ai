@@ -11,6 +11,8 @@ import ResetPasswordEmail from "./components/emails/reset-password";
 
 import { stripe } from "@better-auth/stripe";
 import Stripe from "stripe";
+import WelcomeQuiroProEmail from "./components/emails/subscription-started";
+import { emailHarmony } from 'better-auth-harmony';
 
 const prisma = new PrismaClient();
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -29,7 +31,7 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, token, url }, request) => {
       await resend.emails.send({
         to: user.email,
-        from: 'no-reply@korabimeri.work.gd',
+        from: 'auth@korabimeri.work.gd',
         subject: 'Reset your password',
         react: ResetPasswordEmail({
           resetLink: url,
@@ -52,7 +54,7 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, token, url }, request) => {
       await resend.emails.send({
         to: user.email,
-        from: 'no-reply@korabimeri.work.gd',
+        from: 'auth@korabimeri.work.gd',
         subject: 'Verify your email',
         text: `Click here to verify your email: ${url}`,
       });
@@ -66,14 +68,14 @@ export const auth = betterAuth({
         async sendOTP({ user, otp }, request) {
           await resend.emails.send({
             to: user.email,
-            from: 'no-reply@korabimeri.work.gd',
+            from: 'auth@korabimeri.work.gd',
             subject: 'Your Login Verification Code',
             text: `Your login verification code is: ${otp}`,
           });
         }
       }
     }),
-
+    emailHarmony(),
     stripe({
       stripeClient,
       stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
@@ -98,9 +100,17 @@ export const auth = betterAuth({
           if (user) {
             await resend.emails.send({
               to: user.email,
-              from: 'no-reply@korabimeri.work.gd',
-              subject: `You're now a member of quiro ${plan.name}`,
-              text: `Your quiro ${plan.name} subscription is now active. Reference ID: ${subscription.referenceId}`,
+              from: 'billing@korabimeri.work.gd',
+              subject: `🎉 You just joined Quiro ${plan.name} — let’s get started!`,
+              react: WelcomeQuiroProEmail({
+                recipientName: user.name,
+                startUrl: `${process.env.BETTER_AUTH_URL}/dashboard`,
+                subscriptionId: stripeSubscription.id,
+                planName: plan.name,
+                planPrice: "3€/month",
+                referenceId: subscription.referenceId,
+                renewsAt: subscription?.periodEnd?.toLocaleDateString(),
+              })
             });
           }
         },
@@ -115,7 +125,7 @@ export const auth = betterAuth({
           if (user) {
             await resend.emails.send({
               to: user.email,
-              from: 'no-reply@korabimeri.work.gd',
+              from: 'billing@korabimeri.work.gd',
               subject: 'Your quiro subscription has been canceled',
               text: `Your quiro subscription has been canceled`,
             });

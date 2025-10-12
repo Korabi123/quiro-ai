@@ -30,6 +30,9 @@ export default function PrivacyPolicy() {
             <li><strong>Name and Email Address</strong> – during sign up or sign in.</li>
             <li><strong>Payment Information</strong> – collected by Stripe when you upgrade your plan.</li>
             <li><strong>Social Sign-On Data</strong> – from Google or GitHub (e.g., name, email, profile picture).</li>
+            <li><strong>Usage Data</strong> – information about how you interact with our services, including meetings, reports, and agent interactions.</li>
+            <li><strong>Device Information</strong> – browser type, operating system, and IP address for security and service improvement.</li>
+            <li><strong>Voice Recordings</strong> – when using our AI agent voice call features.</li>
           </ul>
         </section>
 
@@ -57,14 +60,18 @@ export default function PrivacyPolicy() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-2">4. Sharing of Information</h2>
-          <p>
-            We do <strong>not</strong> sell or share your personal information for marketing.
-            We only share data with:
-          </p>
+          <h2 className="text-2xl font-semibold mb-2">4. Third-Party Services</h2>
+          <p>We use the following third-party services:</p>
           <ul className="list-disc pl-5 mt-2">
-            <li><strong>Stripe</strong> for payment processing</li>
-            <li><strong>Google and GitHub</strong> for social authentication</li>
+            <li><strong>Stripe</strong> – for payment processing</li>
+            <li><strong>Google</strong> – for authentication and AI services (Google Gemini)</li>
+            <li><strong>GitHub</strong> – for authentication</li>
+            <li><strong>OpenAI</strong> – for AI-powered features and natural language processing</li>
+            <li><strong>Vapi</strong> – for voice AI assistant functionality</li>
+            <li><strong>Resend</strong> – for email communications</li>
+            <li><strong>Vercel</strong> – for hosting and infrastructure</li>
+            <li><strong>Prisma</strong> – for database operations</li>
+            <li><strong>UploadThing</strong> – for file uploads and storage</li>
           </ul>
           <p className="mt-2">
             These third parties are required to handle your data securely and in compliance with applicable privacy laws.
@@ -100,9 +107,20 @@ export default function PrivacyPolicy() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-2">7. Data Retention</h2>
+          <h2 className="text-2xl font-semibold mb-2">7. Data Retention and AI Processing</h2>
           <p>
             We retain your data only as long as necessary to provide services or as required by law.
+          </p>
+          <p className="mt-2">
+            Our service uses artificial intelligence technologies from OpenAI, Google Gemini, and Vapi to process your data:
+          </p>
+          <ul className="list-disc pl-5 mt-2">
+            <li>Meeting transcripts and recordings may be processed by AI to generate summaries</li>
+            <li>Report data may be analyzed by AI to provide insights and recommendations</li>
+            <li>Voice interactions with our AI agents are processed to enable conversation</li>
+          </ul>
+          <p className="mt-2">
+            These AI providers have their own privacy policies regarding how they handle data. We ensure all AI processing complies with applicable data protection regulations.
           </p>
         </section>
 
@@ -110,8 +128,15 @@ export default function PrivacyPolicy() {
           <h2 className="text-2xl font-semibold mb-2">8. Security</h2>
           <p>
             We implement appropriate technical and organizational measures to protect your data from
-            unauthorized access, disclosure, or misuse.
+            unauthorized access, disclosure, or misuse. These include:
           </p>
+          <ul className="list-disc pl-5 mt-2">
+            <li>Secure authentication through Next.js Auth and OAuth providers</li>
+            <li>Data encryption in transit using HTTPS</li>
+            <li>Secure database operations through Prisma ORM</li>
+            <li>Regular security updates and monitoring</li>
+            <li>Restricted access to personal data within our organization</li>
+          </ul>
         </section>
 
         <section className="mb-8">

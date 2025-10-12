@@ -70,13 +70,32 @@ export default function TermsOfService() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-2">7. Disclaimer</h2>
           <p>
-            The service is provided “as is.” We make no guarantees about its reliability or
+            The service is provided "as is." We make no guarantees about its reliability or
             availability.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-2">8. Privacy</h2>
+          <h2 className="text-2xl font-semibold mb-2">8. Technology and Third-Party Services</h2>
+          <p>
+            Our service utilizes various technologies and third-party services, including:
+          </p>
+          <ul className="list-disc pl-5 mt-2">
+            <li>Next.js and React for our web application framework</li>
+            <li>AI services from OpenAI, Google, and Vapi for voice and text processing</li>
+            <li>Authentication services from Google and GitHub</li>
+            <li>Payment processing through Stripe</li>
+            <li>Email services through Resend</li>
+            <li>File storage through UploadThing</li>
+            <li>Hosting and deployment through Vercel</li>
+          </ul>
+          <p className="mt-2">
+            By using our service, you acknowledge and agree to the terms of service of these third-party providers as they apply to your use of our service.
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-2">9. Privacy</h2>
           <p>
             Your data is governed by our{" "}
             <a href="/legal/privacy-policy" className="text-blue-600 underline">
@@ -87,7 +106,7 @@ export default function TermsOfService() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-2">9. Changes to These Terms</h2>
+          <h2 className="text-2xl font-semibold mb-2">10. Changes to These Terms</h2>
           <p>
             We may update these Terms. Continued use after updates implies agreement to the new
             version.
@@ -95,12 +114,12 @@ export default function TermsOfService() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-2">10. Governing Law</h2>
+          <h2 className="text-2xl font-semibold mb-2">11. Governing Law</h2>
           <p>These Terms are governed by the laws of Kosovo.</p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-2">11. Contact</h2>
+          <h2 className="text-2xl font-semibold mb-2">12. Contact</h2>
           <p>
             Questions? Contact us at{" "}
             <a href="mailto:contact.korabimeri@gmail.com" className="text-blue-600 underline">
