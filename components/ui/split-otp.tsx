@@ -7,7 +7,7 @@ const Slot = (props: SlotProps) => {
       className={cn(
         "border-input bg-background text-foreground flex size-9 items-center justify-center rounded-xl border font-semibold shadow-xs transition-all",
         {
-          "border-blue-600/40 border-[1.6px] ring-blue-600/15 z-10 ring-[3px]":
+          "border-[#ea721b]/40 border-[1.6px] ring-[#ea721b]/15 z-10 ring-[3px]":
             props.isActive,
         }
       )}

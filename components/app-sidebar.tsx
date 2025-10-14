@@ -19,6 +19,11 @@ import { UserButton } from "./auth/user-button";
 import { authClient } from "@/lib/auth-client";
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import { Subscription } from "@better-auth/stripe";
+import { useMeetings } from "@/lib/meetings";
+import { Progress } from "./ui/progress";
+import { Skeleton } from "./ui/skeleton";
 
 const routes = [
   {
@@ -44,6 +49,8 @@ const routes = [
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const { isLoading: loadingMeetings, data: meetings, error } = useMeetings();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -51,12 +58,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const user = session.data?.user;
 
+  useEffect(() => {
+    const getSubscription = async () => {
+      await authClient.subscription.list()
+        .then((res) => setSubscription(res?.data?.[0] ?? null));
+    }
+    getSubscription();
+  }, []);
+
   return (
     <Sidebar {...props}>
       <SidebarHeader className="p-2">
         <SidebarMenu>
           <SidebarMenuItem className="px-2">
-            <a href="#">
+            <a href="/">
               <img
                 src="/branding/logo-png.png"
                 alt="Logo"
@@ -75,7 +90,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuItem
                 onClick={() => {
                   if (route.title === "Questions") {
-                    toast.info("Please be patient, we're working on this feature!");
+                    toast.info(
+                      "Please be patient, we're working on this feature!"
+                    );
                   } else {
                     router.push(route.url);
                   }
@@ -91,17 +108,45 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <route.icon className="size-5" />
                 {route.title}
                 {route.title === "Questions" && (
-                  <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">Coming Soon</Badge>
+                  <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">
+                    Coming Soon
+                  </Badge>
                 )}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
         </SidebarGroup>
+        <SidebarGroup>
+          {loadingMeetings ? (
+            <Skeleton className="h-28" />
+          ) : (
+            <>
+              {subscription?.status !== "active" && (
+                <div className="p-4 rounded-xl flex flex-col gap-4 bg-[#473a33]/75">
+                  <p className="text-white font-medium text-md">
+                    Upgrade to get access to all features
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <p className="text-white text-sm">
+                      {meetings?.length}/5 meetings
+                    </p>
+                    <Progress value={(meetings?.length! / 5) * 100} />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </SidebarGroup>
         <SidebarGroup className="mt-2">
           <SidebarMenu className="gap-2">
             <SidebarMenuItem className="p-2 bg-black/5 rounded-xl inline-flex items-center hover:bg-black/10 cursor-pointer transition-all">
-              {/* @ts-expect-error Just a simple type error */}
-              <UserButton showExtraInfo className="w-full" align={"start"} user={user} />
+              <UserButton
+                showExtraInfo
+                className="w-full"
+                align={"start"}
+                // @ts-expect-error Just a simple type error
+                user={user}
+              />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>

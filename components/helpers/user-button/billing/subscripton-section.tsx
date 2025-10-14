@@ -349,8 +349,8 @@ export const SubscriptionSection = ({ user }: Props) => {
               )}
             </div>
           ) : (
-            <div className="flex flex-col w-full gap-3 justify-evenly md:flex-row">
-              <Card className="shadow-md w-full">
+            <div className="flex flex-col w-full gap-3 justify-evenly md:flex-row items-stretch">
+              <Card className="shadow-md w-full flex flex-col">
                 <CardHeader className="w-full flex flex-row items-center justify-between">
                   <CardTitle className="text-sm tracking-tight">
                     quiro Free
@@ -363,28 +363,26 @@ export const SubscriptionSection = ({ user }: Props) => {
                 <CardContent>
                   <div className="flex flex-col gap-2">
                     <span className="text-xs flex items-center gap-1">
-                      <Check className="size-4 stroke-[1.6] text-zinc-400" />3
-                      Agents
+                      <Check className="size-4 stroke-[1.6] text-zinc-400" />5
+                      Meetings
                     </span>
                     <span className="text-xs flex items-center gap-1">
                       <Check className="size-4 stroke-[1.6] text-zinc-400" />
-                      Call transcript for one agent
+                      Monthly problems{" "}
+                      <Badge variant="outline" className="text-[9px] py-0.5 px-1.5">
+                        Coming soon
+                      </Badge>
                     </span>
                     <span className="text-xs flex items-center gap-1">
                       <Check className="size-4 stroke-[1.6] text-zinc-400" />
-                      10 Chats per day
-                    </span>
-                    <span className="text-xs flex items-center gap-1">
-                      <Check className="size-4 stroke-[1.6] text-zinc-400" />
-                      Monthly problems
-                    </span>
-                    <span className="text-xs flex items-center gap-1">
-                      <Check className="size-4 stroke-[1.6] text-zinc-400" />
-                      General tips
+                      General tips{" "}
+                      <Badge variant="outline" className="text-[9px] py-0.5 px-1.5">
+                        Coming soon
+                      </Badge>
                     </span>
                   </div>
                 </CardContent>
-                <CardFooter className="w-full md:mt-[43%] mt-0 items-center flex gap-2">
+                <CardFooter className="w-full mt-auto items-center flex gap-2">
                   <Button
                     variant={"ghost"}
                     size="xs"
@@ -425,11 +423,10 @@ export const SubscriptionSection = ({ user }: Props) => {
                   </Button>
                 </CardFooter>
               </Card>
-              <Card className="shadow-md w-full">
+              <Card className="shadow-md w-full flex flex-col">
                 <CardHeader className="w-full flex flex-row items-center justify-between">
                   <CardTitle className="text-sm tracking-tight">
-                    quiro{" "}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] pr-[1px]">
+                    quiro <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] pr-[1px]">
                       Pro
                     </span>
                   </CardTitle>
@@ -461,15 +458,31 @@ export const SubscriptionSection = ({ user }: Props) => {
                     </span>
                     <span className="text-xs flex items-center gap-1">
                       <Check className="size-4 stroke-[1.6] text-zinc-400" />
-                      Skill evaluation
+                      Questions{" "}
+                      <Badge variant="outline" className="text-[9px] py-0.5 px-1.5">
+                        Coming soon
+                      </Badge>
                     </span>
                     <span className="text-xs flex items-center gap-1">
                       <Check className="size-4 stroke-[1.6] text-zinc-400" />
-                      Tailored tips to improve your hireability
+                      Skill evaluation{" "}
+                      <Badge variant="outline" className="text-[9px] py-0.5 px-1.5">
+                        Coming soon
+                      </Badge>
                     </span>
                     <span className="text-xs flex items-center gap-1">
                       <Check className="size-4 stroke-[1.6] text-zinc-400" />
-                      Daily problems
+                      Tailored tips{" "}
+                      <Badge variant="outline" className="text-[9px] py-0.5 px-1.5">
+                        Coming soon
+                      </Badge>
+                    </span>
+                    <span className="text-xs flex items-center gap-1">
+                      <Check className="size-4 stroke-[1.6] text-zinc-400" />
+                      Daily problems{" "}
+                      <Badge variant="outline" className="text-[9px] py-0.5 px-1.5">
+                        Coming soon
+                      </Badge>
                     </span>
                     <span className="text-xs flex items-center gap-1">
                       <Check className="size-4 stroke-[1.6] text-zinc-400" />
@@ -481,7 +494,7 @@ export const SubscriptionSection = ({ user }: Props) => {
                     </span>
                   </div>
                 </CardContent>
-                <CardFooter className="w-full items-center flex gap-2">
+                <CardFooter className="w-full mt-auto items-center flex gap-2">
                   <Button
                     variant={"ghost"}
                     size="xs"

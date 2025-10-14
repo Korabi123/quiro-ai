@@ -77,7 +77,7 @@ export const AgentsTable = () => {
           )}
         </>
       ))}
-      {agents?.length === 0 && (
+      {!isLoading && agents?.length === 0 && (
         <div className="flex items-center justify-center w-full p-5">
           <p className="text-sm text-muted-foreground/70">No agents found</p>
         </div>

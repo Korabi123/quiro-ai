@@ -159,7 +159,7 @@ export const ReportsTable = ({ className, variant = "default" }: Props) => {
           </React.Fragment>
         );
       })}
-      {reports?.length === 0 && !isLoading && (
+      {!isLoading && reports?.length === 0 && (
         <div className="flex flex-col items-center justify-center w-full p-5">
           <p className="text-sm text-muted-foreground/70">No reports found</p>
         </div>

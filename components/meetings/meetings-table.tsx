@@ -140,7 +140,7 @@ export const MeetingsTable = ({ className, agentId, variant = "default" }: Props
           )}
         </>
       ))}
-      {meetings?.length === 0 && (
+      {!isLoading && meetings?.length === 0 && (
         <div className="flex items-center justify-center w-full p-5">
           <p className="text-sm text-muted-foreground/70">No meetings found</p>
         </div>
