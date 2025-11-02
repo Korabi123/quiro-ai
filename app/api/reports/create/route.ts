@@ -8,6 +8,10 @@ export const POST = withRateLimit(async (req: Request) => {
     const { name, type, customType, field } = await req.json();
     const session = await auth.api.getSession(req);
 
+    const subscription = await auth.api.listActiveSubscriptions({
+      headers: req.headers,
+    });
+
     if (!session) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -18,6 +22,10 @@ export const POST = withRateLimit(async (req: Request) => {
 
     if (!type || !name || !field) {
       return new NextResponse("Invalid request", { status: 400 });
+    }
+
+    if (subscription.length === 0) {
+      return new NextResponse("Pro plan required", { status: 402 });
     }
 
     const report = await prismadb.report.create({

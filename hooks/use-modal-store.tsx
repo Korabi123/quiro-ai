@@ -9,7 +9,8 @@ export type ModalStoreType =
   | "createReport"
   | "editReport"
   | "deleteReport"
-  | "secondReportModal";
+  | "secondReportModal"
+  | "restrictionDialog";
 
 interface ModalStoreData {
   meetingId?: string;
@@ -20,6 +21,9 @@ interface ModalStoreData {
     type?: "COMMUNICATION" | "TECHNICAL" | "LEADERSHIP" | "ALL" | "CUSTOM";
     field?: string;
     customType?: string;
+  };
+  restrictionDialogData?: {
+    dialogDescription?: string;
   };
 }
 

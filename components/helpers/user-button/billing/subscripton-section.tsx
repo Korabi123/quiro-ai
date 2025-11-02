@@ -9,7 +9,7 @@ import { AFTER_LOGIN } from "@/routes";
 import { Subscription } from "@better-auth/stripe";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { User } from "@prisma/client";
-import { ArrowRight, ArrowUpDown, Check, Loader, Loader2, Settings, XIcon } from "lucide-react";
+import { ArrowRight, ArrowUpDown, Check, Loader, Loader2, Settings, X, XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -380,6 +380,22 @@ export const SubscriptionSection = ({ user }: Props) => {
                         Coming soon
                       </Badge>
                     </span>
+                    <span className="text-xs flex items-center gap-1">
+                      <X className="size-4 stroke-[1.6] text-zinc-400" />
+                      Call recording
+                    </span>
+                    <span className="text-xs flex items-center gap-1">
+                      <X className="size-4 stroke-[1.6] text-zinc-400" />
+                      Coding problems
+                    </span>
+                    <span className="text-xs flex items-center gap-1">
+                      <X className="size-4 stroke-[1.6] text-zinc-400" />
+                      Tailored tips
+                    </span>
+                    <span className="text-xs flex items-center gap-1">
+                      <X className="size-4 stroke-[1.6] text-zinc-400" />
+                      Daily problems
+                    </span>
                   </div>
                 </CardContent>
                 <CardFooter className="w-full mt-auto items-center flex gap-2">
@@ -458,14 +474,11 @@ export const SubscriptionSection = ({ user }: Props) => {
                     </span>
                     <span className="text-xs flex items-center gap-1">
                       <Check className="size-4 stroke-[1.6] text-zinc-400" />
-                      Questions{" "}
-                      <Badge variant="outline" className="text-[9px] py-0.5 px-1.5">
-                        Coming soon
-                      </Badge>
+                      Skill reports
                     </span>
                     <span className="text-xs flex items-center gap-1">
                       <Check className="size-4 stroke-[1.6] text-zinc-400" />
-                      Skill evaluation{" "}
+                      Coding problems{" "}
                       <Badge variant="outline" className="text-[9px] py-0.5 px-1.5">
                         Coming soon
                       </Badge>

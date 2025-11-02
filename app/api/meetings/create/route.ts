@@ -9,6 +9,12 @@ export async function POST(req: Request) {
       headers: req.headers,
     });
 
+    const subscription = await auth.api.listActiveSubscriptions({
+      headers: req.headers,
+    });
+
+    console.log("SUBSCRIPTION: ", subscription);
+
     if (!session) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -26,6 +32,16 @@ export async function POST(req: Request) {
 
     if (!agentDB) {
       return new NextResponse("Agent not found", { status: 400 });
+    }
+
+    const existingMeetings = await prismadb.meeting.findMany({
+      where: {
+        userId: session.user.id,
+      }
+    })
+
+    if (subscription.length === 0 && existingMeetings.length === 5) {
+      return new NextResponse("Pro plan required", { status: 402 });
     }
 
     const meeting = await prismadb.meeting.create({

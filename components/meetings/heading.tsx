@@ -9,7 +9,6 @@ import {
   MoreVertical,
   Pencil,
   Plus,
-  SlashIcon,
   Trash2,
 } from "lucide-react";
 import {
@@ -20,7 +19,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../ui/dialog";
 import { useForm } from "react-hook-form";
 import {
@@ -32,7 +30,7 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import {
   CommandDialog,
@@ -68,6 +66,9 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { useModalStore } from "@/hooks/use-modal-store";
+import { Subscription } from "@better-auth/stripe";
+import { useMeetings } from "@/lib/meetings";
+import { authClient } from "@/lib/auth-client";
 
 const formSchema = z.object({
   title: z.string().min(1),
@@ -85,7 +86,6 @@ interface Props {
 export const MeetingHeading = ({
   secondary = false,
   breadcrumb = null,
-  breadcrumbHref = null,
   optionsHidden = false,
   meetingId,
 }: Props) => {
@@ -100,8 +100,19 @@ export const MeetingHeading = ({
   const [open, setOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const meetings = useMeetings();
 
   const { onOpen } = useModalStore();
+
+  useEffect(() => {
+    const getSubscription = async () => {
+      await authClient.subscription
+        .list()
+        .then((res) => setSubscription(res?.data?.[0] ?? null));
+    };
+    getSubscription();
+  });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     startTransition(async () => {
@@ -122,213 +133,230 @@ export const MeetingHeading = ({
     });
   };
 
-  const agents = useAgents({ search: "" });
+  const agents = useAgents();
   const router = useRouter();
 
   return (
-    <Dialog
-      open={dialogOpen}
-      onOpenChange={() => {
-        setDialogOpen((dialogOpen) => !dialogOpen);
-        form.reset();
-      }}
-    >
-      <div className="flex items-center justify-between w-full">
-        {!secondary && (
-          <>
-            <h1 className="font-semibold md:text-3xl text-xl">My Meetings</h1>
-            <DialogTrigger asChild>
-              <Button className="bg-[#ea721b] hover:bg-opacity-80 transition-all">
+    <>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={() => {
+          setDialogOpen((dialogOpen) => !dialogOpen);
+          form.reset();
+        }}
+      >
+        <div className="flex items-center justify-between w-full">
+          {!secondary && (
+            <>
+              <h1 className="font-semibold md:text-3xl text-xl">My Meetings</h1>
+              <Button
+                onClick={() => {
+                  if (
+                    subscription?.plan !== "pro" &&
+                    meetings?.data?.length === 5
+                  ) {
+                    onOpen("restrictionDialog", {
+                      restrictionDialogData: {
+                        dialogDescription:
+                          `You have reached the maximum number of meetings allowed for this plan, please upgrade your plan to create more meetings.`,
+                      },
+                    });
+                  } else {
+                    setDialogOpen(true);
+                  }
+                }}
+                className="bg-[#ea721b] hover:bg-opacity-80 transition-all"
+              >
                 <Plus className="size-5" />
                 New Meeting
               </Button>
-            </DialogTrigger>
-          </>
-        )}
-        {secondary && (
-          <>
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="font-semibold md:text-3xl text-xl">
-                  <BreadcrumbLink asChild>
-                    <Link href="/meetings">My Meetings</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator>
-                  <ChevronRight className=" text-black" />
-                </BreadcrumbSeparator>
-                <BreadcrumbItem className="font-medium md:text-3xl text-xl">
-                  <BreadcrumbPage className="font-medium">
-                    {breadcrumb}
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-            {!optionsHidden && (
-              <>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant={"ghost"} size={"icon"}>
-                      <MoreVertical />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="p-0">
-                    <DropdownMenuItem
-                      onClick={() =>
-                        onOpen("editMeeting", { meetingId: meetingId })
-                      }
-                      className="text-muted-foreground"
-                    >
-                      <Pencil />
-                      Edit Meeting
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() =>
-                        onOpen("deleteMeeting", { meetingId: meetingId })
-                      }
-                      className="rounded-none text-destructive focus:text-destructive focus:bg-destructive/10 transition-all"
-                    >
-                      <Trash2 />
-                      Delete Meeting
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            )}
-          </>
-        )}
-        <DialogContent className="md:w-[550px] w-full">
-          <DialogHeader>
-            <DialogTitle>New Meeting</DialogTitle>
-            <DialogDescription>Create a new meeting</DialogDescription>
-          </DialogHeader>
-          <div className="mt-2">
-            <Form {...form}>
-              <form
-                className="space-y-4"
-                onSubmit={form.handleSubmit(onSubmit)}
-              >
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Label>Title</Label>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="agent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Label>Agent</Label>
-                      {field.value.length === 0 && (
-                        <Button
-                          variant={"outline"}
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => setOpen(true)}
-                          className="w-full mb-2 flex items-center cursor-pointer group justify-between rounded-xl hover:bg-muted transition-all border px-3 py-2 h-9"
-                        >
-                          <span className="text-sm text-muted-foreground/80 font-medium group-hover:text-muted-foreground transition-all">
-                            Select an agent
-                          </span>
-                          <ChevronsUpDown className="size-4 text-muted-foreground/80 group-hover:text-muted-foreground transition-all" />
-                        </Button>
-                      )}
-                      {field.value.length > 0 && (
-                        <Button
-                          variant={"outline"}
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => setOpen(true)}
-                          className="w-full mb-2 flex items-center cursor-pointer group rounded-xl hover:bg-muted transition-all border px-3 py-2 h-9"
-                        >
-                          <GeneratedAvatar
-                            seed={field.value}
-                            className="size-6"
+            </>
+          )}
+          {secondary && (
+            <>
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem className="font-semibold md:text-3xl text-xl">
+                    <BreadcrumbLink asChild>
+                      <Link href="/meetings">My Meetings</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator>
+                    <ChevronRight className=" text-black" />
+                  </BreadcrumbSeparator>
+                  <BreadcrumbItem className="font-medium md:text-3xl text-xl">
+                    <BreadcrumbPage className="font-medium">
+                      {breadcrumb}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+              {!optionsHidden && (
+                <>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant={"ghost"} size={"icon"}>
+                        <MoreVertical />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="p-0">
+                      <DropdownMenuItem
+                        onClick={() =>
+                          onOpen("editMeeting", { meetingId: meetingId })
+                        }
+                        className="text-muted-foreground"
+                      >
+                        <Pencil />
+                        Edit Meeting
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          onOpen("deleteMeeting", { meetingId: meetingId })
+                        }
+                        className="rounded-none text-destructive focus:text-destructive focus:bg-destructive/10 transition-all"
+                      >
+                        <Trash2 />
+                        Delete Meeting
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              )}
+            </>
+          )}
+          <DialogContent className="md:w-[550px] w-full">
+            <DialogHeader>
+              <DialogTitle>New Meeting</DialogTitle>
+              <DialogDescription>Create a new meeting</DialogDescription>
+            </DialogHeader>
+            <div className="mt-2">
+              <Form {...form}>
+                <form
+                  className="space-y-4"
+                  onSubmit={form.handleSubmit(onSubmit)}
+                >
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label>Title</Label>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            disabled={isPending}
                           />
-                          <span className="text-sm text-muted-foreground/80 font-medium group-hover:text-muted-foreground transition-all">
-                            {field.value}
-                          </span>
-                          <ChevronsUpDown className="ml-auto size-4 text-muted-foreground/80 group-hover:text-muted-foreground transition-all" />
-                        </Button>
-                      )}
-                      <span className="text-sm pt-2 text-muted-foreground/80 font-medium">
-                        Not found what you are looking for?{" "}
-                        <CreateAgentDialog />
-                      </span>
-                      <CommandDialog open={open} onOpenChange={setOpen}>
-                        <CommandInput placeholder="Search for an agent..." />
-                        <CommandList className="px-0 mx-0">
-                          <CommandEmpty>No results found.</CommandEmpty>
-                          <CommandGroup className="mx-0 font-normal">
-                            {agents.data?.map((agent) => (
-                              <CommandItem
-                                onSelect={() => {
-                                  form.setValue("agent", agent.name);
-                                  setOpen(false);
-                                  router.refresh();
-                                }}
-                                key={agent.id}
-                              >
-                                <GeneratedAvatar
-                                  seed={agent.name}
-                                  className="size-8"
-                                />
-                                <span className="font-medium tracking-tight">
-                                  {agent.name}
-                                </span>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </CommandDialog>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <DialogFooter>
-                  <DialogClose asChild>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="agent"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label>Agent</Label>
+                        {field.value.length === 0 && (
+                          <Button
+                            variant={"outline"}
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => setOpen(true)}
+                            className="w-full mb-2 flex items-center cursor-pointer group justify-between rounded-xl hover:bg-muted transition-all border px-3 py-2 h-9"
+                          >
+                            <span className="text-sm text-muted-foreground/80 font-medium group-hover:text-muted-foreground transition-all">
+                              Select an agent
+                            </span>
+                            <ChevronsUpDown className="size-4 text-muted-foreground/80 group-hover:text-muted-foreground transition-all" />
+                          </Button>
+                        )}
+                        {field.value.length > 0 && (
+                          <Button
+                            variant={"outline"}
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => setOpen(true)}
+                            className="w-full mb-2 flex items-center cursor-pointer group rounded-xl hover:bg-muted transition-all border px-3 py-2 h-9"
+                          >
+                            <GeneratedAvatar
+                              seed={field.value}
+                              className="size-6"
+                            />
+                            <span className="text-sm text-muted-foreground/80 font-medium group-hover:text-muted-foreground transition-all">
+                              {field.value}
+                            </span>
+                            <ChevronsUpDown className="ml-auto size-4 text-muted-foreground/80 group-hover:text-muted-foreground transition-all" />
+                          </Button>
+                        )}
+                        <span className="text-sm pt-2 text-muted-foreground/80 font-medium">
+                          Not found what you are looking for?{" "}
+                          <CreateAgentDialog />
+                        </span>
+                        <CommandDialog open={open} onOpenChange={setOpen}>
+                          <CommandInput placeholder="Search for an agent..." />
+                          <CommandList className="px-0 mx-0">
+                            <CommandEmpty>No results found.</CommandEmpty>
+                            <CommandGroup className="mx-0 font-normal">
+                              {agents.data?.map((agent) => (
+                                <CommandItem
+                                  onSelect={() => {
+                                    form.setValue("agent", agent.name);
+                                    setOpen(false);
+                                    router.refresh();
+                                  }}
+                                  key={agent.id}
+                                >
+                                  <GeneratedAvatar
+                                    seed={agent.name}
+                                    className="size-8"
+                                  />
+                                  <span className="font-medium tracking-tight">
+                                    {agent.name}
+                                  </span>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </CommandDialog>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button
+                        disabled={isPending}
+                        variant={"outline"}
+                        type="button"
+                      >
+                        Cancel
+                      </Button>
+                    </DialogClose>
                     <Button
+                      type="submit"
+                      className="bg-[#ea721b] hover:bg-opacity-80 transition-all"
                       disabled={isPending}
-                      variant={"outline"}
-                      type="button"
                     >
-                      Cancel
+                      <Loader2
+                        className={cn(
+                          "text-transparent -mr-6 size-5 transition-all",
+                          isPending &&
+                            "mr-0 animate-spin text-white transition-all"
+                        )}
+                      />
+                      Create
                     </Button>
-                  </DialogClose>
-                  <Button
-                    type="submit"
-                    className="bg-[#ea721b] hover:bg-opacity-80 transition-all"
-                    disabled={isPending}
-                  >
-                    <Loader2
-                      className={cn(
-                        "text-transparent -mr-6 size-5 transition-all",
-                        isPending &&
-                          "mr-0 animate-spin text-white transition-all"
-                      )}
-                    />
-                    Create
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </div>
-        </DialogContent>
-      </div>
-    </Dialog>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </div>
+          </DialogContent>
+        </div>
+      </Dialog>
+    </>
   );
 };

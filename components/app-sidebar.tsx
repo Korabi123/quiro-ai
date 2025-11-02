@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react"
-import { GalleryVerticalEnd, Star, Video } from "lucide-react"
+import { ChevronsLeftRight, GalleryVerticalEnd, Star, Video } from "lucide-react"
 
 import {
   Sidebar,
@@ -24,6 +24,7 @@ import { Subscription } from "@better-auth/stripe";
 import { useMeetings } from "@/lib/meetings";
 import { Progress } from "./ui/progress";
 import { Skeleton } from "./ui/skeleton";
+import { useModalStore } from "@/hooks/use-modal-store";
 
 const routes = [
   {
@@ -37,15 +38,20 @@ const routes = [
     icon: FaRobot,
   },
   {
-    title: "Reports",
+    title: "Skill Reports",
     url: "/reports",
     icon: GalleryVerticalEnd,
   },
   {
-    title: "Questions",
-    url: "/questions",
+    title: "Coding Problems",
+    url: "/coding",
+    icon: ChevronsLeftRight,
+  },
+  {
+    title: "Tips",
+    url: "/tips",
     icon: Star,
-  }
+  },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -53,6 +59,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isLoading: loadingMeetings, data: meetings, error } = useMeetings();
   const router = useRouter();
   const pathname = usePathname();
+
+  const { onOpen } = useModalStore();
 
   const session = authClient.useSession();
 
@@ -89,10 +97,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             {routes.map((route) => (
               <SidebarMenuItem
                 onClick={() => {
-                  if (route.title === "Questions") {
+                  if (route.title === "Coding Problems" || route.title === "Tips") {
                     toast.info(
                       "Please be patient, we're working on this feature!"
                     );
+                  } else if (route.title === "Skill Reports" && subscription?.status !== "active") {
+                    onOpen("restrictionDialog", {
+                      restrictionDialogData: {
+                        dialogDescription:
+                          `This feature is pro only, please upgrade your plan to access it! The pro plan includes:`,
+                      },
+                    });
                   } else {
                     router.push(route.url);
                   }
@@ -101,15 +116,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   "p-2 px-3 inline-flex items-center gap-2 font-medium text-black/50 rounded-xl cursor-pointer hover:bg-black/5 transition-all",
                   pathname === route.url &&
                     "bg-[#ffd43e]/25 hover:bg-[#ffd43e]/35 transition-all text-black",
-                  route.title === "Questions" &&
-                    "cursor-not-allowed text-black/50 hover:bg-transparent"
+                  route.title === "Coding Problems" &&
+                    "cursor-not-allowed text-black/50 hover:bg-transparent",
+                  route.title === "Tips" && "cursor-not-allowed text-black/50 hover:bg-transparent",
+                  route.title === "Skill Reports" && subscription?.status !== "active" && "cursor-not-allowed text-black/50 hover:bg-transparent"
                 )}
               >
                 <route.icon className="size-5" />
                 {route.title}
-                {route.title === "Questions" && (
+                {route.title === "Coding Problems" && (
                   <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">
                     Coming Soon
+                  </Badge>
+                )}
+                {route.title === "Tips" && (
+                  <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">
+                    Coming Soon
+                  </Badge>
+                )}
+                {route.title === "Skill Reports" && subscription?.status !== "active" && (
+                  <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">
+                    Pro Only
                   </Badge>
                 )}
               </SidebarMenuItem>

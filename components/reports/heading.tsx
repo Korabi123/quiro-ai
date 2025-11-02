@@ -46,7 +46,7 @@ export const ReportsHeading = ({
     <div className="flex items-center justify-between w-full">
       {!secondary && (
         <>
-          <h1 className="font-semibold md:text-3xl text-xl">My Reports</h1>
+          <h1 className="font-semibold md:text-3xl text-xl">My Skill Reports</h1>
           <Button
             onClick={() =>
               onOpen("createReport", {
@@ -68,7 +68,7 @@ export const ReportsHeading = ({
             <BreadcrumbList>
               <BreadcrumbItem className="font-semibold md:text-3xl text-xl">
                 <BreadcrumbLink asChild>
-                  <Link href="/reports">My Reports</Link>
+                  <Link href="/reports">My Skill Reports</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator>
