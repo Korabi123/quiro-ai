@@ -42,13 +42,13 @@ export const MeetingContent = ({ meetingId }: Props) => {
     "summary" | "transcript" | "recording" | "askAI"
   >("summary");
   const [content, setContent] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const endOfChatsRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const router = useRouter();
 
   const { data: chats } = useChats(meetingId);
-
-  const endOfChatsRef = useRef<HTMLDivElement>(null);
 
   const memoizedTranscript = useMemo(() => {
     if (!meeting?.callTranscript) return null;
@@ -127,9 +127,12 @@ export const MeetingContent = ({ meetingId }: Props) => {
     meeting?.agent?.name,
   ]);
 
+  const [lastSentMessage, setLastSentMessage] = useState<string>("");
+
   const onSubmit = () => {
     setContent("");
-
+    setLastSentMessage(content); // Store the message we just sent
+    
     startTransition(async () => {
       try {
         await axios.post(`/api/chats/create?meetingId=${meetingId}`, {
@@ -140,6 +143,8 @@ export const MeetingContent = ({ meetingId }: Props) => {
         });
       } catch (error) {
         toast.error("Something went wrong");
+        setIsTyping(false);
+        setLastSentMessage(""); // Clear on error
       }
     });
   };
@@ -172,6 +177,22 @@ export const MeetingContent = ({ meetingId }: Props) => {
   useEffect(() => {
     endOfChatsRef.current?.scrollIntoView({ behavior: "smooth" });
   });
+
+  useEffect(() => {
+    if (chats && chats.length > 0) {
+      const lastMessage = chats[chats.length - 1];
+      
+      // If we have a last sent message and the last chat is from the user with the same content
+      if (lastSentMessage && lastMessage.type === "USER" && lastMessage.content === lastSentMessage) {
+        // Show typing indicator after user's message is confirmed
+        setIsTyping(true);
+        setLastSentMessage(""); // Clear the tracking
+      } else if (lastMessage.type === "AI") {
+        // Hide typing indicator when AI responds
+        setIsTyping(false);
+      }
+    }
+  }, [chats, lastSentMessage]);
 
   return (
     <>
@@ -343,12 +364,12 @@ export const MeetingContent = ({ meetingId }: Props) => {
                     ) : (
                       <div className="flex flex-col p-2 gap-6 w-full h-full overflow-y-scroll">
                         {chats?.map((chat) => (
-                          <>
+                          <div key={chat.id} className={cn(
+                            "flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4",
+                            chat.type === "AI" ? "self-start" : "self-end"
+                          )}>
                             {chat.type === "AI" && (
-                              <div
-                                key={chat.id}
-                                className="self-start flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4"
-                              >
+                              <>
                                 <div className="flex items-center gap-2">
                                   <GeneratedAvatar
                                     // @ts-ignore
@@ -363,13 +384,10 @@ export const MeetingContent = ({ meetingId }: Props) => {
                                 <Response className="text-sm text-muted-foreground/70">
                                   {chat.content}
                                 </Response>
-                              </div>
+                              </>
                             )}
                             {chat.type === "USER" && (
-                              <div
-                                key={chat.id}
-                                className="self-end flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4"
-                              >
+                              <>
                                 <div className="flex items-center gap-2">
                                   <Avatar className="size-6">
                                     <AvatarImage
@@ -386,11 +404,31 @@ export const MeetingContent = ({ meetingId }: Props) => {
                                 <Response className="text-sm text-muted-foreground/70">
                                   {chat.content}
                                 </Response>
-                              </div>
+                              </>
                             )}
-                            <div ref={endOfChatsRef} />
-                          </>
+                          </div>
                         ))}
+                        {isTyping && (
+                          <div className="self-start flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4">
+                            <div className="flex items-center gap-2">
+                              <GeneratedAvatar
+                                // @ts-ignore
+                                seed={meeting?.agent?.name}
+                                className="size-6"
+                              />
+                              <p className="text-md">
+                                {/* @ts-ignore */}
+                                {meeting?.agent?.name}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce"></div>
+                              <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                              <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                            </div>
+                          </div>
+                        )}
+                        <div ref={endOfChatsRef} />
                       </div>
                     )}
                     <div className="p-2">
@@ -400,12 +438,14 @@ export const MeetingContent = ({ meetingId }: Props) => {
                           value={content}
                           className="peer pe-9"
                           placeholder="Ask AI..."
+                          disabled={isTyping || isPending}
                         />
                         <button
                           className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                           aria-label="Submit search"
                           type="submit"
                           onClick={onSubmit}
+                          disabled={isTyping || isPending || !content.trim()}
                         >
                           <ArrowRightIcon size={16} aria-hidden="true" />
                         </button>
