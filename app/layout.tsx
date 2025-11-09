@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import localFont from "next/font/local";
 import { DialogProvider } from "@/components/provider/dialog-provider";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const satoshi = localFont({
   src: [
@@ -140,6 +141,7 @@ export default function RootLayout({
         <DialogProvider />
         {children}
         <Analytics />
+        <SpeedInsights />
         <Toaster />
       </body>
     </html>
