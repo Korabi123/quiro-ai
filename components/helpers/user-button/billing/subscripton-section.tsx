@@ -447,10 +447,7 @@ export const SubscriptionSection = ({ user }: Props) => {
                     </span>
                   </CardTitle>
                   <CardDescription className="pb-1">
-                    <span className="line-through text-muted-foreground">
-                      10€
-                    </span>{" "}
-                    <span className="font-semibold text-zinc-600">3€</span>
+                    <span className="font-semibold text-zinc-600">10€</span>
                     /month
                   </CardDescription>
                 </CardHeader>

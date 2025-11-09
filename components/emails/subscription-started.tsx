@@ -65,8 +65,8 @@ export function WelcomeQuiroProEmail({
             </Heading>
             <ul style={stepsList}>
               <li style={stepItem}>✅ Explore your dashboard</li>
-              <li style={stepItem}>📚 Learn from quick start guides</li>
-              <li style={stepItem}>🤝 Connect with the Quiro Pro community</li>
+              <li style={stepItem}>📚 Generate and manage your agents</li>
+              <li style={stepItem}>🤝 Start a meeting</li>
             </ul>
           </Section>
 
@@ -95,7 +95,7 @@ export function WelcomeQuiroProEmail({
                 {subscriptionId && <>Subscription ID: {subscriptionId}<br/></>}
                 {referenceId && <>Reference ID: {referenceId}<br/></>}
                 {planName && <>Plan: {planName}<br/></>}
-                {planPrice && <>Price: {planPrice}</>}
+                {planPrice && <>Price: {planPrice}<br/></>}
                 {renewsAt && <>Renews At: {renewsAt}</>}
               </Text>
             )}
