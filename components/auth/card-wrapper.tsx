@@ -35,7 +35,7 @@ export const CardWrapper = ({
         {hasLogo && (
           <img
             src={logoSrc}
-            className="size-12 self-center mb-4"
+            className="size-12 ml-auto mr-auto mb-4"
             alt="Logo"
             width={100}
             height={100}
@@ -44,10 +44,10 @@ export const CardWrapper = ({
         <CardTitle className="text-xl">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="px-8 shadow-sm rounded-b-2xl border-slate-300/50 border-b-[2px]">
+      <CardContent className="px-8 shadow-sm rounded-b-2xl border-slate-300/50 pb-4 border-b-[2px]">
         {children}
       </CardContent>
-      <CardFooter className="flex justify-center border-t-slate-200/10 bg-gray-200/30 p-4 py-[6px] rounded-b-2xl">
+      <CardFooter className="flex justify-center border-t-slate-200/10 bg-gray-200/30 p-4 py-[0px] -mt-4 -mb-4 rounded-b-2xl">
         {footerRef === "login" && (
           <span className="text-muted-foreground/70 text-sm">
             Already have an account?{" "}

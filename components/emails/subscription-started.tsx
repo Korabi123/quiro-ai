@@ -83,7 +83,7 @@ export function WelcomeQuiroProEmail({
           <Section style={footerSection}>
             <Text style={footerText}>
               Need help?{" "}
-              <Link href="mailto:support@quiropro.com" style={footerLink}>
+              <Link href="mailto:contact.korabimeri@gmail.com" style={footerLink}>
                 Contact our support team
               </Link>
               .
@@ -183,12 +183,13 @@ const ctaSection = {
 };
 
 const button = {
-  backgroundColor: "#10B981",
+  backgroundColor: "#ea721b",
   color: "#ffffff",
   textDecoration: "none",
   borderRadius: "6px",
   fontSize: "16px",
   fontWeight: 500,
+  padding: "10px 20px",
 };
 
 const divider = {
@@ -224,7 +225,7 @@ const footerTextSmall = {
 };
 
 const footerLink = {
-  color: "#10B981",
+  color: "#ea721b",
   textDecoration: "underline",
 };
 
