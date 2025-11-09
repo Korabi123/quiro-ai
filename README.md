@@ -3,10 +3,6 @@
 ## Introduction
 Quiro AI is an advanced AI-powered platform designed to streamline your workflow by intelligently managing meetings, agents, and reports. It leverages cutting-edge AI to provide features like real-time transcription, intelligent summaries, and efficient data organization, helping you make informed decisions faster.
 
-## Branding
-
-![Quiro AI Logo](public/branding/logo-standalone-png.png)
-
 ## Screenshot
 
 ![App Screenshot](public/screenshots/meetings-main.png)
