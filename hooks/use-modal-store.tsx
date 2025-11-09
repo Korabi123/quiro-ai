@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 export type ModalStoreType =
+  "createMeeting"
   | "editMeeting"
   | "deleteMeeting"
   | "createAgent"

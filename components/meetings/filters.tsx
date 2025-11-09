@@ -145,7 +145,7 @@ const AgentFilter = () => {
                 }}
                 key={agent.id}
               >
-                <GeneratedAvatar seed={agent.id} className="size-8" />
+                <GeneratedAvatar seed={agent.name} className="size-8" />
                 <span>{agent.name}</span>
               </CommandItem>
             ))}

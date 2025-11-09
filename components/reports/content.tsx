@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 import { ReportEmptySvg } from "../svg/report-empty";
 import { Button } from "../ui/button";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Response } from "../ai-elements/response";
-import { Question } from "@prisma/client";
+import { Chat, Question } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { GeneratedAvatar } from "../generated-avatar";
@@ -62,10 +62,27 @@ export const ReportContent = ({ reportId }: Props) => {
 
   const [lastSentMessage, setLastSentMessage] = useState<string>("");
 
+  const [optimisticChats, setOptimisticChats] = useState<Chat[]>([]);
+  const [pendingMessage, setPendingMessage] = useState<string>("");
+
   const onSubmit = () => {
+    // Add optimistic update
+    const tempChat: Chat = {
+      id: `temp-${Date.now()}`,
+      content: content,
+      type: "USER",
+      meetingId: null,
+      reportId: reportId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      userId: session?.data?.user.id!,
+    };
+
+    setOptimisticChats((prev) => [...prev, tempChat]);
+    setPendingMessage(content);
     setContent("");
     setLastSentMessage(content); // Store the message we just sent
-    
+
     startTransition(async () => {
       try {
         await axios.post(`/api/chats/create?reportId=${reportId}`, {
@@ -75,8 +92,18 @@ export const ReportContent = ({ reportId }: Props) => {
           // @ts-ignore
           transcript: `SUMMARY: ${report?.summary}\nBREAKDOWN: ${report?.breakdown}\nQUESTIONS AND FEEDBACK:\n${report?.questions.map((question: Question) => `${question.content}: ${question.answer}\n${question.feedback}\n`).join("\n")}`,
         });
+        // Clear optimistic chat after server confirms
+        setOptimisticChats((prev) =>
+          prev.filter((chat) => chat.id !== tempChat.id)
+        );
+        setPendingMessage("");
       } catch (error) {
         toast.error("Something went wrong");
+        // Remove optimistic chat on error
+        setOptimisticChats((prev) =>
+          prev.filter((chat) => chat.id !== tempChat.id)
+        );
+        setPendingMessage("");
         setIsTyping(false);
         setLastSentMessage(""); // Clear on error
       }
@@ -85,7 +112,10 @@ export const ReportContent = ({ reportId }: Props) => {
 
   useEffect(() => {
     const down = (pressedKey: KeyboardEvent) => {
-      if (pressedKey.key === "l" && (pressedKey.metaKey || pressedKey.ctrlKey)) {
+      if (
+        pressedKey.key === "l" &&
+        (pressedKey.metaKey || pressedKey.ctrlKey)
+      ) {
         pressedKey.preventDefault();
         onSubmit();
       }
@@ -96,16 +126,16 @@ export const ReportContent = ({ reportId }: Props) => {
   }, [onSubmit]);
 
   useEffect(() => {
-    endOfChatsRef.current?.scrollIntoView({ behavior: "smooth" });
-  });
-
-  useEffect(() => {
     if (chats && chats.length > 0) {
       const lastMessage = chats[chats.length - 1];
-      
+
       // If we have a last sent message and the last chat is from the user with the same content
-      if (lastSentMessage && lastMessage.type === "USER" && lastMessage.content === lastSentMessage) {
-        // Show typing indicator after user's message is confirmed
+      if (
+        lastSentMessage &&
+        lastMessage.type === "USER" &&
+        lastMessage.content === lastSentMessage
+      ) {
+        // Show typing indicator immediately after user's message is confirmed
         setIsTyping(true);
         setLastSentMessage(""); // Clear the tracking
       } else if (lastMessage.type === "AI") {
@@ -114,6 +144,44 @@ export const ReportContent = ({ reportId }: Props) => {
       }
     }
   }, [chats, lastSentMessage]);
+
+  // Combine server chats with optimistic chats
+  const displayChats = useMemo(() => {
+    if (!chats) return optimisticChats;
+
+    // Filter out any optimistic chats that might have been duplicated by the server
+    const filteredOptimistic = optimisticChats.filter(
+      (optChat) =>
+        !chats.some(
+          (serverChat) =>
+            serverChat.content === optChat.content &&
+            serverChat.type === optChat.type &&
+            Math.abs(
+              new Date(serverChat.createdAt).getTime() -
+                new Date(optChat.createdAt).getTime()
+            ) < 5000
+        )
+    );
+
+    return [...chats, ...filteredOptimistic];
+  }, [chats, optimisticChats]);
+
+  useEffect(() => {
+    // Smooth scroll to bottom with a small delay to ensure DOM updates
+    const scrollToBottom = () => {
+      const scrollContainer = endOfChatsRef.current?.closest('.overflow-y-scroll');
+      if (scrollContainer) {
+        scrollContainer.scrollTo({
+          top: scrollContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    };
+
+    // Use setTimeout to ensure DOM is updated before scrolling
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
+  });
 
   return (
     <>
@@ -296,8 +364,8 @@ export const ReportContent = ({ reportId }: Props) => {
                   </>
                 )}
                 {tab === "askAI" && (
-                  <div className="flex flex-col gap-2 max-h-[400px] h-[400px]">
-                    {chats?.length === 0 ? (
+                  <div className="flex flex-col gap-2 max-h-[450px] h-[450px]">
+                    {displayChats?.length === 0 ? (
                       <div className="w-full h-full flex flex-col gap-3 items-center justify-center p-4">
                         <MessageCircleIcon className="size-16 text-muted-foreground/40" />
                         <p className="text-muted-foreground/40">
@@ -306,11 +374,14 @@ export const ReportContent = ({ reportId }: Props) => {
                       </div>
                     ) : (
                       <div className="flex flex-col p-2 gap-6 w-full h-full overflow-y-scroll">
-                        {chats?.map((chat) => (
-                          <div key={chat.id} className={cn(
-                            "flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4",
-                            chat.type === "AI" ? "self-start" : "self-end"
-                          )}>
+                        {displayChats?.map((chat) => (
+                          <div
+                            key={chat.id}
+                            className={cn(
+                              "flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4",
+                              chat.type === "AI" ? "self-start" : "self-end"
+                            )}
+                          >
                             {chat.type === "AI" && (
                               <>
                                 <div className="flex items-center gap-2">
@@ -366,11 +437,18 @@ export const ReportContent = ({ reportId }: Props) => {
                             </div>
                             <div className="flex items-center gap-1">
                               <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce"></div>
-                              <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                              <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                              <div
+                                className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce"
+                                style={{ animationDelay: "0.1s" }}
+                              ></div>
+                              <div
+                                className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce"
+                                style={{ animationDelay: "0.2s" }}
+                              ></div>
                             </div>
                           </div>
                         )}
+                        <div ref={endOfChatsRef} />
                       </div>
                     )}
                     <div className="p-2">

@@ -28,6 +28,7 @@ import { AudioPlayer } from "../ui/audio-player";
 import { Input } from "@/components/ui/input";
 import { useChats } from "@/lib/chats";
 import { Response } from '@/components/ai-elements/response';
+import { Chat } from "@prisma/client";
 
 interface Props {
   meetingId: string;
@@ -71,53 +72,57 @@ export const MeetingContent = ({ meetingId }: Props) => {
     );
 
     if (filteredTranscript.length === 0) {
-      return <p className="text-center text-muted-foreground/70 mb-4">No results found for "{searchQuery}".</p>;
+      return (
+        <p className="text-center text-muted-foreground/70 mb-4">
+          No results found for "{searchQuery}".
+        </p>
+      );
     }
 
     return filteredTranscript.map((item, index) => {
-        const { speaker, utterance } = item;
-        return (
-          <div key={index} className="border rounded-2xl p-3 bg-card">
-            <div className="flex items-center gap-2 mb-2">
-              {speaker === "AI" ? (
-                <GeneratedAvatar
-                  // @ts-ignore
-                  seed={meeting?.agent?.name}
-                  className="size-6"
-                />
-              ) : (
-                <Avatar className="size-6">
-                  <AvatarImage src={session.data?.user.image!} />
-                  <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
-                    <UserIcon className="size-4" />
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              <p className="text-md">
-                {speaker === "AI"
-                  ? // @ts-ignore
-                    meeting?.agent?.name
-                  : session?.data?.user.name || "User"}
-              </p>
-            </div>
-            <p className="text-sm text-muted-foreground/70">
-              {searchQuery
-                ? utterance
-                    .split(new RegExp(`(${searchQuery})`, "gi"))
-                    .map((part, i) =>
-                      part.toLowerCase() === searchQuery.toLowerCase() ? (
-                        <span key={i} className="bg-yellow-200">
-                          {part}
-                        </span>
-                      ) : (
-                        <span key={i}>{part}</span>
-                      )
-                    )
-                : utterance}
+      const { speaker, utterance } = item;
+      return (
+        <div key={index} className="border rounded-2xl p-3 bg-card">
+          <div className="flex items-center gap-2 mb-2">
+            {speaker === "AI" ? (
+              <GeneratedAvatar
+                // @ts-ignore
+                seed={meeting?.agent?.name}
+                className="size-6"
+              />
+            ) : (
+              <Avatar className="size-6">
+                <AvatarImage src={session.data?.user.image!} />
+                <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
+                  <UserIcon className="size-4" />
+                </AvatarFallback>
+              </Avatar>
+            )}
+            <p className="text-md">
+              {speaker === "AI"
+                ? // @ts-ignore
+                  meeting?.agent?.name
+                : session?.data?.user.name || "User"}
             </p>
           </div>
-        );
-      });
+          <p className="text-sm text-muted-foreground/70">
+            {searchQuery
+              ? utterance
+                  .split(new RegExp(`(${searchQuery})`, "gi"))
+                  .map((part, i) =>
+                    part.toLowerCase() === searchQuery.toLowerCase() ? (
+                      <span key={i} className="bg-yellow-200">
+                        {part}
+                      </span>
+                    ) : (
+                      <span key={i}>{part}</span>
+                    )
+                  )
+              : utterance}
+          </p>
+        </div>
+      );
+    });
   }, [
     meeting?.callTranscript,
     searchQuery,
@@ -129,10 +134,27 @@ export const MeetingContent = ({ meetingId }: Props) => {
 
   const [lastSentMessage, setLastSentMessage] = useState<string>("");
 
+  const [optimisticChats, setOptimisticChats] = useState<Chat[]>([]);
+  const [pendingMessage, setPendingMessage] = useState<string>("");
+
   const onSubmit = () => {
+    // Add optimistic update
+    const tempChat: Chat = {
+      id: `temp-${Date.now()}`,
+      content: content,
+      type: "USER",
+      meetingId: meetingId,
+      reportId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      userId: session?.data?.user.id!,
+    };
+
+    setOptimisticChats((prev) => [...prev, tempChat]);
+    setPendingMessage(content);
     setContent("");
     setLastSentMessage(content); // Store the message we just sent
-    
+
     startTransition(async () => {
       try {
         await axios.post(`/api/chats/create?meetingId=${meetingId}`, {
@@ -141,8 +163,18 @@ export const MeetingContent = ({ meetingId }: Props) => {
           type: "USER",
           transcript: meeting?.callTranscript,
         });
+        // Clear optimistic chat after server confirms
+        setOptimisticChats((prev) =>
+          prev.filter((chat) => chat.id !== tempChat.id)
+        );
+        setPendingMessage("");
       } catch (error) {
         toast.error("Something went wrong");
+        // Remove optimistic chat on error
+        setOptimisticChats((prev) =>
+          prev.filter((chat) => chat.id !== tempChat.id)
+        );
+        setPendingMessage("");
         setIsTyping(false);
         setLastSentMessage(""); // Clear on error
       }
@@ -152,14 +184,14 @@ export const MeetingContent = ({ meetingId }: Props) => {
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "l" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
+        e.preventDefault();
         onSubmit();
       }
-    }
+    };
 
-    document.addEventListener("keydown", down)
-    return () => document.removeEventListener("keydown", down)
-  }, [onSubmit])
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, [onSubmit]);
 
   const onMeetingCancel = () => {
     startTransition(async () => {
@@ -175,16 +207,16 @@ export const MeetingContent = ({ meetingId }: Props) => {
   };
 
   useEffect(() => {
-    endOfChatsRef.current?.scrollIntoView({ behavior: "smooth" });
-  });
-
-  useEffect(() => {
     if (chats && chats.length > 0) {
       const lastMessage = chats[chats.length - 1];
-      
+
       // If we have a last sent message and the last chat is from the user with the same content
-      if (lastSentMessage && lastMessage.type === "USER" && lastMessage.content === lastSentMessage) {
-        // Show typing indicator after user's message is confirmed
+      if (
+        lastSentMessage &&
+        lastMessage.type === "USER" &&
+        lastMessage.content === lastSentMessage
+      ) {
+        // Show typing indicator immediately after user's message is confirmed
         setIsTyping(true);
         setLastSentMessage(""); // Clear the tracking
       } else if (lastMessage.type === "AI") {
@@ -194,6 +226,43 @@ export const MeetingContent = ({ meetingId }: Props) => {
     }
   }, [chats, lastSentMessage]);
 
+  // Combine server chats with optimistic chats
+  const displayChats = useMemo(() => {
+    if (!chats) return optimisticChats;
+
+    // Filter out any optimistic chats that might have been duplicated by the server
+    const filteredOptimistic = optimisticChats.filter(
+      (optChat) =>
+        !chats.some(
+          (serverChat) =>
+            serverChat.content === optChat.content &&
+            serverChat.type === optChat.type &&
+            Math.abs(
+              new Date(serverChat.createdAt).getTime() -
+                new Date(optChat.createdAt).getTime()
+            ) < 5000
+        )
+    );
+
+    return [...chats, ...filteredOptimistic];
+  }, [chats, optimisticChats]);
+
+  useEffect(() => {
+    // Smooth scroll to bottom with a small delay to ensure DOM updates
+    const scrollToBottom = () => {
+      const scrollContainer = endOfChatsRef.current?.closest('.overflow-y-scroll');
+      if (scrollContainer) {
+        scrollContainer.scrollTo({
+          top: scrollContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    };
+
+    // Use setTimeout to ensure DOM is updated before scrolling
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
+  });
   return (
     <>
       {isLoading ? (
@@ -353,8 +422,8 @@ export const MeetingContent = ({ meetingId }: Props) => {
                   </div>
                 )}
                 {tab === "askAI" && (
-                  <div className="flex flex-col gap-2 max-h-[400px] h-[400px]">
-                    {chats?.length === 0 ? (
+                  <div className="flex flex-col gap-2 max-h-[450px] h-[450px]">
+                    {displayChats?.length === 0 ? (
                       <div className="w-full h-full flex flex-col gap-3 items-center justify-center p-4">
                         <MessageCircleIcon className="size-16 text-muted-foreground/40" />
                         <p className="text-muted-foreground/40">
@@ -363,11 +432,14 @@ export const MeetingContent = ({ meetingId }: Props) => {
                       </div>
                     ) : (
                       <div className="flex flex-col p-2 gap-6 w-full h-full overflow-y-scroll">
-                        {chats?.map((chat) => (
-                          <div key={chat.id} className={cn(
-                            "flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4",
-                            chat.type === "AI" ? "self-start" : "self-end"
-                          )}>
+                        {displayChats?.map((chat) => (
+                          <div
+                            key={chat.id}
+                            className={cn(
+                              "flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4",
+                              chat.type === "AI" ? "self-start" : "self-end"
+                            )}
+                          >
                             {chat.type === "AI" && (
                               <>
                                 <div className="flex items-center gap-2">
@@ -423,8 +495,14 @@ export const MeetingContent = ({ meetingId }: Props) => {
                             </div>
                             <div className="flex items-center gap-1">
                               <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce"></div>
-                              <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                              <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                              <div
+                                className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce"
+                                style={{ animationDelay: "0.1s" }}
+                              ></div>
+                              <div
+                                className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce"
+                                style={{ animationDelay: "0.2s" }}
+                              ></div>
                             </div>
                           </div>
                         )}

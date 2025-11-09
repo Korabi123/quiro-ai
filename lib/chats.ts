@@ -7,7 +7,7 @@ export const useChats = (meetingId?: string, reportId?: string) => {
     `/api/chats/get?meetingId=${meetingId}&reportId=${reportId}`,
     fetcher,
     {
-      refreshInterval: 150
+      refreshInterval: 2000 // 2 second polling interval
     }
   );
 
