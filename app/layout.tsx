@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 import localFont from "next/font/local";
 import { DialogProvider } from "@/components/provider/dialog-provider";
+import { Analytics } from "@vercel/analytics/next";
 
 const satoshi = localFont({
   src: [
@@ -75,7 +76,7 @@ export const metadata: Metadata = {
   description: "Quiro AI offers daily coding problems, AI-powered mock interviews, and tailored skill checks to help you ace your technical interviews. Prepare effectively for your dream job with our comprehensive platform.",
   openGraph: {
     type: "website",
-    url: "https://quiro.ai",
+    url: "https://quiro-ai.vercel.app",
     title: "Quiro AI - Ace Your Interviews with AI-Powered Prep",
     description: "Quiro AI offers daily coding problems, AI-powered mock interviews, and tailored skill checks to help you ace your technical interviews. Prepare effectively for your dream job with our comprehensive platform.",
     images: [
@@ -122,7 +123,7 @@ export const metadata: Metadata = {
   creator: "korabimeri",
   publisher: "Quiro AI", // Added publisher
   alternates: {
-    canonical: "https://quiro.ai", // Added canonical URL
+    canonical: "https://quiro-ai.vercel.app", // Added canonical URL
   },
 };
 
@@ -138,6 +139,7 @@ export default function RootLayout({
       >
         <DialogProvider />
         {children}
+        <Analytics />
         <Toaster />
       </body>
     </html>
