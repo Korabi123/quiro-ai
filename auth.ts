@@ -104,10 +104,10 @@ export const auth = betterAuth({
               subject: `🎉 You just joined Quiro ${plan.name} — let’s get started!`,
               react: WelcomeQuiroProEmail({
                 recipientName: user.name,
-                startUrl: `${process.env.BETTER_AUTH_URL}/dashboard`,
+                startUrl: `${process.env.BETTER_AUTH_URL}/meetings`,
                 subscriptionId: stripeSubscription.id,
                 planName: plan.name,
-                planPrice: "3€/month",
+                planPrice: "10€/month",
                 referenceId: subscription.referenceId,
                 renewsAt: subscription?.periodEnd?.toLocaleDateString(),
               })

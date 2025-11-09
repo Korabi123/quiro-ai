@@ -68,8 +68,62 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "quiro AI",
-  description: "Train for real interviews with daily coding problems, AI-powered mock calls, and tailored skill checks — all in one app.",
+  title: {
+    default: "Quiro AI - Ace Your Interviews with AI-Powered Prep",
+    template: "%s | Quiro AI",
+  },
+  description: "Quiro AI offers daily coding problems, AI-powered mock interviews, and tailored skill checks to help you ace your technical interviews. Prepare effectively for your dream job with our comprehensive platform.",
+  openGraph: {
+    type: "website",
+    url: "https://quiro.ai",
+    title: "Quiro AI - Ace Your Interviews with AI-Powered Prep",
+    description: "Quiro AI offers daily coding problems, AI-powered mock interviews, and tailored skill checks to help you ace your technical interviews. Prepare effectively for your dream job with our comprehensive platform.",
+    images: [
+      {
+        url: "https://i.ibb.co/DDGQ0BpC/ogimage.png", // Absolute URL for Open Graph image
+        width: 1200,
+        height: 630,
+        alt: "Quiro AI - Interview Preparation Platform",
+      },
+    ],
+    locale: "en_US",
+    siteName: "Quiro AI",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Quiro AI - Ace Your Interviews with AI-Powered Prep",
+    description: "Quiro AI offers daily coding problems, AI-powered mock interviews, and tailored skill checks to help you ace your technical interviews. Prepare effectively for your dream job with our comprehensive platform.",
+    images: ["https://i.ibb.co/DDGQ0BpC/ogimage.png"], // Absolute URL for Twitter image
+    creator: "@quiro_ai", // Assuming a Twitter handle exists
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  keywords: [
+    "Quiro AI",
+    "interview preparation",
+    "coding problems",
+    "AI mock interviews",
+    "skill checks",
+    "technical interview",
+    "career success",
+    "job preparation",
+    "software engineering interview",
+  ],
+  applicationName: "Quiro AI",
+  creator: "korabimeri",
+  publisher: "Quiro AI", // Added publisher
+  alternates: {
+    canonical: "https://quiro.ai", // Added canonical URL
+  },
 };
 
 export default function RootLayout({

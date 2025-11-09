@@ -10,10 +10,10 @@ const ipResetTimers = new Map<string, NodeJS.Timeout>();
 interface RateLimitOptions {
   // Maximum number of requests allowed in the window
   limit: number;
-  
+
   // Time window in seconds
   windowMs: number;
-  
+
   // Optional message to return when rate limited
   message?: string;
 }
@@ -23,32 +23,32 @@ interface RateLimitOptions {
  */
 export function createRateLimiter(options: RateLimitOptions) {
   const { limit, windowMs, message = 'Too many requests, please try again later' } = options;
-  
+
   return function rateLimiter(req: NextRequest) {
     // Get client IP
-    const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
-    
+    const ip = req.headers.get('x-forwarded-for') || 'unknown';
+
     // Get current count for this IP or initialize to 0
     const currentRequests = ipRequestMap.get(ip) || 0;
-    
+
     // If this is the first request from this IP, set up reset timer
     if (currentRequests === 0) {
       const timer = setTimeout(() => {
         ipRequestMap.delete(ip);
         ipResetTimers.delete(ip);
       }, windowMs);
-      
+
       ipResetTimers.set(ip, timer);
     }
-    
+
     // Increment request count
     ipRequestMap.set(ip, currentRequests + 1);
-    
+
     // Check if rate limit exceeded
     if (currentRequests >= limit) {
       return NextResponse.json(
         { error: message },
-        { 
+        {
           status: 429,
           headers: {
             'Retry-After': Math.ceil(windowMs / 1000).toString(),
@@ -59,7 +59,7 @@ export function createRateLimiter(options: RateLimitOptions) {
         }
       );
     }
-    
+
     // Not rate limited, continue
     return null;
   };

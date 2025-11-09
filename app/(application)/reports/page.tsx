@@ -6,7 +6,7 @@ import { ReportsTable } from "@/components/reports/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import { Subscription } from "@better-auth/stripe";
-import { useEffect, useState, useTransition } from "react";
+import { Suspense, useEffect, useState, useTransition } from "react";
 
 const ReportsPage = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -38,11 +38,13 @@ const ReportsPage = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4 md:px-10 px-4 py-4">
-      <ReportsHeading />
-      <ReportsFilters />
-      <ReportsTable />
-    </div>
+    <Suspense>
+      <div className="flex flex-col gap-4 md:px-10 px-4 py-4">
+        <ReportsHeading />
+        <ReportsFilters />
+        <ReportsTable />
+      </div>
+    </Suspense>
   );
 }
 
