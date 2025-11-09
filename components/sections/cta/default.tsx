@@ -27,7 +27,7 @@ export default function CTA({
   description = "Join thousands of successful candidates who aced their interviews with Quiro AI. Start your journey to career success today!",
   buttons = [
     {
-      href: "/auth/sign-up",
+      href: "/sign-up",
       text: "Get Started",
       variant: "default",
     },

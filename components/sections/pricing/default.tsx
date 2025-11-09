@@ -26,7 +26,7 @@ export default function Pricing({
       cta: {
         variant: "glow",
         label: "Start Free Practice",
-        href: "/auth/sign-up",
+        href: "/sign-up",
         autoUpgrade: false,
       },
       features: [
@@ -46,7 +46,7 @@ export default function Pricing({
       cta: {
         variant: "default",
         label: "Go Pro",
-        href: "/auth/sign-up",
+        href: "/sign-up",
         autoUpgrade: true,
       },
       features: [
