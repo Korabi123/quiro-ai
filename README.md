@@ -5,11 +5,11 @@ Quiro AI is an advanced AI-powered platform designed to streamline your workflow
 
 ## Branding
 
-![Quiro AI Logo](public/next.svg) <!-- Placeholder for a proper logo -->
+![Quiro AI Logo](public/branding/logo-standalone-png.png)
 
 ## Screenshot
 
-![App Screenshot](https://via.placeholder.com/800x450?text=Quiro+AI+App+Screenshot) <!-- Placeholder for an actual screenshot -->
+![App Screenshot](public/screenshots/meetings-main.png)
 
 ## Features
 
