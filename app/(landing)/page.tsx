@@ -8,6 +8,8 @@ import "./landing.css";
 import Pricing from "@/components/sections/pricing/default";
 import { motion } from "framer-motion";
 import CTA from "@/components/sections/cta/default";
+import { Footer, FooterBottom } from "@/components/ui/footer";
+import FooterSection from "@/components/blocks/footer";
 
 export default function Home() {
   return (
@@ -32,6 +34,7 @@ export default function Home() {
         >
           <CTA className="bg-black mt-20" />
         </motion.div>
+        <FooterSection />
       </div>
     </>
   );
