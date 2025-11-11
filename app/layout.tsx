@@ -135,6 +135,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <meta
+        name="google-site-verification"
+        content="lekmOW1tN9N3gVV3pCGAkjlhp8sa54hIhE1vUkSBIoE"
+      />
       <body
         className={`${inter.variable} ${satoshi.variable} font-satoshi antialiased h-full w-full`}
       >
