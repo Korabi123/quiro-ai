@@ -7,6 +7,7 @@ import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import CrispChat from "@/components/crisp";
+import { DialogProvider } from "@/components/provider/dialog-provider";
 
 const satoshi = localFont({
   src: [
@@ -142,6 +143,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${satoshi.variable} font-satoshi antialiased h-full w-full`}
       >
+        <DialogProvider />
         {children}
         <Analytics />
         <SpeedInsights />
