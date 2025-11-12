@@ -101,7 +101,6 @@ export const LoginCard = ({
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setEmailState(form.getValues().email);
-    console.log(emailState);
 
     authClient.signIn.email(
       {

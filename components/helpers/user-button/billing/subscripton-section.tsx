@@ -39,8 +39,6 @@ export const SubscriptionSection = ({ user }: Props) => {
       setSubscription(subscription.data?.[0] ?? null);
     };
     getSubscription();
-
-    // console.log("subscription: ", subscription);
   }, []);
 
   return (

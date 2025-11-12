@@ -4,7 +4,6 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
 import localFont from "next/font/local";
-import { DialogProvider } from "@/components/provider/dialog-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
@@ -142,7 +141,6 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${satoshi.variable} font-satoshi antialiased h-full w-full`}
       >
-        <DialogProvider />
         {children}
         <Analytics />
         <SpeedInsights />
