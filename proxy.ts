@@ -4,7 +4,7 @@ import { PUBLIC_ROUTES } from "./routes";
 
 const publicRoutes = PUBLIC_ROUTES;
 
-export async function middleware(req: Request) {
+export async function proxy(req: Request) {
   const session = getSessionCookie(req);
 
   if (publicRoutes.includes(new URL(req.url).pathname)) {

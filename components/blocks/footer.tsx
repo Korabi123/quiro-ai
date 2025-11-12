@@ -31,7 +31,7 @@ interface FooterProps {
 }
 
 export default function FooterSection({
-  logo = <img src="/branding/logo-standalone.svg" alt="Quiro AI" className="h-8 w-auto" />,
+  logo = <img src="./branding/logo-standalone-png.png" alt="Quiro AI" className="h-8 w-auto" />,
   name = "Quiro AI",
   columns = [
     {

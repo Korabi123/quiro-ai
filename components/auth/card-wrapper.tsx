@@ -47,7 +47,7 @@ export const CardWrapper = ({
       <CardContent className="px-8 shadow-sm rounded-b-2xl border-slate-300/50 pb-4 border-b-[2px]">
         {children}
       </CardContent>
-      <CardFooter className="flex justify-center border-t-slate-200/10 bg-gray-200/30 p-4 py-[0px] -mt-4 -mb-4 rounded-b-2xl">
+      <CardFooter className="flex justify-center border-t-slate-200/10 bg-gray-200/30 p-4 py-[0px] -mt-6 -mb-6 rounded-b-2xl">
         {footerRef === "login" && (
           <span className="text-muted-foreground/70 text-sm">
             Already have an account?{" "}
