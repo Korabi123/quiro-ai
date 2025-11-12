@@ -36,7 +36,7 @@ export function WelcomeQuiroProEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>🎉 You just joined Quiro Pro — let’s get started!</Preview>
+      <Preview>You just joined Quiro Pro — let’s get started!</Preview>
       <Body style={main}>
         <Container style={container}>
           {/* Animated GIF */}

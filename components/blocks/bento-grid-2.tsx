@@ -31,7 +31,7 @@ const itemsSample = [
   {
     title: "AI Interview Simulations",
     description: "Simulate real interview calls with AI agents you create and customize.",
-    icon: <img src="https://emojicdn.elk.sh/🎙️" alt="🎙️" className="h-4 w-4" />,
+    icon: <img src="https://emojicdn.elk.sh/%F0%9F%8E%99%EF%B8%8F" alt="🎙️" className="h-4 w-4" />,
     tags: ["AI", "Interviews", "Practice"],
     colSpan: 2,
     cta: "/sign-up",
@@ -39,21 +39,21 @@ const itemsSample = [
   {
     title: "Customizable AI Agents",
     description: "Create and customize AI agents with specific prompts for tailored meeting simulations.",
-    icon: <img src="https://emojicdn.elk.sh/🤖" alt="🤖" className="h-4 w-4" />,
+    icon: <img src="https://emojicdn.elk.sh/%F0%9F%A4%96" alt="🤖" className="h-4 w-4" />,
     tags: ["AI", "Customization", "Agents"],
     cta: "/sign-up",
   },
   {
     title: "Comprehensive Skill Reports",
     description: "Generate detailed skill reports by field and type, with AI-powered feedback.",
-    icon: <img src="https://emojicdn.elk.sh/📄" alt="📄" className="h-4 w-4" />,
+    icon: <img src="https://emojicdn.elk.sh/%F0%9F%93%84" alt="📄" className="h-4 w-4" />,
     tags: ["Skills", "Reports", "Feedback"],
     cta: "/sign-up",
   },
   {
     title: "AI-Powered Coding Challenges",
     description: "Solve coding problems with AI grading and performance improvement suggestions.",
-    icon: <img src="https://emojicdn.elk.sh/💻" alt="💻" className="h-4 w-4" />,
+    icon: <img src="https://emojicdn.elk.sh/%F0%9F%92%BB" alt="💻" className="h-4 w-4" />,
     tags: ["Coding", "AI", "Practice"],
     status: 'Coming Soon',
     cta: "/sign-up",
@@ -61,7 +61,7 @@ const itemsSample = [
   {
     title: "Personalized Hireability Insights",
     description: "Receive daily hireability tips based on your skill reports, meetings, and coding problems.",
-    icon: <img src="https://emojicdn.elk.sh/💡" alt="💡" className="h-4 w-4" />,
+    icon: <img src="https://emojicdn.elk.sh/%F0%9F%92%A1" alt="💡" className="h-4 w-4" />,
     tags: ["Tips", "Insights", "Career"],
     status: 'Coming Soon',
     cta: "/sign-up",
@@ -69,7 +69,7 @@ const itemsSample = [
   {
     title: "LinkedIn Job Integrations",
     description: "Generate agent instructions and skill reports directly from LinkedIn job URLs.",
-    icon: <img src="https://emojicdn.elk.sh/🔗" alt="🔗" className="h-4 w-4" />,
+    icon: <img src="https://emojicdn.elk.sh/%F0%9F%94%97" alt="🔗" className="h-4 w-4" />,
     tags: ["LinkedIn", "Integration", "Jobs"],
     colSpan: 2,
     status: "Coming Soon",
