@@ -162,7 +162,7 @@ export const SubscriptionSection = ({ user }: Props) => {
                       {subscription?.plan === "pro" ? (
                         <>
                           <span className="font-semibold text-zinc-600">
-                            3€
+                            10€
                           </span>
                         </>
                       ) : (
