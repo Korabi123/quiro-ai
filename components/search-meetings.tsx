@@ -1,8 +1,15 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Search, Plus, Calendar, Bot, FileText, CalendarPlus, UserPlus, FilePlus } from "lucide-react"
-import { useRouter } from "next/navigation"
+import * as React from "react";
+import {
+  Search,
+  Calendar,
+  FileText,
+  CalendarPlus,
+  UserPlus,
+  FilePlus,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import {
   CommandDialog,
@@ -11,104 +18,123 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
-} from "@/components/ui/command"
-import { Button } from "@/components/ui/button"
-import { GeneratedAvatar } from "./generated-avatar"
-import { useAgents } from "@/lib/agents"
-import { useMeetings } from "@/lib/meetings"
-import { useReports } from "@/lib/reports"
-import { useModalStore } from "@/hooks/use-modal-store"
+} from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
+import { GeneratedAvatar } from "./generated-avatar";
+import { useAgents } from "@/lib/agents";
+import { useMeetings } from "@/lib/meetings";
+import { useReports } from "@/lib/reports";
+import { useModalStore } from "@/hooks/use-modal-store";
+import { Subscription } from "@better-auth/stripe";
+import { authClient } from "@/lib/auth-client";
 
 export default function MeetingsSearch() {
-  const [open, setOpen] = React.useState(false)
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const router = useRouter()
-  const { onOpen } = useModalStore()
+  const [open, setOpen] = React.useState(false);
+  const [subscription, setSubscription] = React.useState<Subscription | null>(null);
+  const [isPending, startTransition] = React.useTransition();
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const router = useRouter();
+  const { onOpen } = useModalStore();
 
   // Fetch real data
-  const { data: agents, isLoading: agentsLoading } = useAgents()
-  const { data: meetings, isLoading: meetingsLoading } = useMeetings()
-  const { data: reports, isLoading: reportsLoading } = useReports()
+  const { data: agents, isLoading: agentsLoading } = useAgents();
+  const { data: meetings, isLoading: meetingsLoading } = useMeetings();
+  const { data: reports, isLoading: reportsLoading } = useReports();
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setOpen((open) => !open)
+        e.preventDefault();
+        setOpen((open) => !open);
       }
-    }
+    };
 
-    document.addEventListener("keydown", down)
-    return () => document.removeEventListener("keydown", down)
-  }, [])
+    document.addEventListener("keydown", down);
+    const getSubscription = async () => {
+      startTransition(async () => {
+        await authClient.subscription.list()
+          .then((res) => setSubscription(res?.data?.[0] ?? null));
+      });
+    }
+    getSubscription();
+    return () => document.removeEventListener("keydown", down);
+  }, []);
 
   // Filter items based on search query
   const filteredAgents = React.useMemo(() => {
-    if (!agents) return []
-    return agents.filter(agent =>
-      agent.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 5) // Limit to 5 items
-  }, [agents, searchQuery])
+    if (!agents) return [];
+    return agents
+      .filter((agent) =>
+        agent.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .slice(0, 5); // Limit to 5 items
+  }, [agents, searchQuery]);
 
   const filteredMeetings = React.useMemo(() => {
-    if (!meetings) return []
-    return meetings.filter(meeting =>
-      meeting.title.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 5) // Limit to 5 items
-  }, [meetings, searchQuery])
+    if (!meetings) return [];
+    return meetings
+      .filter((meeting) =>
+        meeting.title.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .slice(0, 5); // Limit to 5 items
+  }, [meetings, searchQuery]);
 
   const filteredReports = React.useMemo(() => {
-    if (!reports) return []
-    return reports.filter(report =>
-      report.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 5) // Limit to 5 items
-  }, [reports, searchQuery])
+    if (!reports) return [];
+    return reports
+      .filter((report) =>
+        report.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .slice(0, 5); // Limit to 5 items
+  }, [reports, searchQuery]);
 
   const handleAgentClick = (agentId: string) => {
-    router.push(`/agents/${agentId}`)
-    setOpen(false)
-  }
+    router.push(`/agents/${agentId}`);
+    setOpen(false);
+  };
 
   const handleMeetingClick = (meetingId: string) => {
-    router.push(`/meetings/${meetingId}`)
-    setOpen(false)
-  }
+    router.push(`/meetings/${meetingId}`);
+    setOpen(false);
+  };
 
   const handleReportClick = (reportId: string) => {
-    router.push(`/reports/${reportId}`)
-    setOpen(false)
-  }
+    router.push(`/reports/${reportId}`);
+    setOpen(false);
+  };
 
   const handleCreateAgent = () => {
     onOpen("createAgent", {
       reportId: undefined,
       agentId: undefined,
       meetingId: undefined,
-    })
-    setOpen(false)
-  }
+    });
+    setOpen(false);
+  };
 
   const handleCreateMeeting = () => {
     // Open the create meeting modal using the modal store
-    onOpen('createMeeting', {
+    onOpen("createMeeting", {
       reportId: undefined,
       agentId: undefined,
       meetingId: undefined,
-    })
-    setOpen(false)
-  }
+    });
+    setOpen(false);
+  };
 
   const handleCreateReport = () => {
     onOpen("createReport", {
       reportId: undefined,
       agentId: undefined,
       meetingId: undefined,
-    })
-    setOpen(false)
-  }
+    });
+    setOpen(false);
+  };
 
-  const hasResults = filteredAgents.length > 0 || filteredMeetings.length > 0 || filteredReports.length > 0
+  const hasResults =
+    filteredAgents.length > 0 ||
+    filteredMeetings.length > 0 ||
+    filteredReports.length > 0;
 
   return (
     <div className="w-full p-4">
@@ -143,10 +169,12 @@ export default function MeetingsSearch() {
               <UserPlus className="mr-2 text-muted-foreground/70 size-4" />
               <span>Create Agent</span>
             </CommandItem>
-            <CommandItem onSelect={handleCreateReport}>
-              <FilePlus className="mr-2 text-muted-foreground/70 size-4" />
-              <span>Create Report</span>
-            </CommandItem>
+            {subscription?.plan === "pro" && (
+              <CommandItem onSelect={handleCreateReport}>
+                <FilePlus className="mr-2 text-muted-foreground/70 size-4" />
+                <span>Create Report</span>
+              </CommandItem>
+            )}
           </CommandGroup>
 
           {/* <CommandSeparator /> */}
@@ -155,7 +183,10 @@ export default function MeetingsSearch() {
           {filteredAgents.length > 0 && (
             <CommandGroup heading="Agents" className="mx-0 font-normal">
               {filteredAgents.map((agent) => (
-                <CommandItem key={agent.id} onSelect={() => handleAgentClick(agent.id)}>
+                <CommandItem
+                  key={agent.id}
+                  onSelect={() => handleAgentClick(agent.id)}
+                >
                   <GeneratedAvatar seed={agent.name} className="size-6 mr-2" />
                   <span>{agent.name}</span>
                 </CommandItem>
@@ -167,7 +198,10 @@ export default function MeetingsSearch() {
           {filteredMeetings.length > 0 && (
             <CommandGroup heading="Meetings" className="mx-0 font-normal">
               {filteredMeetings.map((meeting) => (
-                <CommandItem key={meeting.id} onSelect={() => handleMeetingClick(meeting.id)}>
+                <CommandItem
+                  key={meeting.id}
+                  onSelect={() => handleMeetingClick(meeting.id)}
+                >
                   <Calendar className="mr-2 text-muted-foreground/70 size-4" />
                   <span>{meeting.title}</span>
                 </CommandItem>
@@ -179,7 +213,10 @@ export default function MeetingsSearch() {
           {filteredReports.length > 0 && (
             <CommandGroup heading="Reports" className="mx-0 font-normal">
               {filteredReports.map((report) => (
-                <CommandItem key={report.id} onSelect={() => handleReportClick(report.id)}>
+                <CommandItem
+                  key={report.id}
+                  onSelect={() => handleReportClick(report.id)}
+                >
                   <FileText className="mr-2 text-muted-foreground/70 size-4" />
                   <span>{report.name}</span>
                 </CommandItem>
@@ -192,10 +229,19 @@ export default function MeetingsSearch() {
             <>
               {/* Recent Agents */}
               {agents && agents.length > 0 && (
-                <CommandGroup heading="Recent Agents" className="mx-0 font-normal">
+                <CommandGroup
+                  heading="Recent Agents"
+                  className="mx-0 font-normal"
+                >
                   {agents.slice(0, 3).map((agent) => (
-                    <CommandItem key={agent.id} onSelect={() => handleAgentClick(agent.id)}>
-                      <GeneratedAvatar seed={agent.name} className="size-6 mr-2" />
+                    <CommandItem
+                      key={agent.id}
+                      onSelect={() => handleAgentClick(agent.id)}
+                    >
+                      <GeneratedAvatar
+                        seed={agent.name}
+                        className="size-6 mr-2"
+                      />
                       <span>{agent.name}</span>
                     </CommandItem>
                   ))}
@@ -204,9 +250,15 @@ export default function MeetingsSearch() {
 
               {/* Recent Meetings */}
               {meetings && meetings.length > 0 && (
-                <CommandGroup heading="Recent Meetings" className="mx-0 font-normal">
+                <CommandGroup
+                  heading="Recent Meetings"
+                  className="mx-0 font-normal"
+                >
                   {meetings.slice(0, 3).map((meeting) => (
-                    <CommandItem key={meeting.id} onSelect={() => handleMeetingClick(meeting.id)}>
+                    <CommandItem
+                      key={meeting.id}
+                      onSelect={() => handleMeetingClick(meeting.id)}
+                    >
                       <Calendar className="mr-2 h-4 w-4" />
                       <span>{meeting.title}</span>
                     </CommandItem>
@@ -216,9 +268,15 @@ export default function MeetingsSearch() {
 
               {/* Recent Reports */}
               {reports && reports.length > 0 && (
-                <CommandGroup heading="Recent Reports" className="mx-0 font-normal">
+                <CommandGroup
+                  heading="Recent Reports"
+                  className="mx-0 font-normal"
+                >
                   {reports.slice(0, 3).map((report) => (
-                    <CommandItem key={report.id} onSelect={() => handleReportClick(report.id)}>
+                    <CommandItem
+                      key={report.id}
+                      onSelect={() => handleReportClick(report.id)}
+                    >
                       <FileText className="mr-2 h-4 w-4" />
                       <span>{report.name}</span>
                     </CommandItem>
@@ -230,5 +288,5 @@ export default function MeetingsSearch() {
         </CommandList>
       </CommandDialog>
     </div>
-  )
+  );
 }
