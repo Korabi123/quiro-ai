@@ -31,14 +31,14 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, token, url }, request) => {
       await resend.emails.send({
         to: user.email,
-        from: 'auth@korabimeri.work.gd',
-        subject: 'Reset your password',
+        from: "auth@korabimeri.work.gd",
+        subject: "Reset your password",
         react: ResetPasswordEmail({
           resetLink: url,
           userFirstName: user.name,
-        })
+        }),
       });
-    }
+    },
   },
   socialProviders: {
     github: {
@@ -48,17 +48,17 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }
+    },
   },
   emailVerification: {
     sendVerificationEmail: async ({ user, token, url }, request) => {
       await resend.emails.send({
         to: user.email,
-        from: 'auth@korabimeri.work.gd',
-        subject: 'Verify your email',
+        from: "auth@korabimeri.work.gd",
+        subject: "Verify your email",
         text: `Click here to verify your email: ${url}`,
       });
-    }
+    },
   },
   appName: "quiro",
   plugins: [
@@ -68,12 +68,12 @@ export const auth = betterAuth({
         async sendOTP({ user, otp }, request) {
           await resend.emails.send({
             to: user.email,
-            from: 'auth@korabimeri.work.gd',
-            subject: 'Your Login Verification Code',
+            from: "auth@korabimeri.work.gd",
+            subject: "Your Login Verification Code",
             text: `Your login verification code is: ${otp}`,
           });
-        }
-      }
+        },
+      },
     }),
     emailHarmony(),
     stripe({
@@ -90,17 +90,30 @@ export const auth = betterAuth({
           },
         ],
 
-        onSubscriptionComplete: async ({ event, subscription, stripeSubscription, plan }) => {
+        getCheckoutSessionParams: async () => {
+          return {
+            params: {
+              allow_promotion_codes: true,
+            },
+          };
+        },
+
+        onSubscriptionComplete: async ({
+          event,
+          subscription,
+          stripeSubscription,
+          plan,
+        }) => {
           const user = await prisma.user.findFirst({
             where: {
               stripeCustomerId: subscription.stripeCustomerId,
-            }
+            },
           });
 
           if (user) {
             await resend.emails.send({
               to: user.email,
-              from: 'billing@korabimeri.work.gd',
+              from: "billing@korabimeri.work.gd",
               subject: `🎉 You just joined Quiro ${plan.name} — let’s get started!`,
               react: WelcomeQuiroProEmail({
                 recipientName: user.name,
@@ -110,28 +123,33 @@ export const auth = betterAuth({
                 planPrice: "10€/month",
                 referenceId: subscription.referenceId,
                 renewsAt: subscription?.periodEnd?.toLocaleDateString(),
-              })
+              }),
             });
           }
         },
 
-        onSubscriptionCancel: async ({ event, subscription, stripeSubscription, cancellationDetails }) => {
+        onSubscriptionCancel: async ({
+          event,
+          subscription,
+          stripeSubscription,
+          cancellationDetails,
+        }) => {
           const user = await prisma.user.findFirst({
             where: {
               stripeCustomerId: subscription.stripeCustomerId,
-            }
+            },
           });
 
           if (user) {
             await resend.emails.send({
               to: user.email,
-              from: 'billing@korabimeri.work.gd',
-              subject: 'Your quiro subscription has been canceled',
+              from: "billing@korabimeri.work.gd",
+              subject: "Your quiro subscription has been canceled",
               text: `Your quiro subscription has been canceled`,
             });
           }
-        }
-      }
+        },
+      },
     }),
     passkey({
       rpID: "localhost",
