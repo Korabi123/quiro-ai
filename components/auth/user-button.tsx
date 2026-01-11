@@ -23,6 +23,7 @@ import {
   Loader,
   PlusCircle,
   UserIcon,
+  Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { User } from "@prisma/client";
@@ -37,6 +38,8 @@ import { SecuritySection } from "../helpers/user-button/security/security-sectio
 import { BillingSection } from "../helpers/user-button/billing/billing-section";
 import { Subscription } from "@better-auth/stripe";
 import { Badge } from "../ui/badge";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 export const UserButton = ({
   user,
@@ -56,6 +59,33 @@ export const UserButton = ({
   const [isLoading, setIsLoading] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+
+  const { data: streakData } = useSWR<{
+    streak: number;
+    lastStreakUpdate: string | null;
+  }>("/api/user/streak", fetcher, {
+    fallbackData: {
+      streak: user?.streak || 0,
+      // @ts-ignore
+      lastStreakUpdate: user?.lastStreakUpdate || null,
+    },
+  });
+
+  const isStreakActive = () => {
+    if (!streakData || streakData.streak === 0) return false;
+    if (!streakData.lastStreakUpdate) return false;
+
+    const now = new Date();
+    const lastUpdate = new Date(streakData.lastStreakUpdate);
+
+    return (
+      now.getFullYear() === lastUpdate.getFullYear() &&
+      now.getMonth() === lastUpdate.getMonth() &&
+      now.getDate() === lastUpdate.getDate()
+    );
+  };
+
+  const isActive = isStreakActive();
 
   const currentSession = authClient.useSession();
 
@@ -109,6 +139,24 @@ export const UserButton = ({
               )}
             >
               {user?.name}{" "}
+              {subscription?.plan === "pro" && (
+                <div
+                  className={cn(
+                    "inline-flex items-center justify-center gap-1 ml-1 px-2 py-0.5 rounded-full border text-xs font-medium",
+                    isActive
+                      ? "bg-orange-500/10 text-orange-600 border-orange-500/20"
+                      : "bg-gray-500/10 text-gray-600 border-gray-500/20"
+                  )}
+                >
+                  <Zap
+                    className={cn(
+                      "size-3",
+                      isActive ? "fill-orange-600" : "fill-gray-600"
+                    )}
+                  />
+                  {streakData?.streak || 0}
+                </div>
+              )}
               {subscription?.status === "active" && (
                 <Badge
                   className="ml-1 py-1 px-3 text-xs font-medium rounded-full bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white border border-white/20 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700"

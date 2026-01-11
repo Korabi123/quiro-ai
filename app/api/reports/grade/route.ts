@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import prismadb from "@/lib/prismadb";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { updateStreak } from "@/lib/streak";
 
 export async function POST(req: Request) {
   try {
@@ -134,6 +135,8 @@ export async function POST(req: Request) {
         breakdown: responseJ.breakdown,
       },
     });
+
+    await updateStreak(session.user.id);
 
     return NextResponse.json(responseJ);
   } catch (error) {

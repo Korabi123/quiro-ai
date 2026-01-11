@@ -20,6 +20,8 @@ interface Props {
   assistantId: string;
 }
 
+import { mutate } from "swr";
+
 export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
   const [animate] = useAutoAnimate();
 
@@ -53,7 +55,10 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
         loading: "Ending meeting...",
         success: () => {
           setTimeout(() => {
-            axios.patch(`/api/meetings/details?meetingId=${meetingId}&vapiAgent=${assistantId}`);
+            axios.patch(`/api/meetings/details?meetingId=${meetingId}&vapiAgent=${assistantId}`)
+              .then(() => {
+                mutate("/api/user/streak");
+              });
           }, 2500);
 
           router.push("/meetings");

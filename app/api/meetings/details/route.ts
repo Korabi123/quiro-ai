@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { VapiClient } from "@vapi-ai/server-sdk";
 import prismadb from "@/lib/prismadb";
+import { updateStreak } from "@/lib/streak";
 
 export async function PATCH(req: Request) {
   const vapi = new VapiClient({
@@ -50,6 +51,8 @@ export async function PATCH(req: Request) {
         recordingURL: vapiMeeting.artifact?.stereoRecordingUrl,
       }
     });
+
+    await updateStreak(session.user.id);
 
     return NextResponse.json(meeting);
   } catch (error) {

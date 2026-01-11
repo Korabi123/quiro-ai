@@ -194,6 +194,7 @@ export const Wrapper = ({ reportId }: Props) => {
         await axios.post(`/api/reports/grade?id=${reportId}`, {
           answers: updatedAnswers,
         }).finally(() => {
+          mutate("/api/user/streak");
           router.push(`/reports/${reportId}`);
         });
       });

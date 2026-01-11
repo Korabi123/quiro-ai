@@ -25,6 +25,19 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
 
+  user: {
+    additionalFields: {
+      streak: {
+        type: "number",
+        defaultValue: 0,
+      },
+      lastStreakUpdate: {
+        type: "date",
+        required: false
+      }
+    }
+  },
+
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,

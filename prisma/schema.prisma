@@ -159,6 +159,9 @@ model User {
 
   normalizedEmail String?
 
+  streak           Int       @default(0)
+  lastStreakUpdate DateTime?
+
   @@unique([email])
   @@map("user")
   @@unique([normalizedEmail])
