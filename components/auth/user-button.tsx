@@ -60,10 +60,7 @@ export const UserButton = ({
   const [sessions, setSessions] = useState<Session[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
 
-  const { data: streakData } = useSWR<{
-    streak: number;
-    lastStreakUpdate: string | null;
-  }>("/api/user/streak", fetcher, {
+  const { data: streakData } = useSWR("/api/user/streak", fetcher, {
     fallbackData: {
       streak: user?.streak || 0,
       // @ts-ignore
