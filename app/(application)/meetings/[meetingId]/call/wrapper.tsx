@@ -1,5 +1,6 @@
 "use client";
 
+import { StreakSuccessDialog } from "@/components/dialogs/streak-success-dialog";
 import { GeneratedAvatar } from "@/components/generated-avatar";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,9 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
   const [transcript, setTranscript] = useState<Array<{role: string, text: string}>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [showStreakDialog, setShowStreakDialog] = useState(false);
+  const [streakCount, setStreakCount] = useState(0);
+
   useEffect(() => {
     const vapiInstance = new Vapi(apiKey);
     setVapi(vapiInstance);
@@ -56,12 +60,21 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
         success: () => {
           setTimeout(() => {
             axios.patch(`/api/meetings/details?meetingId=${meetingId}&vapiAgent=${assistantId}`)
-              .then(() => {
-                mutate("/api/user/streak");
+              .then(async () => {
+                await mutate("/api/user/streak");
+                try {
+                  const { data: streakData } = await axios.get("/api/user/streak");
+                  if (streakData && streakData.streak > 0) {
+                    setStreakCount(streakData.streak);
+                    setShowStreakDialog(true);
+                  } else {
+                    router.push("/meetings");
+                  }
+                } catch {
+                  router.push("/meetings");
+                }
               });
           }, 2500);
-
-          router.push("/meetings");
 
           return "Meeting ended successfully";
         },
@@ -180,6 +193,11 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
           End Meeting
         </Button>
       )}
+      <StreakSuccessDialog
+        isOpen={showStreakDialog}
+        streak={streakCount}
+        onClose={() => router.push("/meetings")}
+      />
     </div>
   );
 }

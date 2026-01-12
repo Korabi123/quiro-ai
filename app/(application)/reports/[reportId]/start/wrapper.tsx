@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useTransition, useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { StreakSuccessDialog } from "@/components/dialogs/streak-success-dialog";
 
 interface Props {
   reportId: string;
@@ -23,6 +24,9 @@ export const Wrapper = ({ reportId }: Props) => {
   const [isPending, startTransition] = useTransition();
   const [loadingText, setLoadingText] = useState("");
   const [value, setValue] = useState("");
+
+  const [showStreakDialog, setShowStreakDialog] = useState(false);
+  const [streakCount, setStreakCount] = useState(0);
 
   const [onQuestion, setOnQuestion] = useState(0);
   const [multipleChoiceOptions, setMultipleChoiceOptions] = useState<
@@ -193,9 +197,20 @@ export const Wrapper = ({ reportId }: Props) => {
       startTransition(async () => {
         await axios.post(`/api/reports/grade?id=${reportId}`, {
           answers: updatedAnswers,
-        }).finally(() => {
-          mutate("/api/user/streak");
-          router.push(`/reports/${reportId}`);
+        }).finally(async () => {
+          await mutate("/api/user/streak");
+
+          try {
+            const { data: streakData } = await axios.get("/api/user/streak");
+            if (streakData && streakData.streak > 0) {
+              setStreakCount(streakData.streak);
+              setShowStreakDialog(true);
+            } else {
+              router.push(`/reports/${reportId}`);
+            }
+          } catch (error) {
+            router.push(`/reports/${reportId}`);
+          }
         });
       });
     }
@@ -330,6 +345,11 @@ export const Wrapper = ({ reportId }: Props) => {
           </div>
         </div>
       )}
+      <StreakSuccessDialog
+        isOpen={showStreakDialog}
+        streak={streakCount}
+        onClose={() => router.push(`/reports/${reportId}`)}
+      />
     </>
   );
 };
