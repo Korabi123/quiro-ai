@@ -35,22 +35,22 @@ export async function updateStreak(userId: string) {
       // First time updating streak
       newStreak = 1;
     } else {
-      // Calculate difference in days (ignoring time)
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const lastUpdateDate = new Date(lastUpdate.getFullYear(), lastUpdate.getMonth(), lastUpdate.getDate());
-      
-      const diffTime = Math.abs(today.getTime() - lastUpdateDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 0) {
-        // Already updated today
-        return;
-      } else if (diffDays === 1) {
-        // Updated yesterday, increment streak
-        newStreak += 1;
-      } else {
-        // Missed a day or more, reset to 1
+      const msDiff = now.getTime() - lastUpdate.getTime();
+      const twentyFourHours = 1000 * 60 * 60 * 24;
+      if (msDiff >= twentyFourHours) {
         newStreak = 1;
+      } else {
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const lastUpdateDate = new Date(lastUpdate.getFullYear(), lastUpdate.getMonth(), lastUpdate.getDate());
+        const diffTime = Math.abs(today.getTime() - lastUpdateDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays === 0) {
+          return;
+        } else if (diffDays === 1) {
+          newStreak += 1;
+        } else {
+          newStreak = 1;
+        }
       }
     }
 
