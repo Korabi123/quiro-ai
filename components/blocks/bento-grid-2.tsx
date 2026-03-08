@@ -51,6 +51,14 @@ const itemsSample = [
     cta: "/sign-up",
   },
   {
+    title: "LinkedIn Job Integrations",
+    description: "Generate agent instructions and skill reports directly from LinkedIn job URLs.",
+    icon: <img src="https://emojicdn.elk.sh/%F0%9F%94%97" alt="🔗" className="h-4 w-4" />,
+    tags: ["LinkedIn", "Integration", "Jobs"],
+    colSpan: 2,
+    cta: "/sign-up",
+  },
+  {
     title: "AI-Powered Coding Challenges",
     description: "Solve coding problems with AI grading and performance improvement suggestions.",
     icon: <img src="https://emojicdn.elk.sh/%F0%9F%92%BB" alt="💻" className="h-4 w-4" />,
@@ -64,15 +72,6 @@ const itemsSample = [
     icon: <img src="https://emojicdn.elk.sh/%F0%9F%92%A1" alt="💡" className="h-4 w-4" />,
     tags: ["Tips", "Insights", "Career"],
     status: 'Coming Soon',
-    cta: "/sign-up",
-  },
-  {
-    title: "LinkedIn Job Integrations",
-    description: "Generate agent instructions and skill reports directly from LinkedIn job URLs.",
-    icon: <img src="https://emojicdn.elk.sh/%F0%9F%94%97" alt="🔗" className="h-4 w-4" />,
-    tags: ["LinkedIn", "Integration", "Jobs"],
-    colSpan: 2,
-    status: "Coming Soon",
     cta: "/sign-up",
   },
 ];
