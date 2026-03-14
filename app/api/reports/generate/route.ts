@@ -42,12 +42,15 @@ export async function POST(req: Request) {
       baseURL: "https://router.huggingface.co/v1",
     });
 
-    const response = await ai.chat.completions.create({
-      model: "deepseek-ai/DeepSeek-V3-0324",
-      messages: [
-        {
-          role: "system",
-          content: `
+    let response;
+
+    if (report.field !== "Generated from a LinkedIn job posting") {
+      response = await ai.chat.completions.create({
+        model: "deepseek-ai/DeepSeek-V3-0324",
+        messages: [
+          {
+            role: "system",
+            content: `
           Act as an expert career coach and interviewer.
 
           Your task is to generate a short, focused skill assessment consisting of 10 questions.
@@ -147,9 +150,294 @@ export async function POST(req: Request) {
 
           ONLY INCLUDE JSON IN THE RESPONSE.
           `,
-        },
-      ],
-    });
+          },
+        ],
+      });
+    } else {
+      const jobInfo = await fetch(`https://extract-quiro.netlify.app/.netlify/functions/worker?url=${report.customType}`).then(res => res.json());
+
+      response = await ai.chat.completions.create({
+        model: "deepseek-ai/DeepSeek-V3-0324",
+        messages: [
+          {
+            role: "system",
+            content: `
+            Act as an expert technical interviewer and career coach.
+
+            Your task is to generate a **comprehensive skill assessment consisting of exactly 18 questions** based on a LinkedIn job listing provided as JSON.
+
+            The goal of the assessment is to determine whether a candidate possesses the **skills required for the specific role described in the job listing**.
+
+            The questions must strictly follow the provided database schema and enum definitions and must include a **rubric object for each question** so the system can auto-grade or guide manual grading.
+
+            ---
+
+            JOB LISTING DATA (JSON)
+
+            {{JOB_JSON: ${JSON.stringify(jobInfo)}}}
+
+            Example structure:
+
+            {
+            "companyName": "...",
+            "jobTitle": "...",
+            "jobDescription": "..."
+            }
+
+            You must **extract all relevant information from this JSON before generating questions**.
+
+            ---
+
+            STEP 1 — EXTRACT JOB CONTEXT
+
+            Analyze the JSON and internally extract:
+
+            • Company name
+            • Job title
+            • Seniority level (Junior / Mid / Senior / Lead / Staff / Principal)
+            • Core responsibilities
+            • Required technical skills
+            • Mentioned frameworks and tools
+            • Architecture expectations
+            • Debugging or performance expectations
+            • Collaboration and communication expectations
+
+            Use these signals to determine the **most important skills required for the role**.
+
+            ---
+
+            STEP 2 — DESIGN THE SKILL ASSESSMENT
+
+            Create an **18-question assessment** that evaluates whether a candidate has the skills needed for this role.
+
+            The assessment should measure a mix of:
+
+            • technical knowledge
+            • real-world engineering decision making
+            • debugging ability
+            • architecture thinking
+            • problem solving ability
+            • communication ability
+            • teamwork and collaboration
+
+            Avoid generic questions when the job description mentions specific technologies.
+
+            Example:
+
+            If the listing mentions **React**, include React questions.
+            If it mentions **performance optimization**, include performance questions.
+            If it mentions **system architecture**, include architecture questions.
+
+            The assessment should feel like a **real technical screening for this job**.
+
+            ---
+
+            STEP 2.5 — BALANCED SKILL EVALUATION SIGNALS
+
+            Design the assessment so it evaluates multiple types of engineering ability.
+
+            Internally categorize questions into these evaluation signals:
+
+            KNOWLEDGE — understanding of concepts and technologies
+            APPLICATION — applying knowledge to real problems
+            DEBUGGING — diagnosing and fixing issues
+            ARCHITECTURE — system design and trade-offs
+            COMMUNICATION — explaining ideas clearly
+            TEAMWORK — collaboration and working with others
+
+            Ensure the assessment contains a balanced mix.
+
+            Approximate distribution:
+
+            • 3 KNOWLEDGE
+            • 4 APPLICATION
+            • 3 DEBUGGING
+            • 3 ARCHITECTURE
+            • 3 COMMUNICATION
+            • 2 TEAMWORK
+
+            These categories are **internal reasoning only** and must NOT appear in the final output.
+
+            ---
+
+            STEP 3 — QUESTION TYPE DISTRIBUTION (IMPORTANT)
+
+            You must include a mix of all question types.
+
+            Required distribution:
+
+            • 7 FREE_TEXT
+            • 5 MULTIPLE_CHOICE
+            • 3 FILL_BLANK
+            • 3 TRUE_FALSE
+
+            Do NOT exceed or reduce these counts.
+
+            ---
+
+            QUESTION QUALITY FILTER (IMPORTANT)
+
+            Before finalizing questions, apply the following quality rules.
+
+            Avoid weak or trivial questions such as:
+
+            • "What is React?"
+            • "What is JavaScript?"
+            • "What is a database?"
+
+            Instead, prefer questions that evaluate:
+
+            • engineering reasoning
+            • real-world debugging
+            • architecture trade-offs
+            • performance thinking
+            • applied knowledge
+
+            Examples of GOOD questions:
+
+            "How would you diagnose a React component that re-renders excessively?"
+
+            "What trade-offs would you consider when choosing between client-side rendering and server-side rendering?"
+
+            "How would you investigate a slow API response in production?"
+
+            If a question could be answered with **a simple definition**, rewrite it into a **real-world scenario question**.
+
+            ---
+
+            IMPORTANT QUESTION RULES
+
+            1. Do not include the answer in the question text.
+            2. Avoid factual statements — every question must be phrased as a question.
+            3. No duplicates — all questions must be unique.
+            4. Use the provided QuestionType enum exactly:
+
+              * FREE_TEXT
+              * MULTIPLE_CHOICE
+              * FILL_BLANK
+              * TRUE_FALSE
+            5. Ensure difficulty balance:
+              • ~5 easy questions
+              • ~7 medium questions
+              • ~6 hard questions
+            6. No trick questions or misleading phrasing.
+            7. GENERATE EXACTLY 18 QUESTIONS — NO MORE, NO LESS.
+
+            If more or fewer than 18 questions are generated, regenerate until the output contains exactly 18.
+
+            ---
+
+            MULTIPLE_CHOICE FORMAT RULE
+
+            For MULTIPLE_CHOICE questions:
+
+            • The answer options MUST be included directly inside the "content" field.
+            • Provide exactly **4 options** labeled **A), B), C), D)**.
+            • Options must appear **inline separated by spaces**, not line breaks.
+            • Only **ONE option may be correct**.
+            • The "answer" field must contain the correct option exactly as written.
+
+            Example:
+
+            "Which of these is NOT a valid HTTP method? A) GET B) POST C) FETCH D) DELETE"
+
+            Answer field:
+
+            "C) FETCH"
+
+            ---
+
+            FILL_BLANK FORMAT RULE
+
+            • The question must contain exactly **one blank** written as:
+
+            ---
+
+            Example:
+
+            "In Redux, application state is stored in a single ____."
+
+            The "answer" field must contain the correct missing word or phrase.
+
+            ---
+
+            SENIORITY ADAPTATION RULE
+
+            If the role appears to be **Senior, Staff, Lead, or Principal**:
+
+            Prefer deeper questions involving:
+
+            • architecture decisions
+            • engineering trade-offs
+            • system design reasoning
+            • real-world debugging scenarios
+
+            However, you must **still respect the required question type distribution**.
+
+            ---
+
+            SCORING GUIDELINES
+
+            Each question must include a rubric explaining:
+
+            • what skill the question evaluates
+            • how to evaluate the answer
+            • what qualifies as weak, partial, and strong answers
+
+            Use scoring ranges based on difficulty:
+
+            Easy → 2–5 points
+            Medium → 5–10 points
+            Hard → 10–15 points
+
+            Rubrics must clearly explain **how to award points**.
+
+            ---
+
+            SCHEMA
+
+            enum QuestionType {
+            FREE_TEXT
+            MULTIPLE_CHOICE
+            FILL_BLANK
+            TRUE_FALSE
+            }
+
+            model Question {
+            id String // Omit, auto-generated
+            content String
+            answer String?
+            type QuestionType
+            rubric Rubric
+            }
+
+            model Rubric {
+            criteria: string
+            scoring: string
+            maxScore: number
+            }
+
+            ---
+
+            OUTPUT FORMAT
+
+            Return **ONLY a JSON array containing exactly 18 Question objects** that strictly follow the schema above.
+
+            Do NOT include:
+
+            • explanations
+            • markdown
+            • comments
+            • text before or after the JSON
+
+            ONLY RETURN JSON.
+
+
+          `,
+          },
+        ],
+      });
+    }
 
     const finalResponse = response.choices[0].message.content;
 

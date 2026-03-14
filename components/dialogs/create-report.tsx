@@ -23,7 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -39,16 +39,21 @@ import {
   SelectValue,
 } from "../ui/select";
 import { useRouter } from "next/navigation";
+import { Subscription } from "@better-auth/stripe";
+import { authClient } from "@/lib/auth-client";
+import { Badge } from "../ui/badge";
 
 const formSchema = z.object({
   name: z.string().min(1),
-  field: z.string().min(1),
-  type: z.enum(["COMMUNICATION", "TECHNICAL", "LEADERSHIP", "ALL", "CUSTOM"]),
+  field: z.string().optional(),
+  type: z.enum(["COMMUNICATION", "TECHNICAL", "LEADERSHIP", "ALL", "CUSTOM"]).optional(),
   customType: z.string().optional(),
 });
 
 export const CreateReportDialog = () => {
   const [isPending, startTransition] = useTransition();
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [linkedIn, setLinkedIn] = useState<boolean>(true);
 
   const { isOpen, type, onClose } = useModalStore();
   const isModalOpen = isOpen && type === "createReport";
@@ -56,6 +61,17 @@ export const CreateReportDialog = () => {
   const router = useRouter();
 
   const [animate] = useAutoAnimate();
+
+  useEffect(() => {
+    const getSubscription = async () => {
+      startTransition(async () => {
+        await authClient.subscription
+          .list()
+          .then((res) => setSubscription(res?.data?.[0] ?? null));
+      });
+    };
+    getSubscription();
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -72,20 +88,43 @@ export const CreateReportDialog = () => {
         form.setError("customType", { message: "Custom type is required" });
         return;
       } else {
-        try {
-          await axios
-            .post("/api/reports/create", data)
-            .then(() => {
-              toast.success("Report created successfully");
-              onClose();
-              form.reset();
-            })
-            .finally(() => {
-              mutate("/api/reports/get");
-              router.refresh();
-            });
-        } catch (error) {
-          toast.error("Something went wrong");
+        if (linkedIn === true) {
+          const customData = {
+            ...data,
+            type: "CUSTOM",
+            field: "Generated from a LinkedIn job posting",
+          }
+          try {
+            await axios
+              .post("/api/reports/create", customData)
+              .then(() => {
+                toast.success("Report created successfully");
+                onClose();
+                form.reset();
+              })
+              .finally(() => {
+                mutate("/api/reports/get");
+                router.refresh();
+              });
+          } catch (error) {
+            toast.error("Something went wrong");
+          }
+        } else {
+          try {
+            await axios
+              .post("/api/reports/create", data)
+              .then(() => {
+                toast.success("Report created successfully");
+                onClose();
+                form.reset();
+              })
+              .finally(() => {
+                mutate("/api/reports/get");
+                router.refresh();
+              });
+          } catch (error) {
+            toast.error("Something went wrong");
+          }
         }
       }
     });
@@ -131,56 +170,83 @@ export const CreateReportDialog = () => {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="field"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Field</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        autoComplete="off"
-                        disabled={isPending}
-                        placeholder="E.g 'Software Development'"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+              {linkedIn === false && (
+                <FormField
+                  control={form.control}
+                  name="field"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Field</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select the type of report" />
-                        </SelectTrigger>
+                        <Input
+                          {...field}
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          autoComplete="off"
+                          disabled={isPending}
+                          placeholder="E.g 'Software Development'"
+                        />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="COMMUNICATION">
-                          Communication
-                        </SelectItem>
-                        <SelectItem value="TECHNICAL">Technical</SelectItem>
-                        <SelectItem value="LEADERSHIP">Leadership</SelectItem>
-                        <SelectItem value="ALL">All of the above</SelectItem>
-                        <SelectItem value="CUSTOM">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {linkedIn === false && (
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select the type of report" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="COMMUNICATION">
+                            Communication
+                          </SelectItem>
+                          <SelectItem value="TECHNICAL">Technical</SelectItem>
+                          <SelectItem value="LEADERSHIP">Leadership</SelectItem>
+                          <SelectItem value="ALL">All of the above</SelectItem>
+                          <SelectItem value="CUSTOM">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {linkedIn === true && (
+                <FormField
+                  control={form.control}
+                  name="customType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn job posting URL <Badge className="ml-2 bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white">Pro feature</Badge></FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          autoComplete="off"
+                          disabled={isPending}
+                          placeholder="https://www.linkedin.com/jobs/view/3321346100/"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               {form.watch("type") === "CUSTOM" && (
                 <FormField
                   control={form.control}
@@ -203,6 +269,40 @@ export const CreateReportDialog = () => {
                   )}
                 />
               )}
+              {subscription?.plan === "pro" && (
+                <>
+                  {linkedIn === false ? (
+                    <div className="flex items-center gap-2 pb-4 -mt-8">
+                      <span className="text-xs text-muted-foreground">
+                        Want to get better questions?
+                      </span>
+                      <Button
+                        type="button"
+                        className="-ml-1 text-xs p-0 h-auto bg-transparent text-[#ffd43e]/70 hover:text-[#ffd43e] hover:bg-transparent transition-all"
+                        onClick={() => {
+                          setLinkedIn(true);
+                          form.setValue("customType", undefined);
+                        }}
+                      >
+                        Generate skill report from a LinkedIn job posting
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 pb-4 -mt-8">
+                      <span className="text-xs text-muted-foreground">
+                        Prefer to give custom information?
+                      </span>
+                      <Button
+                        type="button"
+                        className="-ml-1 text-xs p-0 h-auto bg-transparent text-[#ffd43e]/70 hover:text-[#ffd43e] hover:bg-transparent transition-all"
+                        onClick={() => setLinkedIn(false)}
+                      >
+                        Generate skill report from custom information
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
               <DialogFooter>
                 <DialogClose asChild>
                   <Button
@@ -221,7 +321,8 @@ export const CreateReportDialog = () => {
                   <Loader2
                     className={cn(
                       "text-transparent -mr-6 size-5 transition-all",
-                      isPending && "mr-0 animate-spin text-white transition-all"
+                      isPending &&
+                        "mr-0 animate-spin text-white transition-all",
                     )}
                   />
                   Create

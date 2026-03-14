@@ -26,47 +26,85 @@ import {
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { GeneratedAvatar } from "./generated-avatar";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Loader, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import axios from "axios";
 import { mutate } from "swr";
+import { Subscription } from "@better-auth/stripe";
+import { authClient } from "@/lib/auth-client";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { Badge } from "./ui/badge";
 
 const formSchema = z.object({
   name: z.string().min(1),
-  instructions: z.string().min(1).max(1000),
+  linkedInUrl: z.string().optional(),
+  instructions: z.string().optional(),
 });
 
 export const CreateAgentDialog = () => {
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [instructionsType, setInstructionsType] = useState<"manual" | "linkedIn">("manual");
   const [open, setOpen] = useState(false);
+  const [animate] = useAutoAnimate();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      linkedInUrl: "",
       instructions: "",
     },
   });
 
+  useEffect(() => {
+    const getSubscription = async () => {
+      startTransition(async () => {
+        await authClient.subscription.list()
+          .then((res) => setSubscription(res?.data?.[0] ?? null));
+      });
+    }
+    getSubscription();
+  }, []);
+
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    startTransition(async () => {
-      try {
-        await axios
-          .post("/api/agents/create", data)
-          .then(() => {
-            toast.success("Agent created successfully");
-            setOpen(false);
-            form.reset();
-          })
-          .finally(() => {
-            mutate("/api/agents/get");
-          });
-      } catch (error) {
-        toast.error("Something went wrong");
-      }
-    });
+    if (instructionsType === "linkedIn" && !data.linkedInUrl) {
+      form.setError("linkedInUrl", {
+        message: "Please enter a LinkedIn job posting URL",
+      });
+      return;
+    } else if (instructionsType === "manual" && !data.instructions) {
+      form.setError("instructions", {
+        message: "Please enter instructions",
+      });
+      return;
+    } else {
+      startTransition(async () => {
+        try {
+          if (instructionsType === "linkedIn") {
+            const res = await axios.post("/api/agents/generateInstructions", {
+              linkedInUrl: data.linkedInUrl,
+            });
+            data.instructions = res.data;
+          }
+
+          await axios
+            .post("/api/agents/create", data)
+            .then(() => {
+              toast.success("Agent created successfully");
+              setOpen(false);
+              form.reset();
+            })
+            .finally(() => {
+              mutate("/api/agents/get");
+            });
+        } catch (error) {
+          toast.error("Something went wrong");
+        }
+      });
+    }
   };
 
   return (
@@ -90,9 +128,13 @@ export const CreateAgentDialog = () => {
           <DialogTitle>New Agent</DialogTitle>
           <DialogDescription>Create a new agent</DialogDescription>
         </DialogHeader>
-        <div className="mt-2">
+        <div ref={animate} className="mt-2">
           <Form {...form}>
-            <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+            <form
+              ref={animate}
+              className="space-y-4"
+              onSubmit={form.handleSubmit(onSubmit)}
+            >
               <GeneratedAvatar seed={form.watch("name")} className="size-14" />
               <FormField
                 control={form.control}
@@ -114,29 +156,86 @@ export const CreateAgentDialog = () => {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="instructions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Instructions</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="You are a hiring manager at Google. You will be conducting my interview for the senior software engineer position. You will ask me common interview questions and give me feedback on my answers."
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        autoComplete="off"
-                        rows={5}
-                        className="resize-none"
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {instructionsType === "manual" && (
+                <FormField
+                  control={form.control}
+                  name="instructions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instructions</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="You are a hiring manager at Google. You will be conducting my interview for the senior software engineer position. You will ask me common interview questions and give me feedback on my answers."
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          autoComplete="off"
+                          rows={5}
+                          className="resize-none"
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {instructionsType === "linkedIn" && (
+                <FormField
+                  control={form.control}
+                  name="linkedInUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn job posting URL <Badge className="ml-2 bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white">Pro feature</Badge></FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="https://www.linkedin.com/jobs/view/3321346100/"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          autoComplete="off"
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {subscription?.plan === "pro" && (
+                <>
+                  {instructionsType === "manual" && (
+                    <div className="flex items-center gap-2 pb-4 -mt-8">
+                      <span className="text-xs text-muted-foreground">
+                        Can't string up instructions?
+                      </span>
+                      <Button
+                        type="button"
+                        className="text-xs p-0 h-auto bg-transparent text-[#ffd43e]/70 hover:text-[#ffd43e] hover:bg-transparent transition-all"
+                        onClick={() => setInstructionsType("linkedIn")}
+                      >
+                        Generate instructions from a LinkedIn job posting
+                      </Button>
+                    </div>
+                  )}
+                  {instructionsType === "linkedIn" && (
+                    <div className="flex items-center gap-2 pb-4 -mt-8">
+                      <span className="text-xs text-muted-foreground">
+                        Want to write your own instructions?
+                      </span>
+                      <Button
+                        type="button"
+                        className="text-xs p-0 h-auto bg-transparent text-[#ffd43e]/70 hover:text-[#ffd43e] hover:bg-transparent transition-all"
+                        onClick={() => setInstructionsType("manual")}
+                      >
+                        Write your own instructions
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
               <DialogFooter>
                 <DialogClose asChild>
                   <Button

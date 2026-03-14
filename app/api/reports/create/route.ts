@@ -17,11 +17,19 @@ export const POST = withRateLimit(async (req: Request) => {
     }
 
     if (type === "CUSTOM" && !customType) {
-      return new NextResponse("Invalid request", { status: 400 });
+      return new NextResponse("Custom type is required", { status: 400 });
     }
 
-    if (!type || !name || !field) {
-      return new NextResponse("Invalid request", { status: 400 });
+    if (!type) {
+      return new NextResponse("Type is required", { status: 400 });
+    }
+
+    if (!name) {
+      return new NextResponse("Name is required", { status: 400 });
+    }
+
+    if (!field) {
+      return new NextResponse("Field is required", { status: 400 });
     }
 
     if (subscription.length === 0) {
