@@ -1,35 +1,12 @@
 "use client";
 
-import * as z from "zod";
-
 import {
   ChevronRight,
-  ChevronsUpDown,
-  Loader2,
   MoreVertical,
   Pencil,
   Plus,
   Trash2,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
-import { useForm } from "react-hook-form";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "../ui/form";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 import { useState, useTransition, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,7 +43,6 @@ export const MeetingHeading = ({
   optionsHidden = false,
   meetingId,
 }: Props) => {
-  const [isPending, startTransition] = useTransition();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const meetings = useMeetings();
 

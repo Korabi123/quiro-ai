@@ -134,6 +134,96 @@ model Report {
   customType String?
 }
 
+model CodingProblem {
+  id          String   @id @default(cuid())
+
+  slug        String   @unique
+  title       String
+  difficulty  Difficulty
+
+  source      String?
+  externalId  String?
+
+  createdAt   DateTime @default(now())
+
+  attempts    CodingAttempt[]
+  progress    UserProblemProgress[]
+  User        User?                 @relation(fields: [userId], references: [id])
+  userId      String?
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model CodingAttempt {
+  id            String   @id @default(cuid())
+
+  userId        String
+  problemId     String
+
+  language      String
+  code          String
+
+  executionOutput String?
+  expectedOutput  String?
+
+  passedTests   Boolean
+
+  createdAt     DateTime @default(now())
+
+  grading       CodeGrading?
+
+  problem       CodingProblem @relation(fields: [problemId], references: [id])
+
+  @@index([userId])
+  @@index([problemId])
+}
+
+model CodeGrading {
+  id                String  @id @default(cuid())
+
+  attemptId         String  @unique
+  attempt           CodingAttempt @relation(fields: [attemptId], references: [id])
+
+  isCorrect         Boolean
+  passedTests       Boolean
+
+  correctnessScore  Int
+  efficiencyScore   Int
+  codeQualityScore  Int
+  bestPracticeScore Int
+  totalScore        Int
+
+  timeComplexity    String?
+  spaceComplexity   String?
+
+  summary           String
+  strengths         Json
+  improvements      Json
+
+  createdAt         DateTime @default(now())
+}
+
+model UserProblemProgress {
+  id          String   @id @default(cuid())
+
+  userId      String
+  problemId   String
+
+  attempts    Int      @default(0)
+  solved      Boolean  @default(false)
+  bestScore   Int?
+
+  lastAttempt DateTime?
+
+  problem     CodingProblem @relation(fields: [problemId], references: [id])
+
+  @@unique([userId, problemId])
+}
+
 model User {
   id            String    @id
   name          String
@@ -156,6 +246,7 @@ model User {
   createdMeetings Meeting[]
   createdAgents   Agent[]
   createdReports  Report[]
+  codingProblems  CodingProblem[]
 
   normalizedEmail String?
 

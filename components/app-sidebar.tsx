@@ -44,7 +44,7 @@ const routes = [
   },
   {
     title: "Coding Problems",
-    url: "/coding",
+    url: "/coding-problems",
     icon: ChevronsLeftRight,
   },
   {
@@ -97,11 +97,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             {routes.map((route) => (
               <SidebarMenuItem
                 onClick={() => {
-                  if (route.title === "Coding Problems" || route.title === "Tips") {
+                  if (route.title === "Tips") {
                     toast.info(
                       "Please be patient, we're working on this feature!"
                     );
-                  } else if (route.title === "Skill Reports" && subscription?.status !== "active") {
+                  } else if ((route.title === "Skill Reports" || route.title === "Coding Problems") && subscription?.status !== "active") {
                     onOpen("restrictionDialog", {
                       restrictionDialogData: {
                         dialogDescription:
@@ -114,24 +114,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 }}
                 className={cn(
                   "p-2 px-3 inline-flex items-center gap-2 font-medium text-black/50 rounded-xl cursor-pointer hover:bg-black/5 transition-all",
-                  pathname === route.url &&
+                  (pathname === route.url || pathname.startsWith(route.url + "/")) &&
                     "bg-[#ffd43e]/25 hover:bg-[#ffd43e]/35 transition-all text-black",
-                  route.title === "Coding Problems" &&
-                    "cursor-not-allowed text-black/50 hover:bg-transparent",
                   route.title === "Tips" && "cursor-not-allowed text-black/50 hover:bg-transparent",
+                  route.title === "Coding Problems" && subscription?.status !== "active" && "cursor-not-allowed text-black/50 hover:bg-transparent",
                   route.title === "Skill Reports" && subscription?.status !== "active" && "cursor-not-allowed text-black/50 hover:bg-transparent"
                 )}
               >
                 <route.icon className="size-5" />
                 {route.title}
-                {route.title === "Coding Problems" && (
+                {route.title === "Tips" && (
                   <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">
                     Coming Soon
                   </Badge>
                 )}
-                {route.title === "Tips" && (
+                {route.title === "Coding Problems" && subscription?.status !== "active" && (
                   <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">
-                    Coming Soon
+                    Pro Only
                   </Badge>
                 )}
                 {route.title === "Skill Reports" && subscription?.status !== "active" && (
