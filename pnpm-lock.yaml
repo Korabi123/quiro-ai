@@ -182,6 +182,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      dompurify:
+        specifier: ^3.3.3
+        version: 3.3.3
       embla-carousel-react:
         specifier: ^8.5.2
         version: 8.5.2(react@19.0.0)
@@ -3866,11 +3869,11 @@ packages:
     resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
     engines: {node: '>= 4'}
 
-  dompurify@3.2.6:
-    resolution: {integrity: sha512-/2GogDQlohXPZe6D6NOgQvXLPSYBqIWMnZ8zzOhn09REE4eyAzb+Hed3jhoM9OkuaJ8P6ZGTTVWQKAi8ieIzfQ==}
-
   dompurify@3.2.7:
     resolution: {integrity: sha512-WhL/YuveyGXJaerVlMYGWhvQswa7myDG17P7Vu65EWC05o8vfeNbvNf4d/BOvH99+ZW+LlQsc1GDKMa1vNK6dw==}
+
+  dompurify@3.3.3:
+    resolution: {integrity: sha512-Oj6pzI2+RqBfFG+qOaOLbFXLQ90ARpcGG6UePL82bJLtdsa6CYJD7nmiU8MW9nQNOtCHV3lZ/Bzq1X0QYbBZCA==}
 
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
@@ -10703,11 +10706,11 @@ snapshots:
     dependencies:
       domelementtype: 2.3.0
 
-  dompurify@3.2.6:
+  dompurify@3.2.7:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
-  dompurify@3.2.7:
+  dompurify@3.3.3:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
@@ -12278,7 +12281,7 @@ snapshots:
       d3-sankey: 0.12.3
       dagre-d3-es: 7.0.11
       dayjs: 1.11.18
-      dompurify: 3.2.6
+      dompurify: 3.3.3
       katex: 0.16.22
       khroma: 2.1.0
       lodash-es: 4.17.21

@@ -8,7 +8,12 @@ export const useAgents = () => {
   const { data, error, isLoading } = useSWR<Agent[]>(
     `/api/agents/get${queryString}`,
     fetcher,
-    { refreshInterval: 2500 }
+    { 
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000,
+    }
   );
 
   return {
@@ -21,7 +26,12 @@ export const useAgents = () => {
 export const useAgent = (agentId: string) => {
   const { data, error, isLoading } = useSWR<Agent>(
     `/api/agents/get?id=${agentId}`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000,
+    }
   );
 
   return {

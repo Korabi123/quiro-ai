@@ -42,6 +42,7 @@ import { useRouter } from "next/navigation";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  isLoading?: boolean;
 }
 
 const DifficultyFilter = ({ 
@@ -149,6 +150,7 @@ const ClearFilterButton = ({ onClick }: { onClick: () => void }) => {
 export function DataTable<TData, TValue>({
   columns,
   data,
+  isLoading = false,
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -220,15 +222,14 @@ export function DataTable<TData, TValue>({
           />
         )}
       </div>
-      {data.length === 0 && (
+      {isLoading ? (
         <div className="flex items-center justify-center w-full p-5">
           <Loader className="size-5 animate-spin text-muted-foreground/70" />
           <p className="text-sm ml-2 text-muted-foreground/70">
             Loading problems...
           </p>
         </div>
-      )}
-      {table.getRowModel().rows?.length ? (
+      ) : table.getRowModel().rows?.length ? (
         table.getRowModel().rows.map((row, index) => (
           <>
             <div
@@ -259,6 +260,7 @@ export function DataTable<TData, TValue>({
           <p className="text-sm text-muted-foreground/70">No problems found</p>
         </div>
       )}
+      {!isLoading && (
       <div className="flex items-center justify-between px-5 py-3">
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Rows per page</p>
@@ -307,6 +309,7 @@ export function DataTable<TData, TValue>({
           </Button>
         </div>
       </div>
+      )}
     </div>
   );
 }

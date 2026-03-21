@@ -8,7 +8,12 @@ export const useReports = () => {
   const { data, error, isLoading } = useSWR<Report[]>(
     `/api/reports/get${queryString}`,
     fetcher,
-    { refreshInterval: 2500 }
+    { 
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000,
+    }
   );
 
   return {
@@ -21,7 +26,12 @@ export const useReports = () => {
 export const useReport = (reportId: string) => {
   const { data, error, isLoading } = useSWR<Report>(
     `/api/reports/get?id=${reportId}`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000,
+    }
   );
 
   return {
@@ -34,7 +44,12 @@ export const useReport = (reportId: string) => {
 export const useQuestionsFromReport = (reportId: string) => {
   const { data, error, isLoading } = useSWR<Question[]>(
     `/api/questions/get?reportId=${reportId}`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000,
+    }
   );
 
   return {

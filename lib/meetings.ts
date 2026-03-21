@@ -9,7 +9,10 @@ export const useMeetings = () => {
     `/api/meetings/get${queryString}`,
     fetcher,
     {
-      refreshInterval: 2500
+      refreshInterval: 10000,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000,
     }
   );
 
@@ -23,7 +26,12 @@ export const useMeetings = () => {
 export const useMeeting = (meetingId: string) => {
   const { data, error, isLoading } = useSWR<Meeting>(
     `/api/meetings/get?id=${meetingId}`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000,
+    }
   );
 
   return {
