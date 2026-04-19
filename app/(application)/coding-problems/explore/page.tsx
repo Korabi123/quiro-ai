@@ -1,6 +1,6 @@
 "use client";
 
-import { columns } from '@/components/coding-problems/explore-table/columns';
+import { useColumns } from '@/components/coding-problems/explore-table/columns';
 import { DataTable } from '@/components/coding-problems/explore-table/data-table';
 import { CodingProblemHeading } from '@/components/coding-problems/heading';
 import { useProblems } from '@/lib/problems';
@@ -8,6 +8,7 @@ import { Suspense } from 'react';
 
 const CodingProblemExplorePage = () => {
   const { data, isLoading } = useProblems();
+  const columns = useColumns();
   
   return (
     <Suspense>

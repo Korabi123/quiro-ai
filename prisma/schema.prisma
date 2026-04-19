@@ -171,6 +171,14 @@ model CodingAttempt {
   expectedOutput  String?
 
   passedTests   Boolean
+  
+  executionTime  String?
+  memoryUsage    String?
+  
+  visiblePassedCount  Int?
+  visibleTotalCount  Int?
+  hiddenPassedCount  Int?
+  hiddenTotalCount  Int?
 
   createdAt     DateTime @default(now())
 
