@@ -248,9 +248,9 @@ ${code}
 public class Program {
     public static void Main() {
         Solution sol = new Solution();
-        var result = sol.${funcName}(${csArgs.join(', ')});
-        if (result is int[] arr) {
-            Console.WriteLine("[" + string.Join(",", arr) + "]");
+        object result = sol.${funcName}(${csArgs.join(', ')});
+        if (result is Array arr) {
+            Console.WriteLine("[" + string.Join(",", arr.Cast<object>()) + "]");
         } else {
             Console.WriteLine(result);
         }

@@ -1,13 +1,15 @@
 "use client";
 
 import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
+import { useInView } from "react-intersection-observer";
 import { fetcher } from "@/lib/fetcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Loader2, Play, Sparkles, CheckCircle, XCircle, Trophy, Clock, Target, Code2, TrendingUp, Star, GitCommit, FileCode, ArrowRightIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
@@ -55,24 +57,46 @@ interface AttemptWithGrading extends Attempt {
   grading?: Grading | null;
 }
 
+interface SubmissionsResponse {
+  attempts: AttemptWithGrading[];
+  nextCursor?: string;
+  totalCount: number;
+}
+
 type TabType = "code" | "grading";
 
 export const ProblemDetail = ({ problemId, problemSlug }: Props) => {
   const router = useRouter();
-  const { data, isLoading, mutate } = useSWR<AttemptWithGrading[]>(
-    `/api/submissions?slug=${problemSlug || problemId}`,
-    async (url: string) => {
-      const res = await fetch(url);
-      const json = await res.json();
-      return json.attempts || [];
-    }
-  );
-
   const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("code");
   const [isLoadingGrading, setIsLoadingGrading] = useState(false);
 
-  const attempts = data || [];
+  const { ref, inView } = useInView();
+
+  const { data, size, setSize, isValidating, mutate } = useSWRInfinite<SubmissionsResponse>(
+    (index, previousPageData) => {
+      if (previousPageData && !previousPageData.nextCursor) return null;
+      const cursor = previousPageData?.nextCursor ? `&cursor=${previousPageData.nextCursor}` : "";
+      return `/api/submissions?slug=${problemSlug || problemId}${cursor}&limit=15`;
+    },
+    async (url: string) => {
+      const res = await fetch(url);
+      return res.json();
+    }
+  );
+
+  const attempts = data ? data.flatMap((page) => page.attempts) : [];
+  const totalCount = data?.[0]?.totalCount || 0;
+  const nextCursor = data?.[data.length - 1]?.nextCursor;
+  const isLoadingMore = isValidating && (data?.length || 0) > 0;
+  const hasMore = !!nextCursor;
+
+  useEffect(() => {
+    if (inView && hasMore && !isLoadingMore) {
+      setSize(size + 1);
+    }
+  }, [inView, hasMore, isLoadingMore, size, setSize]);
+
   const selectedAttempt = attempts.find(a => a.id === selectedAttemptId) || attempts[0] || null;
   const solvedCount = attempts.filter(a => a.passedTests).length;
 
@@ -97,13 +121,16 @@ export const ProblemDetail = ({ problemId, problemSlug }: Props) => {
 
       const grading = await response.json();
 
-      // Update the attempt with grading in local state
-      if (attempts) {
-        const updatedAttempts = attempts.map(a =>
-          a.id === attempt.id ? { ...a, grading } : a
-        );
-        mutate(updatedAttempts, false);
-      }
+      // Update the local cache with the new grading
+      mutate((currentData) => {
+        if (!currentData) return currentData;
+        return currentData.map((page) => ({
+          ...page,
+          attempts: page.attempts.map((a) =>
+            a.id === attempt.id ? { ...a, grading } : a
+          ),
+        }));
+      }, false);
 
       toast.success("AI grading complete!");
     } catch (error) {
@@ -114,7 +141,7 @@ export const ProblemDetail = ({ problemId, problemSlug }: Props) => {
     }
   };
 
-  if (isLoading) {
+  if (!data && isValidating) {
     return (
       <div className="flex items-center justify-center p-10">
         <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -131,7 +158,7 @@ export const ProblemDetail = ({ problemId, problemSlug }: Props) => {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Submissions</p>
             <Target className="size-4 text-[#ea721b]" />
           </div>
-          <p className="text-3xl font-bold">{attempts.length}</p>
+          <p className="text-3xl font-bold">{totalCount}</p>
           <p className="text-[10px] text-muted-foreground mt-1">Total attempts made</p>
         </div>
 
@@ -157,14 +184,14 @@ export const ProblemDetail = ({ problemId, problemSlug }: Props) => {
             <Trophy className="size-4 text-yellow-500" />
           </div>
           <p className="text-3xl font-bold">
-            {Math.max(...attempts.map(a => {
+            {attempts.length > 0 ? Math.max(...attempts.map(a => {
               if (!a.visibleTotalCount) return a.passedTests ? 100 : 0;
               const visiblePassed = a.visiblePassedCount || 0;
               const visibleTotal = a.visibleTotalCount || 1;
               const hiddenPassed = a.hiddenPassedCount || 0;
               const hiddenTotal = a.hiddenTotalCount || 0;
               return Math.round(((visiblePassed + hiddenPassed) / (visibleTotal + hiddenTotal)) * 100);
-            }), 0)}%
+            }), 0) : 0}%
           </p>
           <p className="text-[10px] text-muted-foreground mt-1">Highest test case pass rate</p>
         </div>
@@ -192,87 +219,94 @@ export const ProblemDetail = ({ problemId, problemSlug }: Props) => {
               History
             </h3>
             <Badge variant="outline" className="text-[10px] bg-white">
-              {attempts.length}
+              {totalCount}
             </Badge>
           </div>
 
           <div className="flex flex-col gap-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-            {attempts.length === 0 ? (
+            {attempts.length === 0 && !isValidating ? (
               <div className="py-10 text-center rounded-2xl border border-dashed border-border/50">
                 <p className="text-sm text-muted-foreground">No submissions yet</p>
               </div>
             ) : (
-              attempts.map((attempt, idx) => (
-                <div
-                  key={attempt.id}
-                  onClick={() => setSelectedAttemptId(attempt.id)}
-                  className={cn(
-                    "group relative p-4 rounded-2xl border transition-all cursor-pointer",
-                    (selectedAttemptId === attempt.id || (!selectedAttemptId && idx === 0))
-                      ? "bg-white border-[#ea721b]/40 shadow-sm"
-                      : "bg-muted-foreground/5 border-transparent hover:border-border/50 hover:bg-muted-foreground/10"
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className={cn(
-                        "size-2 rounded-full",
-                        attempt.passedTests ? "bg-green-500" : "bg-red-500"
-                      )} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        Attempt #{attempts.length - idx}
-                      </span>
-                    </div>
-                    {attempt.passedTests ? (
-                      <span className="text-[10px] font-bold text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">PASSED</span>
-                    ) : (
-                      <span className="text-[10px] font-bold text-red-600 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">FAILED</span>
+              <>
+                {attempts.map((attempt, idx) => (
+                  <div
+                    key={attempt.id}
+                    onClick={() => setSelectedAttemptId(attempt.id)}
+                    className={cn(
+                      "group relative p-4 rounded-2xl border transition-all cursor-pointer",
+                      (selectedAttemptId === attempt.id || (!selectedAttemptId && idx === 0))
+                        ? "bg-white border-[#ea721b]/40 shadow-sm"
+                        : "bg-muted-foreground/5 border-transparent hover:border-border/50 hover:bg-muted-foreground/10"
                     )}
-                  </div>
-
-                  <div className="flex items-end justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5">
-                        <Badge variant="outline" className="text-[10px] py-0 h-4 px-1.5 font-medium border-border/50">
-                          {attempt.language}
-                        </Badge>
-                        <span className="text-[10px] text-muted-foreground">
-                          {new Date(attempt.createdAt).toLocaleDateString()}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className={cn(
+                          "size-2 rounded-full",
+                          attempt.passedTests ? "bg-green-500" : "bg-red-500"
+                        )} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                          Attempt #{totalCount - idx}
                         </span>
                       </div>
-                      {(attempt.visibleTotalCount ?? 0) > 0 && (
-                        <div className="flex flex-col gap-1 mt-1">
-                          <div className="flex items-center gap-2 text-[10px]">
-                            <span className="text-muted-foreground">Tests:</span>
-                            <span className="font-bold text-black">
-                              {(attempt.visiblePassedCount || 0) + (attempt.hiddenPassedCount || 0)}/{(attempt.visibleTotalCount || 0) + (attempt.hiddenTotalCount || 0)}
-                            </span>
+                      {attempt.passedTests ? (
+                        <span className="text-[10px] font-bold text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">PASSED</span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-red-600 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">FAILED</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-end justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-[10px] py-0 h-4 px-1.5 font-medium border-border/50">
+                            {attempt.language}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(attempt.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {(attempt.visibleTotalCount ?? 0) > 0 && (
+                          <div className="flex flex-col gap-1 mt-1">
+                            <div className="flex items-center gap-2 text-[10px]">
+                              <span className="text-muted-foreground">Tests:</span>
+                              <span className="font-bold text-black">
+                                {(attempt.visiblePassedCount || 0) + (attempt.hiddenPassedCount || 0)}/{(attempt.visibleTotalCount || 0) + (attempt.hiddenTotalCount || 0)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-[10px]">
+                              {attempt.executionTime && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="size-2.5 text-blue-500" />
+                                  <span className="text-muted-foreground">{Math.round(parseFloat(attempt.executionTime) * 1000)}ms</span>
+                                </div>
+                              )}
+                              {attempt.memoryUsage && (
+                                <div className="flex items-center gap-1">
+                                  <Target className="size-2.5 text-purple-500" />
+                                  <span className="text-muted-foreground">{Math.round(parseFloat(attempt.memoryUsage) / 1024)}MB</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3 text-[10px]">
-                            {attempt.executionTime && (
-                              <div className="flex items-center gap-1">
-                                <Clock className="size-2.5 text-blue-500" />
-                                <span className="text-muted-foreground">{Math.round(parseFloat(attempt.executionTime) * 1000)}ms</span>
-                              </div>
-                            )}
-                            {attempt.memoryUsage && (
-                              <div className="flex items-center gap-1">
-                                <Target className="size-2.5 text-purple-500" />
-                                <span className="text-muted-foreground">{Math.round(parseFloat(attempt.memoryUsage) / 1024)}MB</span>
-                              </div>
-                            )}
-                          </div>
+                        )}
+                      </div>
+                      {(selectedAttemptId === attempt.id || (!selectedAttemptId && idx === 0)) && (
+                        <div className="size-6 rounded-full bg-[#ea721b]/10 flex items-center justify-center text-[#ea721b]">
+                          <ArrowRightIcon className="size-3" />
                         </div>
                       )}
                     </div>
-                    {(selectedAttemptId === attempt.id || (!selectedAttemptId && idx === 0)) && (
-                      <div className="size-6 rounded-full bg-[#ea721b]/10 flex items-center justify-center text-[#ea721b]">
-                        <ArrowRightIcon className="size-3" />
-                      </div>
-                    )}
                   </div>
-                </div>
-              ))
+                ))}
+                {hasMore && (
+                  <div ref={ref} className="py-4 flex justify-center">
+                    <Loader2 className="size-6 animate-spin text-[#ea721b]" />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -384,6 +418,7 @@ export const ProblemDetail = ({ problemId, problemSlug }: Props) => {
                         automaticLayout: true,
                         cursorBlinking: "smooth",
                         smoothScrolling: true,
+                        cursorSmoothCaretAnimation: "on",
                         contextmenu: true,
                         renderLineHighlight: "all",
                         lineHeight: 1.6,

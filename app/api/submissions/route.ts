@@ -131,6 +131,8 @@ export const GET = async (req: Request) => {
   try {
     const { searchParams } = new URL(req.url);
     const problemSlug = searchParams.get("slug");
+    const cursor = searchParams.get("cursor");
+    const limit = parseInt(searchParams.get("limit") || "15");
     const session = await auth.api.getSession(req);
 
     if (!session) {
@@ -146,8 +148,16 @@ export const GET = async (req: Request) => {
     });
 
     if (!problem) {
-      return NextResponse.json([]);
+      return NextResponse.json({ attempts: [], totalCount: 0 });
     }
+
+    // Get total count separately for the hero stats
+    const totalCount = await prismadb.codingAttempt.count({
+      where: {
+        userId: session.user.id,
+        problemId: problem.id,
+      },
+    });
 
     const submissions = await prismadb.codingAttempt.findMany({
       where: {
@@ -157,11 +167,19 @@ export const GET = async (req: Request) => {
       orderBy: {
         createdAt: "desc",
       },
-      take: 10,
+      take: limit + 1, // Fetch one extra to determine if there's more
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : 0, // Skip the cursor itself if provided
       include: {
         grading: true,
       },
     });
+
+    let nextCursor: string | undefined = undefined;
+    if (submissions.length > limit) {
+      const nextItem = submissions.pop();
+      nextCursor = nextItem?.id;
+    }
 
     const submissionsWithMeta = submissions.map(s => ({
       id: s.id,
@@ -191,7 +209,11 @@ export const GET = async (req: Request) => {
       } : null,
     }));
 
-    return NextResponse.json({ attempts: submissionsWithMeta });
+    return NextResponse.json({
+      attempts: submissionsWithMeta,
+      nextCursor,
+      totalCount
+    });
   } catch (error) {
     console.log("ERROR FETCHING SUBMISSIONS: ", error);
     return new NextResponse("Internal Server Error", { status: 500 });

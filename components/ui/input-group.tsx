@@ -103,15 +103,15 @@ function InputGroupButton({
   variant = "ghost",
   size = "xs",
   ...props
-}: Omit<React.ComponentProps<typeof Button>, "size"> &
+}: Omit<React.ComponentProps<typeof Button>, "size" | "icon" | "iconPlacement"> &
   VariantProps<typeof inputGroupButtonVariants>) {
   return (
     <Button
       type={type}
       data-size={size}
-      variant={variant}
+      variant={variant as any}
       className={cn(inputGroupButtonVariants({ size }), className)}
-      {...props}
+      {...(props as any)}
     />
   )
 }
