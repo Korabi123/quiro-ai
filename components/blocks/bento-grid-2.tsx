@@ -85,7 +85,7 @@ const itemsSample = [
 export default function BentoGrid({ items = itemsSample }: BentoGridProps) {
   return (
     <motion.section
-      className="relative overflow-hidden py-12 bg-black mt-20"
+      className="relative overflow-hidden py-12 bg-black mt-32"
       initial={{ opacity: 0, y: 50, filter: "blur(20px)" }}
       whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       viewport={{ once: false, amount: 0.3 }}

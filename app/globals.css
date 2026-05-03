@@ -7,9 +7,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-:root {
-  height: 100vh;
-}
+/* Don't lock the document height; it breaks scrolling on long pages. */
 
 @keyframes word-appear {
   0% {
@@ -58,6 +56,34 @@ body {
   50% {
     opacity: 0.3;
     transform: scale(1.1);
+  }
+}
+
+/* Cult UI CosmicButton animations */
+@keyframes cosmic-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cosmic-spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@layer utilities {
+  .animate-cosmic-spin {
+    animation: cosmic-spin 3s linear infinite;
+  }
+  .animate-cosmic-spin-slow {
+    animation: cosmic-spin-slow 5s linear infinite;
   }
 }
 
