@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react"
-import { ChevronsLeftRight, GalleryVerticalEnd, Star, Video } from "lucide-react"
+import { ChevronsLeftRight, GalleryHorizontal, GalleryHorizontalEnd, GalleryVerticalEnd, Star, Video } from "lucide-react"
 
 import {
   Sidebar,
@@ -46,6 +46,11 @@ const routes = [
     title: "Coding Problems",
     url: "/coding-problems",
     icon: ChevronsLeftRight,
+  },
+  {
+    title: "Project Grading",
+    url: "/project-grading",
+    icon: GalleryHorizontalEnd,
   },
   {
     title: "Tips",
@@ -97,7 +102,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             {routes.map((route) => (
               <SidebarMenuItem
                 onClick={() => {
-                  if (route.title === "Tips") {
+                  if (route.title === "Tips" || route.title === "Project Grading") {
                     toast.info(
                       "Please be patient, we're working on this feature!"
                     );
@@ -117,6 +122,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   (pathname === route.url || pathname.startsWith(route.url + "/")) &&
                     "bg-[#ffd43e]/25 hover:bg-[#ffd43e]/35 transition-all text-black",
                   route.title === "Tips" && "cursor-not-allowed text-black/50 hover:bg-transparent",
+                  route.title === "Project Grading" && "cursor-not-allowed text-black/50 hover:bg-transparent",
                   route.title === "Coding Problems" && subscription?.status !== "active" && "cursor-not-allowed text-black/50 hover:bg-transparent",
                   route.title === "Skill Reports" && subscription?.status !== "active" && "cursor-not-allowed text-black/50 hover:bg-transparent"
                 )}
@@ -124,6 +130,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <route.icon className="size-5" />
                 {route.title}
                 {route.title === "Tips" && (
+                  <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">
+                    Coming Soon
+                  </Badge>
+                )}
+                {route.title === "Project Grading" && (
                   <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">
                     Coming Soon
                   </Badge>

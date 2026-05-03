@@ -50,7 +50,7 @@ export default function FooterSection({
       ],
     },
   ],
-  copyright = "© 2025 Quiro AI. All rights reserved",
+  copyright = "© 2026 Quiro AI. All rights reserved",
   policies = [
     { text: "Privacy Policy", href: "/legal/privacy-policy" },
     { text: "Terms of Service", href: "/legal/terms-conditions" },

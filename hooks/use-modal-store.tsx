@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 export type ModalStoreType =
-  "createMeeting"
+  | "createMeeting"
   | "editMeeting"
   | "deleteMeeting"
   | "createAgent"
@@ -11,12 +11,14 @@ export type ModalStoreType =
   | "editReport"
   | "deleteReport"
   | "secondReportModal"
-  | "restrictionDialog";
+  | "restrictionDialog"
+  | "streakSuccess";
 
 interface ModalStoreData {
   meetingId?: string;
   agentId?: string;
   reportId?: string;
+  streak?: number;
   report?: {
     name?: string;
     type?: "COMMUNICATION" | "TECHNICAL" | "LEADERSHIP" | "ALL" | "CUSTOM";

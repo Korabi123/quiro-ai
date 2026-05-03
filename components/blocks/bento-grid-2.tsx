@@ -63,7 +63,13 @@ const itemsSample = [
     description: "Solve coding problems with AI grading and performance improvement suggestions.",
     icon: <img src="https://emojicdn.elk.sh/%F0%9F%92%BB" alt="💻" className="h-4 w-4" />,
     tags: ["Coding", "AI", "Practice"],
-    status: 'Coming Soon',
+    cta: "/sign-up",
+  },
+  {
+    title: "AI-Powered Project Grading",
+    description: "Grade coding projects with AI and receive.",
+    icon: <img src="https://emojicdn.elk.sh/%F0%9F%92%BB" alt="💻" className="h-4 w-4" />,
+    tags: ["Coding", "AI", "Practice"],
     cta: "/sign-up",
   },
   {
