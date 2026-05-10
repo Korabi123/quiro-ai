@@ -60,7 +60,7 @@ export const UserButton = ({
   align?: "start" | "center" | "end";
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [sessionSubscriptions, setSessionSubscriptions] = useState<Record<string, string>>({});
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "billing">("profile");
@@ -69,7 +69,6 @@ export const UserButton = ({
   const { data: streakData } = useSWR("/api/user/streak", fetcher, {
     fallbackData: {
       streak: user?.streak || 0,
-      // @ts-ignore
       lastStreakUpdate: user?.lastStreakUpdate || null,
     },
   });
@@ -101,11 +100,11 @@ export const UserButton = ({
 
     const getSessions = async () => {
       await authClient.multiSession.listDeviceSessions()
-        // @ts-expect-error Just a simple type error
         .then(async (res) => {
-          setSessions(res.data);
+          const sessionsData = res.data || [];
+          setSessions(sessionsData);
           try {
-            const userIds = res.data.map((s: any) => s.user.id);
+            const userIds = sessionsData.map((s: any) => s.user.id);
             const subRes = await fetch("/api/user/subscriptions", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -142,8 +141,7 @@ export const UserButton = ({
           )}
         >
           <Avatar>
-            {/* @ts-expect-error Just a simple type error */}
-            <AvatarImage src={user?.image} />
+            <AvatarImage src={user?.image ?? undefined} />
             <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
               <UserIcon className="size-4" />
             </AvatarFallback>
@@ -194,8 +192,7 @@ export const UserButton = ({
           <DropdownMenuLabel className="p-3 px-6">
             <div className="flex items-center gap-4">
               <Avatar>
-                {/* @ts-expect-error Just a simple type error */}
-                <AvatarImage src={user?.image} />
+                <AvatarImage src={user?.image ?? undefined} />
                 <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
                   <UserIcon className="size-4" />
                 </AvatarFallback>
@@ -319,7 +316,7 @@ export const UserButton = ({
                     >
                       <div className="flex items-center gap-4">
                         <Avatar>
-                          <AvatarImage src={session.user.image} />
+                          <AvatarImage src={session.user.image ?? undefined} />
                           <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
                             <UserIcon className="size-4" />
                           </AvatarFallback>
@@ -413,24 +410,24 @@ export const UserButton = ({
               Manage your account info.
             </DialogDescription>
           </div>
-          
+
           <div className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
-            <button 
-              onClick={() => setActiveTab('profile')} 
+            <button
+              onClick={() => setActiveTab('profile')}
               className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors shrink-0", activeTab === 'profile' ? "bg-black/5 dark:bg-white/10 text-foreground" : "hover:bg-black/5 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground")}
             >
               <UserIcon className="size-[18px]" />
               Profile
             </button>
-            <button 
-              onClick={() => setActiveTab('security')} 
+            <button
+              onClick={() => setActiveTab('security')}
               className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors shrink-0", activeTab === 'security' ? "bg-black/5 dark:bg-white/10 text-foreground" : "hover:bg-black/5 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground")}
             >
               <Shield className="size-[18px]" />
               Security
             </button>
-            <button 
-              onClick={() => setActiveTab('billing')} 
+            <button
+              onClick={() => setActiveTab('billing')}
               className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors shrink-0", activeTab === 'billing' ? "bg-black/5 dark:bg-white/10 text-foreground" : "hover:bg-black/5 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground")}
             >
               <CreditCard className="size-[18px]" />
@@ -438,7 +435,7 @@ export const UserButton = ({
             </button>
           </div>
         </div>
-        
+
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col px-10 py-8 overflow-y-auto relative w-full h-full bg-white dark:bg-[#0f0f0f] border-l border-zinc-200 dark:border-zinc-800 md:rounded-l-[24px] shadow-[-4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[-4px_0_24px_rgba(0,0,0,0.2)]">
           <div className="max-w-[800px] w-full">

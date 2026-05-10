@@ -134,7 +134,7 @@ export const TwoFactorSection = ({
           setIsLoading(true);
         },
         onError: (ctx) => {
-          setError(ctx.error.message);
+          setError(ctx.error.message ?? "An error occurred");
           setIsLoading(false);
         },
       }
@@ -190,19 +190,19 @@ export const TwoFactorSection = ({
   ) => {
     setIsLoading(true);
     // Determine if this is the ONLY method enabled
-    const isOnlyMethod = (provider === "email" && !user.totpTwoFactorEnabled) || 
+    const isOnlyMethod = (provider === "email" && !user.totpTwoFactorEnabled) ||
                          (provider === "totp" && !user.emailTwoFactorEnabled);
 
     if (isOnlyMethod) {
       // Use Better Auth native disable
       const res = await authClient.twoFactor.disable({ password: data.currentPassword });
       if (res.error) {
-         setError(res.error.message);
+         setError(res.error.message ?? "An error occurred");
          setIsLoading(false);
          return;
       }
     }
-    
+
     // Call custom API to update fields
     const updateRes = await fetch("/api/user/update-2fa", {
       method: "POST",
@@ -246,7 +246,7 @@ export const TwoFactorSection = ({
                   </svg>
                   <p className="text-[13px] text-zinc-600 mr-2">Authenticator app</p>
                   {localUser.defaultTwoFactorMethod === "totp" && <Badge variant={"outline"} className="scale-[0.85]">Default</Badge>}
-                      
+
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant={"ghost"} size="icon" className="h-6 w-6">
@@ -282,7 +282,7 @@ export const TwoFactorSection = ({
                       <Mail className="text-zinc-700 size-4" />
                       <p className="text-[13px] text-zinc-600 mr-2">Email verification</p>
                       {localUser.defaultTwoFactorMethod === "email" && <Badge variant={"outline"} className="scale-[0.85]">Default</Badge>}
-                      
+
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant={"ghost"} size="icon" className="h-6 w-6">
@@ -322,7 +322,7 @@ export const TwoFactorSection = ({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="rounded-xl shadow-lg p-0">
                         {!localUser.totpTwoFactorEnabled && (
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             className="cursor-pointer"
                             onClick={() => {
                               setProvider("totp");
@@ -346,7 +346,7 @@ export const TwoFactorSection = ({
                           </DropdownMenuItem>
                         )}
                         {!localUser.emailTwoFactorEnabled && (
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             className="cursor-pointer"
                             onClick={() => {
                               setProvider("email");
@@ -395,7 +395,7 @@ export const TwoFactorSection = ({
                       <form
                         className="space-y-6"
                         onSubmit={
-                          twoFactorStage === 10 
+                          twoFactorStage === 10
                             ? removeTwoFactorForm.handleSubmit(onRemoveTwoFactorSubmit)
                             : twoFactorForm.handleSubmit(onTwoFactorPasswordSubmit)
                         }
@@ -537,7 +537,7 @@ export const TwoFactorSection = ({
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                {/* @ts-expect-error Just a simple type error */}
+                                {/* @ts-expect-error SplitOTP uses custom render prop */}
                                 <SplitOTP
                                   {...field}
                                   maxLength={6}
@@ -545,7 +545,7 @@ export const TwoFactorSection = ({
                                 />
                               </FormControl>
                               <FormDescription className="text-xs">
-                                {provider === "totp" 
+                                {provider === "totp"
                                   ? "Enter the code in your authenticator app."
                                   : "Check your email for the 6-digit verification code."}
                               </FormDescription>
@@ -594,7 +594,7 @@ export const TwoFactorSection = ({
                 {twoFactorStage === 4 && (
                   <div className="flex flex-col">
                     <CardDescription className="text-xs">
-                      {provider === "totp" 
+                      {provider === "totp"
                         ? "Two-step verification is now enabled. When signing in, you will need to enter a verification code from this authenticator as an additional step."
                         : "Email verification is now enabled. When signing in, you will be sent a 6-digit code to your email address as an additional step."}
                     </CardDescription>
