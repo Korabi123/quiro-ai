@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRateLimiter } from '@/lib/rate-limiter';
 
-// Create different rate limiters for different endpoints
 export const globalRateLimiter = createRateLimiter({
   limit: 100,
   windowMs: 60 * 1000, // 1 minute
@@ -25,15 +24,12 @@ export const apiRateLimiter = createRateLimiter({
  */
 export function withRateLimit(handler: (req: NextRequest) => Promise<NextResponse> | NextResponse, limiter = apiRateLimiter) {
   return async function rateLimit(req: NextRequest) {
-    // Apply rate limiting
     const rateLimitResponse = limiter(req);
     
-    // If rate limited, return the response
     if (rateLimitResponse) {
       return rateLimitResponse;
     }
     
-    // Otherwise, continue to the handler
     return handler(req);
   };
 }

@@ -16,12 +16,10 @@ export const POST = async (req: Request) => {
       return new NextResponse("Code and language are required", { status: 400 });
     }
 
-    // Get problem details if available
     const problem = await prismadb.codingProblem.findUnique({
       where: { slug: problemSlug },
     });
 
-    // Find or create the attempt if attemptId provided
     let attempt = null;
     if (attemptId) {
       attempt = await prismadb.codingAttempt.findUnique({
@@ -29,7 +27,6 @@ export const POST = async (req: Request) => {
       });
     }
 
-    // If no attempt found by ID, try finding by code and user
     if (!attempt && code) {
       attempt = await prismadb.codingAttempt.findFirst({
         where: {
@@ -111,12 +108,10 @@ Expected Output: ${expectedOutput || "none"}`,
     const finalResponse = response.choices[0].message.content;
     let cleanResponse = finalResponse?.trim() || "";
 
-    // Remove markdown code blocks and any surrounding text
     const jsonMatch = cleanResponse.match(/```json\n([\s\S]*?)\n```/);
     if (jsonMatch) {
       cleanResponse = jsonMatch[1];
     } else {
-      // Try to find JSON object in the response
       const objMatch = cleanResponse.match(/\{[\s\S]*\}/);
       if (objMatch) {
         cleanResponse = objMatch[0];
@@ -128,7 +123,6 @@ Expected Output: ${expectedOutput || "none"}`,
       responseJ = JSON.parse(cleanResponse);
     } catch (parseError) {
       console.log("JSON parse error, returning default:", parseError);
-      // Return default structure
       responseJ = {
         correctnessScore: 50,
         efficiencyScore: 50,
@@ -143,15 +137,12 @@ Expected Output: ${expectedOutput || "none"}`,
       };
     }
 
-    // Save grading to database if attempt exists
     if (attempt) {
-      // Check if grading already exists
       const existingGrading = await prismadb.codeGrading.findUnique({
         where: { attemptId: attempt.id },
       });
 
       if (existingGrading) {
-        // Update existing grading
         await prismadb.codeGrading.update({
           where: { id: existingGrading.id },
           data: {
@@ -170,7 +161,6 @@ Expected Output: ${expectedOutput || "none"}`,
           },
         });
       } else {
-        // Create new grading
         await prismadb.codeGrading.create({
           data: {
             attemptId: attempt.id,

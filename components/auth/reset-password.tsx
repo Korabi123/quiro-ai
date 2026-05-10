@@ -70,7 +70,10 @@ export const ResetPasswordCard = () => {
       onRequest: () => {
         setIsLoading(true);
       },
-      onSuccess: () => {
+      onSuccess: async () => {
+        try {
+          await fetch("/api/send/email/password-changed", { method: "POST" });
+        } catch(e) {}
         toast.success("Password reset successfully.");
         setTimeout(() => {
           router.push("/login");

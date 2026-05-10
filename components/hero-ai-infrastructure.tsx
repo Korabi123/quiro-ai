@@ -50,21 +50,17 @@ export const HeroAiInfrastructure = () => {
             color2="#000000"
             color3="#000000"
             reflection={0.5}
-            // View (camera) props
             cAzimuthAngle={250}
             cPolarAngle={140}
             cDistance={1.5}
             cameraZoom={12.5}
-            // Effect props
             lightType="3d"
             brightness={1.5}
             envPreset="city"
             grain="on"
-            // Tool props
             toggleAxis={false}
             zoomOut={false}
             hoverState=""
-            // Optional - if using transition features
             enableTransition={false}
           />
         </ShaderGradientCanvas>
@@ -185,7 +181,6 @@ export const HeroAiInfrastructure = () => {
         </header>
       )}
 
-      {/* Main Content */}
       <div className="relative z-10 grow flex flex-col items-center justify-center text-center px-4 pt-24 mb-10">
         <TimelineAnimation
           timelineRef={timelineRef}
@@ -239,7 +234,6 @@ export const HeroAiInfrastructure = () => {
         </div>
       </div>
 
-      {/* Trusted By Logos */}
       <div className="relative z-10 py-16 flex flex-col items-center">
         <TimelineAnimation
           timelineRef={timelineRef}

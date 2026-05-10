@@ -20,7 +20,6 @@ const ProblemPage = async ({ params }: { params: Promise<{ id: string }> }) => {
     );
   }
 
-  // First check if problem exists at all
   const problem = await prismadb.codingProblem.findUnique({
     where: { id },
   });
@@ -35,7 +34,6 @@ const ProblemPage = async ({ params }: { params: Promise<{ id: string }> }) => {
     );
   }
 
-  // Now check if user has progress
   const progress = await prismadb.userProblemProgress.findUnique({
     where: {
       userId_problemId: {

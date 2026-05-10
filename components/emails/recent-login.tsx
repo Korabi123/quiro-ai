@@ -1,14 +1,11 @@
 import {
   Body,
-  Button,
-  Column,
   Container,
   Head,
   Heading,
   Html,
   Img,
   Preview,
-  Row,
   Section,
   Text,
 } from '@react-email/components';
@@ -29,102 +26,84 @@ export const RecentLoginEmail = ({
   loginLocation,
   loginIp,
 }: RecentLoginEmailProps) => {
-  const formattedDate = new Intl.DateTimeFormat('en', {
+  const formattedDate = loginDate ? new Intl.DateTimeFormat('en', {
     dateStyle: 'long',
     timeStyle: 'short',
-  }).format(loginDate);
+  }).format(loginDate) : '';
 
   return (
     <Html>
-      <Head />
+      <Head>
+        <meta name="color-scheme" content="light dark" />
+        <meta name="supported-color-schemes" content="light dark" />
+        <style>
+          {`
+            @import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,300,400&display=swap');
+            
+            :root {
+              color-scheme: light dark;
+              supported-color-schemes: light dark;
+            }
+          `}
+        </style>
+      </Head>
+      <Preview>Recent login to your Quiro AI account</Preview>
       <Body style={main}>
-        <Preview>Recent login to your quiro account</Preview>
-        <Container>
-          <Section style={logo}>
-            <Img src="https://qddzgieaky.ufs.sh/f/hl4IFmPz4YLsmVIe3VCh3VU48acCvjpQsgDurN5z0JZYOKkH" />
+        <Container style={container}>
+          <Section style={header}>
+            <Img 
+              src="https://quiro-ai.vercel.app/branding/logo-standalone-png.png" 
+              height="36"
+              alt="Quiro AI Logo"
+              style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '10px', width: 'auto' }}
+            />
+            <Text style={{ display: 'inline-block', verticalAlign: 'middle', fontSize: '22px', fontWeight: '600', color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
+              Quiro AI
+            </Text>
           </Section>
 
           <Section style={content}>
-            <Row>
-              <Img
-                style={image}
-                width={620}
-                src="https://react-email-demo-qv38cga5x-resend.vercel.app/static/yelp-header.png"
-              />
-            </Row>
+            <Heading style={heading}>
+              Hi {userFirstName},
+            </Heading>
+            <Text style={paragraph}>
+              We noticed a recent login to your Quiro AI account.
+            </Text>
 
-            <Row style={{ ...boxInfos, paddingBottom: '0' }}>
-              <Column>
-                <Heading
-                  style={{
-                    fontSize: 32,
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                  }}
-                >
-                  Hi {userFirstName},
-                </Heading>
-                <Heading
-                  as="h2"
-                  style={{
-                    fontSize: 26,
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                  }}
-                >
-                  We noticed a recent login to your quiro account.
-                </Heading>
+            <Section style={detailsBox}>
+              <Text style={{ ...paragraph, marginBottom: '8px' }}>
+                <strong style={strong}>Time:</strong> {formattedDate}
+              </Text>
+              <Text style={{ ...paragraph, marginBottom: '8px' }}>
+                <strong style={strong}>Device:</strong> {loginDevice}
+              </Text>
+              <Text style={{ ...paragraph, marginBottom: '8px' }}>
+                <strong style={strong}>Location:</strong> {loginLocation}
+              </Text>
+              <Text style={footnote}>
+                *Approximate geographic location based on IP address: {loginIp}
+              </Text>
+            </Section>
 
-                <Text style={paragraph}>
-                  <b>Time: </b>
-                  {formattedDate}
-                </Text>
-                <Text style={{ ...paragraph, marginTop: -5 }}>
-                  <b>Device: </b>
-                  {loginDevice}
-                </Text>
-                <Text style={{ ...paragraph, marginTop: -5 }}>
-                  <b>Location: </b>
-                  {loginLocation}
-                </Text>
-                <Text
-                  style={{
-                    color: 'rgb(0,0,0, 0.5)',
-                    fontSize: 14,
-                    marginTop: -5,
-                  }}
-                >
-                  *Approximate geographic location based on IP address: {" "}
-                  {loginIp}
-                </Text>
-
-                <Text style={paragraph}>
-                  If this was you, there&apos;s nothing else you need to do.
-                </Text>
-                <Text style={{ ...paragraph, marginTop: -5 }}>
-                  If this wasn&apos;t you please reset your password.
-                </Text>
-              </Column>
-            </Row>
+            <Text style={paragraph}>
+              If this was you, there's nothing else you need to do.
+            </Text>
+            <Text style={paragraph}>
+              If this wasn't you, please reset your password immediately and enable 2FA.
+            </Text>
           </Section>
 
-          <Section style={containerImageFooter}>
-            <Img
-              style={image}
-              width={620}
-              src="https://react-email-demo-qv38cga5x-resend.vercel.app/static/yelp-footer.png"
-            />
+          <Section style={footer}>
+            <Text style={footerText}>
+              Security alert from Quiro AI.
+            </Text>
+            <Text style={footerText}>
+              © {new Date().getFullYear()} Quiro AI. All rights reserved.
+            </Text>
+            <Text style={footerText}>
+              <a href="https://quiro.ai" style={link}>quiro.ai</a>
+            </Text>
           </Section>
-
-          <Text
-            style={{
-              textAlign: 'center',
-              fontSize: 12,
-              color: 'rgb(0,0,0, 0.7)',
-            }}
-          >
-            © 2025 | quiro | https://quiro.ai
-          </Text>
         </Container>
       </Body>
     </Html>
@@ -134,33 +113,76 @@ export const RecentLoginEmail = ({
 export default RecentLoginEmail;
 
 const main = {
-  backgroundColor: '#fff',
+  backgroundColor: '#000000',
   fontFamily:
-    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+    'Satoshi, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
 };
 
-const paragraph = {
-  fontSize: 16,
-};
-
-const logo = {
-  padding: '30px 20px',
-};
-
-const content = {
-  border: '1px solid rgb(0,0,0, 0.1)',
-  borderRadius: '3px',
-  overflow: 'hidden',
-};
-
-const image = {
+const container = {
+  margin: '0 auto',
+  padding: '20px 0 48px',
+  width: '580px',
   maxWidth: '100%',
 };
 
-const boxInfos = {
-  padding: '20px',
+const header = {
+  padding: '32px 20px',
+  textAlign: 'center' as const,
 };
 
-const containerImageFooter = {
-  padding: '45px 0 0 0',
+const content = {
+  padding: '40px',
+  backgroundColor: '#171717',
+  borderRadius: '16px',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+};
+
+const heading = {
+  fontSize: '32px',
+  lineHeight: '1.3',
+  fontWeight: '700',
+  color: '#ffffff',
+  marginBottom: '24px',
+};
+
+const paragraph = {
+  fontSize: '16px',
+  lineHeight: '1.6',
+  color: 'rgba(255, 255, 255, 0.8)',
+  marginBottom: '20px',
+};
+
+const strong = {
+  color: '#ffffff',
+  fontWeight: '600',
+};
+
+const detailsBox = {
+  margin: '32px 0',
+  padding: '24px',
+  borderRadius: '12px',
+  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+};
+
+const footnote = {
+  fontSize: '12px',
+  color: 'rgba(255, 255, 255, 0.4)',
+  marginTop: '12px',
+};
+
+const footer = {
+  padding: '32px 20px',
+  textAlign: 'center' as const,
+};
+
+const footerText = {
+  fontSize: '12px',
+  color: 'rgba(255, 255, 255, 0.5)',
+  margin: '8px 0',
+};
+
+const link = {
+  color: 'rgba(255, 255, 255, 0.8)',
+  textDecoration: 'underline',
 };

@@ -54,7 +54,6 @@ export async function GET(req: Request) {
       return NextResponse.json(report);
     }
 
-    // If no search or id, return all reports for the user
     const allReports = await prismadb.report.findMany({
       where: {
         userId: session.user.id,

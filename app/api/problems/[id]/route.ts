@@ -29,7 +29,6 @@ export const GET = async (req: Request) => {
     });
 
     if (!progress) {
-      // Check if problem exists but user hasn't attempted it
       const problem = await prismadb.codingProblem.findUnique({
         where: { id },
       });
@@ -38,7 +37,6 @@ export const GET = async (req: Request) => {
         return new NextResponse("Problem not found", { status: 404 });
       }
       
-      // Problem exists but user has no progress - return with default progress
       return NextResponse.json({
         progress: {
           id: "",

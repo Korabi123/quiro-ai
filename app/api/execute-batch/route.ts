@@ -26,11 +26,9 @@ const parseTestInput = (input: string): string[] => {
     args.push(currentArg.trim());
   }
 
-  // Strip named arguments (e.g., "nums1 = [1,2]" -> "[1,2]")
   return args.map(arg => {
     const parts = arg.split('=');
     if (parts.length > 1) {
-      // Check if the left side looks like a variable name
       if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(parts[0].trim())) {
         return parts.slice(1).join('=').trim();
       }
@@ -78,17 +76,13 @@ const wrapCodeForExecution = (code: string, language: string, testInput: string)
   }
 
   if (lang === "rust") {
-    // Don't filter out lines anymore, it's too dangerous and breaks valid code.
-    // Instead, just use the code as is.
     const cleanCode = code;
 
-    // Improved regex to find the main function name while ignoring visibility modifiers
     const funcMatch = cleanCode.match(/(?:pub\s+)?fn\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
     const funcName = funcMatch?.[1];
 
     const rustArgs = args.map(arg => {
       const trimmed = arg.trim();
-      // Recursive function to wrap arrays in vec![]
       const wrapInVec = (val: string): string => {
         val = val.trim();
         if (val.startsWith('[') && val.endsWith(']')) {
@@ -117,7 +111,6 @@ const wrapCodeForExecution = (code: string, language: string, testInput: string)
     if (funcName && testInput) {
       const isImpl = cleanCode.includes('impl Solution');
       const needsStruct = isImpl && !cleanCode.includes('struct Solution');
-      // Check if it's a method (has &self or self) or a static function
       const isMethod = cleanCode.match(new RegExp(`fn\\s+${funcName}\\s*\\(\\s*&?self`));
 
       return `
@@ -169,7 +162,6 @@ public class Main {
   }
 
   if (lang === "cpp") {
-    // Improved regex to capture return type and function name, handling templates like vector<int>
     const funcMatch = code.match(/((?:[\w:<>&*]+\s+)+)(\w+)\s*\(/);
     const funcName = funcMatch?.[2];
     const returnType = funcMatch?.[1].trim();
@@ -289,7 +281,6 @@ func main() {
   }
 
   if (lang === "c") {
-    // Improved regex to capture return type, name, and parameters
     const funcMatch = code.match(/((?:\w+[\s*&]+)+)(\w+)\s*\(([^)]*)\)/);
     if (funcMatch && testInput) {
       const returnType = funcMatch[1].trim();
@@ -300,7 +291,6 @@ func main() {
       let callArgs: string[] = [];
       let argIdx = 0;
 
-      // Split parameters to understand the signature
       const params = paramsStr.split(',').map(p => p.trim());
       
       params.forEach((param) => {
@@ -308,9 +298,7 @@ func main() {
           declarations += `    int returnSize = 0;\n`;
           callArgs.push(`&returnSize`);
         } else if (param.toLowerCase().endsWith('size')) {
-          // This is handled by the previous array argument
         } else {
-          // This is a "logical" argument from our parsed testInput
           const arg = args[argIdx++];
           if (!arg) return;
 
@@ -321,7 +309,6 @@ func main() {
             declarations += `    int ${arrayName}[] = {${inner}};\n`;
             callArgs.push(arrayName);
             
-            // If the NEXT parameter is a Size parameter, pass the length
             const nextParam = params[params.indexOf(param) + 1];
             if (nextParam && nextParam.toLowerCase().endsWith('size')) {
               const elements = inner.split(',').filter(s => s.trim());
@@ -397,7 +384,6 @@ export const POST = async (req: Request) => {
 
         let actualOutput = (execResult.stdout || "").trim();
         try {
-          // Try to parse if it's JSON (common for array outputs)
           const parsed = JSON.parse(actualOutput);
           actualOutput = JSON.stringify(parsed);
         } catch {}
@@ -405,20 +391,18 @@ export const POST = async (req: Request) => {
         const hasExpected = testCase.output && testCase.output.trim() !== '';
         const isHidden = !hasExpected;
 
-        // Collect all error information
         const errorDetails = [
           execResult.compile_output,
           execResult.stderr,
           execResult.message
         ].filter(Boolean).join("\n").trim();
 
-        let passed = execResult.status.id === 3; // Must be "Accepted" status
+        let passed = execResult.status.id === 3;
 
         if (passed) {
           if (hasExpected) {
             passed = compareOutput(actualOutput, testCase.output);
           } else {
-            // For hidden cases, we just need a non-empty output and no errors
             passed = actualOutput.length > 0;
           }
         }

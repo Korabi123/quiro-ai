@@ -10,11 +10,12 @@ import { useRouter } from "next/navigation";
 import { useAgents } from "@/lib/agents";
 import { searchAgents } from "@/lib/client-search";
 import { useMemo } from "react";
+import React from "react";
 
 export const AgentsTable = () => {
   const router = useRouter();
 
-  const [search, setSearch] = useQueryState("search");
+  const [search] = useQueryState("search");
   const { data: allAgents, isLoading } = useAgents();
   
   // Client-side filtering
@@ -38,11 +39,10 @@ export const AgentsTable = () => {
           </p>
         </div>
       )}
-      {agents?.map((agent, index) => (
-        <>
+      {agents?.map((agent) => (
+        <React.Fragment key={agent.id}>
           <div
             onClick={() => router.push(`/agents/${agent.id}`)}
-            key={agent.id + index}
             className="flex cursor-pointer hover:bg-muted-foreground/10 only:rounded-2xl first:rounded-t-2xl last:rounded-b-2xl transition-all items-center justify-between w-full p-5"
           >
             <div className="flex flex-col gap-2">
@@ -75,7 +75,7 @@ export const AgentsTable = () => {
           {agent.id !== agents?.at(-1)?.id && (
             <Separator key={agent.id} className="bg-border/60" />
           )}
-        </>
+        </React.Fragment>
       ))}
       {!isLoading && agents?.length === 0 && (
         <div className="flex items-center justify-center w-full p-5">

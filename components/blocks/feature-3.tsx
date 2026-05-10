@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Define the feature item type
 type FeatureItem = {
   icon: LucideIcon;
   title: string;
@@ -18,7 +17,6 @@ type FeatureItem = {
   cornerStyle?: string;
 };
 
-// Create feature data arrays for left and right columns
 const leftFeatures: FeatureItem[] = [
   {
     icon: Building2,
@@ -73,7 +71,6 @@ const rightFeatures: FeatureItem[] = [
   },
 ];
 
-// Feature card component
 const FeatureCard = ({ feature }: { feature: FeatureItem }) => {
   const Icon = feature.icon;
 
@@ -93,7 +90,6 @@ const FeatureCard = ({ feature }: { feature: FeatureItem }) => {
         <p className="text-muted-foreground text-base text-pretty">
           {feature.description}
         </p>
-        {/* Decorative elements */}
         <span className="from-primary/0 via-primary to-primary/0 absolute -bottom-px left-1/2 h-px w-1/2 -translate-x-1/2 bg-gradient-to-r opacity-60"></span>
         <span className="absolute inset-0 bg-[radial-gradient(30%_5%_at_50%_100%,hsl(var(--primary)/0.15)_0%,transparent_100%)] opacity-60"></span>
       </div>

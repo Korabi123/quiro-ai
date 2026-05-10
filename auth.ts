@@ -8,10 +8,12 @@ import { Resend } from "resend";
 import { multiSession, twoFactor } from "better-auth/plugins";
 import { passkey } from "better-auth/plugins/passkey";
 import ResetPasswordEmail from "./components/emails/reset-password";
+import WelcomeQuiroProEmail from "./components/emails/subscription-started";
+import SubscriptionCancelledEmail from "./components/emails/subscription-cancelled";
+import TwoFactorEmail from "./components/emails/two-factor-auth";
 
 import { stripe } from "@better-auth/stripe";
 import Stripe from "stripe";
-import WelcomeQuiroProEmail from "./components/emails/subscription-started";
 import { emailHarmony } from 'better-auth-harmony';
 
 const prisma = new PrismaClient();
@@ -34,6 +36,20 @@ export const auth = betterAuth({
       lastStreakUpdate: {
         type: "date",
         required: false
+      },
+      emailTwoFactorEnabled: {
+        type: "boolean",
+        required: false,
+        defaultValue: false
+      },
+      totpTwoFactorEnabled: {
+        type: "boolean",
+        required: false,
+        defaultValue: false
+      },
+      defaultTwoFactorMethod: {
+        type: "string",
+        required: false
       }
     }
   },
@@ -44,7 +60,7 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, token, url }, request) => {
       await resend.emails.send({
         to: user.email,
-        from: "auth@korabimeri.work.gd",
+        from: "quiro-auth@korabimeri.work.gd",
         subject: "Reset your password",
         react: ResetPasswordEmail({
           resetLink: url,
@@ -67,7 +83,7 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, token, url }, request) => {
       await resend.emails.send({
         to: user.email,
-        from: "auth@korabimeri.work.gd",
+        from: "quiro-auth@korabimeri.work.gd",
         subject: "Verify your email",
         text: `Click here to verify your email: ${url}`,
       });
@@ -77,13 +93,14 @@ export const auth = betterAuth({
   plugins: [
     twoFactor({
       issuer: "quiro",
+      skipVerificationOnEnable: true,
       otpOptions: {
         async sendOTP({ user, otp }, request) {
           await resend.emails.send({
             to: user.email,
-            from: "auth@korabimeri.work.gd",
+            from: "quiro-auth@korabimeri.work.gd",
             subject: "Your Login Verification Code",
-            text: `Your login verification code is: ${otp}`,
+            react: TwoFactorEmail({ otp }),
           });
         },
       },
@@ -157,8 +174,12 @@ export const auth = betterAuth({
             await resend.emails.send({
               to: user.email,
               from: "billing@korabimeri.work.gd",
-              subject: "Your quiro subscription has been canceled",
-              text: `Your quiro subscription has been canceled`,
+              subject: "Your Quiro Pro subscription has been cancelled",
+              react: SubscriptionCancelledEmail({
+                recipientName: user.name,
+                endDate: subscription?.periodEnd?.toLocaleDateString() || "the end of your billing cycle",
+                reactivateUrl: `${process.env.BETTER_AUTH_URL}/dashboard/billing`,
+              }),
             });
           }
         },

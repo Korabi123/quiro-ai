@@ -1,20 +1,15 @@
 import { throttle } from 'lodash';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Store for tracking request counts by IP
 const ipRequestMap = new Map<string, number>();
 
-// Store for tracking when IPs should be reset
 const ipResetTimers = new Map<string, NodeJS.Timeout>();
 
 interface RateLimitOptions {
-  // Maximum number of requests allowed in the window
   limit: number;
 
-  // Time window in seconds
   windowMs: number;
 
-  // Optional message to return when rate limited
   message?: string;
 }
 
@@ -25,13 +20,10 @@ export function createRateLimiter(options: RateLimitOptions) {
   const { limit, windowMs, message = 'Too many requests, please try again later' } = options;
 
   return function rateLimiter(req: NextRequest) {
-    // Get client IP
     const ip = req.headers.get('x-forwarded-for') || 'unknown';
 
-    // Get current count for this IP or initialize to 0
     const currentRequests = ipRequestMap.get(ip) || 0;
 
-    // If this is the first request from this IP, set up reset timer
     if (currentRequests === 0) {
       const timer = setTimeout(() => {
         ipRequestMap.delete(ip);
@@ -41,10 +33,8 @@ export function createRateLimiter(options: RateLimitOptions) {
       ipResetTimers.set(ip, timer);
     }
 
-    // Increment request count
     ipRequestMap.set(ip, currentRequests + 1);
 
-    // Check if rate limit exceeded
     if (currentRequests >= limit) {
       return NextResponse.json(
         { error: message },
@@ -60,7 +50,6 @@ export function createRateLimiter(options: RateLimitOptions) {
       );
     }
 
-    // Not rate limited, continue
     return null;
   };
 }

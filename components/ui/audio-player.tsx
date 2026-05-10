@@ -58,7 +58,6 @@ export function AudioPlayer({
   const [isSeekingProgress, setIsSeekingProgress] = useState(false);
   const [isSeekingVolume, setIsSeekingVolume] = useState(false);
 
-  // Format time helper
   const formatTime = useCallback((time: number) => {
     if (isNaN(time)) return "0:00";
     const minutes = Math.floor(time / 60);
@@ -66,7 +65,6 @@ export function AudioPlayer({
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }, []);
 
-  // Handle play/pause
   const togglePlayPause = useCallback(async () => {
     if (!audioRef.current) return;
 
@@ -82,7 +80,6 @@ export function AudioPlayer({
     }
   }, [isPlaying]);
 
-  // Handle seeking
   const handleProgressChange = useCallback(
     (value: number[]) => {
       if (!audioRef.current) return;
@@ -93,7 +90,6 @@ export function AudioPlayer({
     [duration]
   );
 
-  // Handle volume change
   const handleVolumeChange = useCallback((value: number[]) => {
     if (!audioRef.current) return;
     const newVolume = value[0] / 100;
@@ -102,7 +98,6 @@ export function AudioPlayer({
     setIsMuted(newVolume === 0);
   }, []);
 
-  // Toggle mute
   const toggleMute = useCallback(() => {
     if (!audioRef.current) return;
 
@@ -115,7 +110,6 @@ export function AudioPlayer({
     }
   }, [isMuted, volume]);
 
-  // Skip forward/backward
   const skipTime = useCallback(
     (seconds: number) => {
       if (!audioRef.current) return;
@@ -133,7 +127,6 @@ export function AudioPlayer({
     setCurrentTime(0);
   }, []);
 
-  // Audio event handlers
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -181,7 +174,6 @@ export function AudioPlayer({
       }
     };
 
-    // Add event listeners
     audio.addEventListener("loadstart", handleLoadStart);
     audio.addEventListener("canplay", handleCanPlay);
     audio.addEventListener("loadedmetadata", handleLoadedMetadata);
@@ -214,7 +206,6 @@ export function AudioPlayer({
     onError,
   ]);
 
-  // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target !== document.body) return;
@@ -278,7 +269,6 @@ export function AudioPlayer({
       />
 
       <div className="bg-card border rounded-2xl p-4 space-y-4">
-        {/* Error State */}
         {hasError && (
           <div className="flex items-center gap-2 text-destructive text-sm">
             <AlertCircle className="w-4 h-4" />
@@ -286,9 +276,7 @@ export function AudioPlayer({
           </div>
         )}
 
-        {/* Main Controls */}
         <div className="flex items-center gap-3">
-          {/* Skip Back */}
           <Button
             variant="ghost"
             size="icon"
@@ -299,7 +287,6 @@ export function AudioPlayer({
             <SkipBack className="w-4 h-4" />
           </Button>
 
-          {/* Play/Pause */}
           <Button
             variant="default"
             size="icon"
@@ -316,7 +303,6 @@ export function AudioPlayer({
             )}
           </Button>
 
-          {/* Skip Forward */}
           <Button
             variant="ghost"
             size="icon"
@@ -327,7 +313,6 @@ export function AudioPlayer({
             <SkipForward className="w-4 h-4" />
           </Button>
 
-          {/* Restart */}
           <Button
             variant="ghost"
             size="icon"
@@ -338,7 +323,6 @@ export function AudioPlayer({
             <RotateCcw className="w-4 h-4" />
           </Button>
 
-          {/* Time Display */}
           <div className="flex-1 text-right">
             <span className="text-sm font-inter text-muted-foreground">
               {formatTime(currentTime)} / {formatTime(duration)}
@@ -346,7 +330,6 @@ export function AudioPlayer({
           </div>
         </div>
 
-        {/* Progress Bar */}
         <div className="space-y-2">
           <Slider
             value={[duration > 0 ? (currentTime / duration) * 100 : 0]}
@@ -360,7 +343,6 @@ export function AudioPlayer({
           />
         </div>
 
-        {/* Volume Controls */}
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -394,7 +376,6 @@ export function AudioPlayer({
           </span>
         </div>
 
-        {/* Loop indicator */}
         {loop && (
           <div className="text-xs text-muted-foreground text-center">
             Loop enabled

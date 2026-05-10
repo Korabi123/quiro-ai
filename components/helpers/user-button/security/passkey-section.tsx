@@ -92,15 +92,15 @@ export const PasskeySection = () => {
   };
 
   return (
-    <div className="flex md:w-[72%] flex-col gap-10">
+    <div className="flex w-full flex-col gap-3 border-b border-zinc-200 dark:border-zinc-800 py-6">
+      <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">Passkeys</p>
       <div
         ref={animate}
-        className="flex md:flex-row flex-col md:gap-0 gap-8 justify-between"
+        className="w-full"
       >
-        <p className="text-sm font-medium">Passkeys</p>
         <div
           ref={animate}
-          className="flex flex-col gap-6 items-end md:w-[350px] md:ml-0 ml-4"
+          className="flex flex-col gap-6 items-start w-full"
         >
           {isLoading ? (
             <div>Loading</div>
@@ -149,10 +149,10 @@ export const PasskeySection = () => {
                           className="flex -mt-[1px] items-center justify-between self-start gap-4 w-full"
                         >
                           <div className="flex flex-col gap-2">
-                            <p className="text-sm font-medium">
+                            <p className="text-[13px] font-medium text-zinc-900 dark:text-zinc-100">
                               {passkey.name}
                             </p>
-                            <p className="text-xs text-zinc-500">
+                            <p className="text-[13px] text-zinc-500">
                               Created: {formattedDate}
                             </p>
                           </div>
@@ -181,10 +181,10 @@ export const PasskeySection = () => {
                                   }, 200);
                                 }}
                               >
-                                <p className="text-sm">Rename</p>
+                                <p className="text-[13px]">Rename</p>
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="cursor-pointer px-3 py-1 text-destructive/80 focus:text-red-500 focus:bg-destructive/5"
+                                className="cursor-pointer px-3 py-1 text-zinc-600 focus:text-zinc-800 transition-all"
                                 onClick={() => {
                                   setIsDeletePasskeyBoxOpen(passkey.id);
                                   setTimeout(() => {
@@ -194,7 +194,7 @@ export const PasskeySection = () => {
                                   }, 200);
                                 }}
                               >
-                                <p className="text-sm">Remove</p>
+                                <p className="text-[13px] text-destructive">Remove</p>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -360,14 +360,11 @@ export const PasskeySection = () => {
           )}
           <Button
             onClick={onAddPasskey}
-            className="w-full group"
+            className="text-[13px] h-8 px-0 hover:bg-transparent"
             variant="ghost"
             size="sm"
           >
-            <span className="mr-auto w-full flex flex-row items-center text-start">
-              Add passkey
-              <ArrowRight className="size-5 -ml-5 group-hover:flex text-transparent group-hover:ml-3 group-hover:text-zinc-400 transition-all" />
-            </span>
+            Add a passkey
           </Button>
         </div>
       </div>

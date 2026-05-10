@@ -230,7 +230,7 @@ export const CreateReportDialog = () => {
                   name="customType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>LinkedIn job posting URL <Badge className="ml-2 bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white">Pro feature</Badge></FormLabel>
+                      <FormLabel>LinkedIn job posting URL <Badge className="ml-2 bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white border-0">Pro feature</Badge></FormLabel>
                       <FormControl>
                         <Input
                           {...field}

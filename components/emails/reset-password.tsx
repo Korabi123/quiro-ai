@@ -1,14 +1,12 @@
 import {
   Body,
   Button,
-  Column,
   Container,
   Head,
   Heading,
   Html,
   Img,
   Preview,
-  Row,
   Section,
   Text,
 } from '@react-email/components';
@@ -26,77 +24,68 @@ export const ResetPasswordEmail = ({
 
   return (
     <Html>
-      <Head />
+      <Head>
+        <meta name="color-scheme" content="light dark" />
+        <meta name="supported-color-schemes" content="light dark" />
+        <style>
+          {`
+            @import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,300,400&display=swap');
+            
+            :root {
+              color-scheme: light dark;
+              supported-color-schemes: light dark;
+            }
+          `}
+        </style>
+      </Head>
+      <Preview>Your password reset link</Preview>
       <Body style={main}>
-        <Preview>Your password reset link...</Preview>
-        <Container>
-          <Section style={logo}>
-            <Img src="https://qddzgieaky.ufs.sh/f/hl4IFmPz4YLsmVIe3VCh3VU48acCvjpQsgDurN5z0JZYOKkH" />
+        <Container style={container}>
+          <Section style={header}>
+            <Img 
+              src="https://quiro-ai.vercel.app/branding/logo-standalone-png.png" 
+              height="36"
+              alt="Quiro AI Logo"
+              style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '10px', width: 'auto' }}
+            />
+            <Text style={{ display: 'inline-block', verticalAlign: 'middle', fontSize: '22px', fontWeight: '600', color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
+              Quiro AI
+            </Text>
           </Section>
 
           <Section style={content}>
-            <Row>
-              <Img
-                style={image}
-                width={620}
-                src="https://react-email-demo-qv38cga5x-resend.vercel.app/static/yelp-header.png"
-              />
-            </Row>
+            <Heading style={heading}>
+              Hi {userFirstName},
+            </Heading>
+            <Text style={paragraph}>
+              You've requested a password reset link for your Quiro AI account.
+            </Text>
 
-            <Row style={{ ...boxInfos, paddingBottom: '0' }}>
-              <Column>
-                <Heading
-                  style={{
-                    fontSize: 32,
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                  }}
-                >
-                  Hi {userFirstName},
-                </Heading>
-                <Heading
-                  as="h2"
-                  style={{
-                    fontSize: 26,
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                  }}
-                >
-                  you&apos;ve requested a password reset link
-                </Heading>
+            <Section style={buttonContainer}>
+              <Button style={button} href={resetLink}>
+                Reset your password
+              </Button>
+            </Section>
 
-                <Text style={paragraph}>
-                  <b>Link: </b>
-                  {resetLink}
-                </Text>
-
-                <Text style={paragraph}>
-                  If this was you, click on the link to reset your password.
-                </Text>
-                <Text style={{ ...paragraph, marginTop: -5 }}>
-                  If this wasn&apos;t you please ignore this email and enable 2fa.
-                </Text>
-              </Column>
-            </Row>
+            <Text style={paragraph}>
+              If this was you, click the button above to reset your password.
+            </Text>
+            <Text style={paragraph}>
+              If this wasn't you, please ignore this email or reach out to support. We strongly recommend enabling 2FA.
+            </Text>
           </Section>
 
-          <Section style={containerImageFooter}>
-            <Img
-              style={image}
-              width={620}
-              src="https://react-email-demo-qv38cga5x-resend.vercel.app/static/yelp-footer.png"
-            />
+          <Section style={footer}>
+            <Text style={footerText}>
+              Security alert from Quiro AI.
+            </Text>
+            <Text style={footerText}>
+              © {new Date().getFullYear()} Quiro AI. All rights reserved.
+            </Text>
+            <Text style={footerText}>
+              <a href="https://quiro.ai" style={link}>quiro.ai</a>
+            </Text>
           </Section>
-
-          <Text
-            style={{
-              textAlign: 'center',
-              fontSize: 12,
-              color: 'rgb(0,0,0, 0.7)',
-            }}
-          >
-            © 2025 | quiro | https://quiro.ai
-          </Text>
         </Container>
       </Body>
     </Html>
@@ -106,33 +95,74 @@ export const ResetPasswordEmail = ({
 export default ResetPasswordEmail;
 
 const main = {
-  backgroundColor: '#fff',
+  backgroundColor: '#000000',
   fontFamily:
-    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+    'Satoshi, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
 };
 
-const paragraph = {
-  fontSize: 16,
-};
-
-const logo = {
-  padding: '30px 20px',
-};
-
-const content = {
-  border: '1px solid rgb(0,0,0, 0.1)',
-  borderRadius: '3px',
-  overflow: 'hidden',
-};
-
-const image = {
+const container = {
+  margin: '0 auto',
+  padding: '20px 0 48px',
+  width: '580px',
   maxWidth: '100%',
 };
 
-const boxInfos = {
-  padding: '20px',
+const header = {
+  padding: '32px 20px',
+  textAlign: 'center' as const,
 };
 
-const containerImageFooter = {
-  padding: '45px 0 0 0',
+const content = {
+  padding: '40px',
+  backgroundColor: '#171717',
+  borderRadius: '16px',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+};
+
+const heading = {
+  fontSize: '32px',
+  lineHeight: '1.3',
+  fontWeight: '700',
+  color: '#ffffff',
+  marginBottom: '24px',
+};
+
+const paragraph = {
+  fontSize: '16px',
+  lineHeight: '1.6',
+  color: 'rgba(255, 255, 255, 0.8)',
+  marginBottom: '20px',
+};
+
+const buttonContainer = {
+  marginTop: '32px',
+  marginBottom: '32px',
+};
+
+const button = {
+  backgroundColor: '#ffffff',
+  borderRadius: '9999px',
+  color: '#000000',
+  fontSize: '16px',
+  fontWeight: '600',
+  textDecoration: 'none',
+  textAlign: 'center' as const,
+  display: 'inline-block',
+  padding: '12px 32px',
+};
+
+const footer = {
+  padding: '32px 20px',
+  textAlign: 'center' as const,
+};
+
+const footerText = {
+  fontSize: '12px',
+  color: 'rgba(255, 255, 255, 0.5)',
+  margin: '8px 0',
+};
+
+const link = {
+  color: 'rgba(255, 255, 255, 0.8)',
+  textDecoration: 'underline',
 };

@@ -106,7 +106,7 @@ export function PricingColumn({
         </div>
 
         <Button variant={cta.variant} size="lg" asChild>
-          <Link href={cta.href}>{cta.label}</Link>
+          <a href={cta.href}>{cta.label}</a>
         </Button>
 
         <p className="text-muted-foreground min-h-[40px] max-w-[220px] text-sm">

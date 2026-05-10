@@ -78,6 +78,18 @@ body {
   }
 }
 
+@keyframes texture-drift {
+  0% {
+    background-position: 0 0, 1px 1px, 0 0, 0 0;
+  }
+  50% {
+    background-position: 2px -2px, -1px 2px, 1px -1px, -1px 1px;
+  }
+  100% {
+    background-position: 0 0, 1px 1px, 0 0, 0 0;
+  }
+}
+
 @layer utilities {
   .animate-cosmic-spin {
     animation: cosmic-spin 3s linear infinite;

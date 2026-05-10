@@ -7,7 +7,6 @@ import { useMediaQuery } from "@/components/use-media-query";
 import MotionDrawer from "@/components/motion-drawer";
 import { CosmicButton } from "@/components/ui/cosmic-button";
 
-/** Quiro landing brand mesh — warm amber/orange aligned with `landing.css` `--brand` / glow accents */
 const QUIRO_MESH = {
   color1: "#FDE68A",
   color2: "#FB923C",
@@ -92,14 +91,14 @@ export const HeroDigitalSuccess = () => {
                 />
                 <span className="font-semibold">Quiro AI</span>
               </div>
-              <a href="/coding-problems" className="block rounded-sm p-2 hover:bg-neutral-100 hover:text-black">
-                Coding problems
+              <a href="#features" className="block rounded-sm p-2 hover:bg-neutral-100 hover:text-black">
+                Features
               </a>
-              <a href="/login" className="block rounded-sm p-2 hover:bg-neutral-100 hover:text-black">
-                Log in
+              <a href="#pricing" className="block rounded-sm p-2 hover:bg-neutral-100 hover:text-black">
+                Pricing
               </a>
-              <a href="/sign-up" className="block rounded-sm p-2 hover:bg-neutral-100 hover:text-black">
-                Sign up
+              <a href="#contact" className="block rounded-sm p-2 hover:bg-neutral-100 hover:text-black">
+                Contact
               </a>
             </nav>
           </MotionDrawer>
@@ -140,14 +139,14 @@ export const HeroDigitalSuccess = () => {
             timelineRef={timelineRef}
             className="hidden items-center gap-10 text-sm font-medium text-white md:flex"
           >
-            <a href="/coding-problems" className="transition hover:text-orange-200">
-              Coding problems
+            <a href="#features" className="transition hover:text-orange-200">
+              Features
             </a>
-            <a href="/login" className="transition hover:text-orange-200">
-              Log in
+            <a href="#pricing" className="transition hover:text-orange-200">
+              Pricing
             </a>
-            <a href="/sign-up" className="transition hover:text-orange-200">
-              Sign up
+            <a href="#contact" className="transition hover:text-orange-200">
+              Contact
             </a>
           </TimelineAnimation>
           <TimelineAnimation

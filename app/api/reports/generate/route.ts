@@ -83,16 +83,16 @@ export async function POST(req: Request) {
 
           model Question {
             id        String       // Omit, will be auto-generated
-            content   String       // The question text (for MULTIPLE_CHOICE, include options here)
-            answer    String?      // Correct answer or expected answer
-            type      QuestionType // One of the types (FREE_TEXT, MULTIPLE_CHOICE, FILL_BLANK, TRUE_FALSE)
-            rubric    Rubric       // Scoring criteria for this question
+            content   String
+            answer    String?
+            type      QuestionType
+            rubric    Rubric
           }
 
           model Rubric {
-            criteria: string       // What the question is evaluating
-            scoring: string        // How to evaluate the answer (point ranges, what earns full credit)
-            maxScore: number       // Maximum points for the question
+            criteria: string
+            scoring: string
+            maxScore: number
           }
 
           ---
@@ -443,12 +443,10 @@ export async function POST(req: Request) {
 
     let cleanResponse = finalResponse?.trim();
 
-    //* Remove "```json" and "```" if they exist
     cleanResponse = cleanResponse
       ?.replace(/^```json\s*/, "")
       .replace(/```$/, "");
 
-    //* Now parse
     const responseJ = JSON.parse(cleanResponse!);
 
     if (!Array.isArray(responseJ)) {
@@ -461,7 +459,6 @@ export async function POST(req: Request) {
       (q, i, arr) => i === arr.findIndex(other => other.content.trim() === q.content.trim())
     );
 
-    //* Create questions and rubrics in DB
     for (const question of uniqueQuestions) {
       const rubric = await prismadb.rubric.create({
         data: {

@@ -205,7 +205,6 @@ const MotionDrawer: React.FC<SideMenuProps> = ({
           whileTap={{ scale: 0.95 }}
         >
           <Menu />
-          {/* Open */}
         </motion.button>
       )}
 
@@ -255,7 +254,7 @@ const MotionDrawer: React.FC<SideMenuProps> = ({
                   whileTap={{ scale: 0.9 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <X size={20} /> {/* Close */}
+                  <X size={20} /> 
                 </motion.button>
               )}
 

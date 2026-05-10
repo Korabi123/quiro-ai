@@ -54,7 +54,6 @@ export async function GET(req: Request) {
           },
         ];
 
-        // Only search agent name if no specific agent is selected
         if (!agentParam) {
           searchConditions.push({
             agent: {

@@ -8,7 +8,7 @@ export const useAgents = () => {
   const { data, error, isLoading } = useSWR<Agent[]>(
     `/api/agents/get${queryString}`,
     fetcher,
-    { 
+    {
       refreshInterval: 0,
       revalidateOnFocus: false,
       revalidateOnReconnect: true,

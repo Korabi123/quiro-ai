@@ -81,7 +81,7 @@ export const ReportContent = ({ reportId }: Props) => {
     setOptimisticChats((prev) => [...prev, tempChat]);
     setPendingMessage(content);
     setContent("");
-    setLastSentMessage(content); // Store the message we just sent
+    setLastSentMessage(content);
 
     startTransition(async () => {
       try {
@@ -92,20 +92,18 @@ export const ReportContent = ({ reportId }: Props) => {
           // @ts-ignore
           transcript: `SUMMARY: ${report?.summary}\nBREAKDOWN: ${report?.breakdown}\nQUESTIONS AND FEEDBACK:\n${report?.questions.map((question: Question) => `${question.content}: ${question.answer}\n${question.feedback}\n`).join("\n")}`,
         });
-        // Clear optimistic chat after server confirms
         setOptimisticChats((prev) =>
           prev.filter((chat) => chat.id !== tempChat.id)
         );
         setPendingMessage("");
       } catch (error) {
         toast.error("Something went wrong");
-        // Remove optimistic chat on error
         setOptimisticChats((prev) =>
           prev.filter((chat) => chat.id !== tempChat.id)
         );
         setPendingMessage("");
         setIsTyping(false);
-        setLastSentMessage(""); // Clear on error
+        setLastSentMessage("");
       }
     });
   };
@@ -129,27 +127,22 @@ export const ReportContent = ({ reportId }: Props) => {
     if (chats && chats.length > 0) {
       const lastMessage = chats[chats.length - 1];
 
-      // If we have a last sent message and the last chat is from the user with the same content
       if (
         lastSentMessage &&
         lastMessage.type === "USER" &&
         lastMessage.content === lastSentMessage
       ) {
-        // Show typing indicator immediately after user's message is confirmed
         setIsTyping(true);
-        setLastSentMessage(""); // Clear the tracking
+        setLastSentMessage("");
       } else if (lastMessage.type === "AI") {
-        // Hide typing indicator when AI responds
         setIsTyping(false);
       }
     }
   }, [chats, lastSentMessage]);
 
-  // Combine server chats with optimistic chats
   const displayChats = useMemo(() => {
     if (!chats) return optimisticChats;
 
-    // Filter out any optimistic chats that might have been duplicated by the server
     const filteredOptimistic = optimisticChats.filter(
       (optChat) =>
         !chats.some(
@@ -167,7 +160,6 @@ export const ReportContent = ({ reportId }: Props) => {
   }, [chats, optimisticChats]);
 
   useEffect(() => {
-    // Smooth scroll to bottom with a small delay to ensure DOM updates
     const scrollToBottom = () => {
       const scrollContainer = endOfChatsRef.current?.closest('.overflow-y-scroll');
       if (scrollContainer) {
@@ -178,7 +170,6 @@ export const ReportContent = ({ reportId }: Props) => {
       }
     };
 
-    // Use setTimeout to ensure DOM is updated before scrolling
     const timeoutId = setTimeout(scrollToBottom, 100);
     return () => clearTimeout(timeoutId);
   });

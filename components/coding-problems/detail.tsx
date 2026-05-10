@@ -121,7 +121,6 @@ export const ProblemDetail = ({ problemId, problemSlug }: Props) => {
 
       const grading = await response.json();
 
-      // Update the local cache with the new grading
       mutate((currentData) => {
         if (!currentData) return currentData;
         return currentData.map((page) => ({
@@ -151,7 +150,6 @@ export const ProblemDetail = ({ problemId, problemSlug }: Props) => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Hero Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="py-4 px-6 flex flex-col rounded-2xl border border-border/50 bg-muted-foreground/5 gap-1">
           <div className="flex items-center justify-between">
@@ -211,7 +209,6 @@ export const ProblemDetail = ({ problemId, problemSlug }: Props) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Column: Submissions List */}
         <div className="lg:col-span-1 flex flex-col gap-4">
           <div className="py-2 px-4 flex items-center justify-between rounded-2xl border border-border/50 bg-muted-foreground/5">
             <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -311,7 +308,6 @@ export const ProblemDetail = ({ problemId, problemSlug }: Props) => {
           </div>
         </div>
 
-        {/* Right Column: Details & Content */}
         <div className="lg:col-span-3 flex flex-col gap-4">
           <div className="py-2 px-6 flex items-center rounded-2xl border border-border/50 bg-muted-foreground/5 justify-between">
             <div className="flex items-center gap-4">

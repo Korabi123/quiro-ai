@@ -24,7 +24,6 @@ export default function MinimalHero() {
   const gradientRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Animate words
     const words = document.querySelectorAll<HTMLElement>('.word');
     words.forEach((word) => {
       const delay = parseInt(word.getAttribute('data-delay') || '0', 10);
@@ -207,7 +206,6 @@ export default function MinimalHero() {
         />
       </svg>
 
-      {/* Corner elements */}
       <div
         className="corner-element top-8 left-8"
         style={{ animationDelay: '4s' }}
@@ -245,7 +243,6 @@ export default function MinimalHero() {
         ></div>
       </div>
 
-      {/* Floating elements */}
       <div
         className="floating-element"
         style={{ top: '25%', left: '15%', animationDelay: '5s' }}
@@ -264,7 +261,6 @@ export default function MinimalHero() {
       ></div>
 
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-between px-8 py-12 md:px-16 md:py-20">
-        {/* Top tagline */}
         <div className="text-center">
           <h2
               className="font-mono text-xs font-light tracking-[0.2em] uppercase opacity-80 md:text-sm"
@@ -303,7 +299,6 @@ export default function MinimalHero() {
           ></div>
         </div>
 
-        {/* Main headline */}
         <div className="mx-auto max-w-5xl text-center">
           <h1
               className="text-decoration text-3xl leading-tight font-extralight tracking-tight md:text-5xl lg:text-6xl text-white"
@@ -388,7 +383,6 @@ export default function MinimalHero() {
           ></div>
         </div>
 
-        {/* Bottom tagline */}
         <div className="text-center">
           <div
             className="mb-4 h-px w-16 opacity-30"
@@ -420,26 +414,7 @@ export default function MinimalHero() {
         </div>
       </div>
 
-      {/* <div
-        className="mt-6 flex justify-center space-x-4 opacity-0"
-        style={{
-          animation: 'word-appear 1s ease-out forwards',
-          animationDelay: '4.5s',
-        }}
-      >
-        <div
-          className="h-1 w-1 rounded-full opacity-40"
-          style={{ background: colors.orange }}
-        ></div>
-        <div
-          className="h-1 w-1 rounded-full opacity-60"
-          style={{ background: colors.yellow }}
-        ></div>
-        <div
-          className="h-1 w-1 rounded-full opacity-40"
-          style={{ background: colors.orange }}
-        ></div>
-      </div> */}
+
 
       <div
         id="mouse-gradient"

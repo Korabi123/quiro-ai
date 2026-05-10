@@ -74,11 +74,11 @@ export const ProfileSection = ({
   };
 
   return (
-    <div className={cn("flex md:flex-row flex-col md:gap-0 gap-8 py-3 justify-between items-start w-full", className)}>
-      <p className="text-sm font-medium pointer-events-none">Profile</p>
-      <div ref={animate} className="md:w-[65%] w-full">
+    <div className={cn("flex flex-col gap-3 w-full border-b border-zinc-200 dark:border-zinc-800 py-6", className)}>
+      <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 pointer-events-none">Profile</p>
+      <div ref={animate} className="w-full">
         {!isProfileBoxOpen ? (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 justify-between w-full">
             <Avatar>
               {/* @ts-expect-error Just a simple type error */}
               <AvatarImage src={user?.image} />

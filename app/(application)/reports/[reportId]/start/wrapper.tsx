@@ -63,13 +63,10 @@ export const Wrapper = ({ reportId }: Props) => {
 
   const currentQuestion = questions?.[onQuestion];
 
-  // Extract multiple choice options when the current question changes
   useEffect(() => {
     if (!currentQuestion) return;
 
     if (currentQuestion.type === "MULTIPLE_CHOICE") {
-      // Find the first occurrence of multiple choice options
-      // This regex looks for patterns like "A) ", "A. ", " A) ", etc.
       const optionPatterns = [
         /\s+[A-D][\)\.]\s+/i, // Space before option
         /^[A-D][\)\.]\s+/i, // Option at start of string
@@ -78,7 +75,6 @@ export const Wrapper = ({ reportId }: Props) => {
       let firstOptionIndex = -1;
       const options: Array<{ label: string; text: string }> = [];
 
-      // Try each pattern
       for (const pattern of optionPatterns) {
         const match = currentQuestion.content.match(pattern);
         if (match && match.index !== undefined) {
@@ -87,9 +83,7 @@ export const Wrapper = ({ reportId }: Props) => {
         }
       }
 
-      // If we found an option pattern
       if (firstOptionIndex >= 0) {
-        // Extract options
         const optionsText = currentQuestion.content.substring(firstOptionIndex);
         const optionRegex =
           /\s*([A-D])[\)\.](\s+)([^\n]+?)(?=\s*[A-D][\)\.](\s+)|$)/g;
@@ -111,7 +105,6 @@ export const Wrapper = ({ reportId }: Props) => {
     }
   }, [currentQuestion]);
 
-  // Function to extract question text without options
   const getQuestionTextWithoutOptions = (content: string) => {
     if (!content) return "";
 
@@ -122,7 +115,6 @@ export const Wrapper = ({ reportId }: Props) => {
 
     let firstOptionIndex = -1;
 
-    // Try each pattern
     for (const pattern of optionPatterns) {
       const match = content.match(pattern);
       if (match && match.index !== undefined) {
@@ -131,12 +123,10 @@ export const Wrapper = ({ reportId }: Props) => {
       }
     }
 
-    // If we found an option pattern
     if (firstOptionIndex >= 0) {
       return content.substring(0, firstOptionIndex).trim();
     }
 
-    // If no pattern is found, return the original content
     return content;
   };
 
@@ -145,7 +135,6 @@ export const Wrapper = ({ reportId }: Props) => {
     answer?: string,
     selectedOption?: string
   ) => {
-    // Check if input is valid based on question type
     if (
       (question.type === "MULTIPLE_CHOICE" || question.type === "TRUE_FALSE") &&
       !selectedOption
@@ -162,7 +151,6 @@ export const Wrapper = ({ reportId }: Props) => {
       return;
     }
 
-    // Create the answer object
     const answerObj = {
       content: question.content,
       answer:
@@ -181,16 +169,13 @@ export const Wrapper = ({ reportId }: Props) => {
       },
     };
 
-    // Update answers state
     setAnswers([...answers, answerObj]);
     setValue("");
 
-    // Move to next question or finish
     // @ts-ignore
     if (onQuestion + 1 < questions?.length) {
       setOnQuestion(onQuestion + 1);
     } else {
-      // Add the last answer to the answers array before submitting
       const updatedAnswers = [...answers, answerObj];
       setLoadingText("Grading report...");
       toast.success("You have completed the report");

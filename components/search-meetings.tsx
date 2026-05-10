@@ -25,18 +25,15 @@ import { useAgents } from "@/lib/agents";
 import { useMeetings } from "@/lib/meetings";
 import { useReports } from "@/lib/reports";
 import { useModalStore } from "@/hooks/use-modal-store";
-import { Subscription } from "@better-auth/stripe";
-import { authClient } from "@/lib/auth-client";
+import { useSubscription } from "@/lib/subscription";
 
 export default function MeetingsSearch() {
   const [open, setOpen] = React.useState(false);
-  const [subscription, setSubscription] = React.useState<Subscription | null>(null);
-  const [isPending, startTransition] = React.useTransition();
   const [searchQuery, setSearchQuery] = React.useState("");
   const router = useRouter();
   const { onOpen } = useModalStore();
+  const { data: subscription } = useSubscription();
 
-  // Fetch real data
   const { data: agents, isLoading: agentsLoading } = useAgents();
   const { data: meetings, isLoading: meetingsLoading } = useMeetings();
   const { data: reports, isLoading: reportsLoading } = useReports();
@@ -50,24 +47,16 @@ export default function MeetingsSearch() {
     };
 
     document.addEventListener("keydown", down);
-    const getSubscription = async () => {
-      startTransition(async () => {
-        await authClient.subscription.list()
-          .then((res) => setSubscription(res?.data?.[0] ?? null));
-      });
-    }
-    getSubscription();
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  // Filter items based on search query
   const filteredAgents = React.useMemo(() => {
     if (!agents) return [];
     return agents
       .filter((agent) =>
         agent.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
-      .slice(0, 5); // Limit to 5 items
+      .slice(0, 5);
   }, [agents, searchQuery]);
 
   const filteredMeetings = React.useMemo(() => {
@@ -76,7 +65,7 @@ export default function MeetingsSearch() {
       .filter((meeting) =>
         meeting.title.toLowerCase().includes(searchQuery.toLowerCase())
       )
-      .slice(0, 5); // Limit to 5 items
+      .slice(0, 5);
   }, [meetings, searchQuery]);
 
   const filteredReports = React.useMemo(() => {
@@ -85,7 +74,7 @@ export default function MeetingsSearch() {
       .filter((report) =>
         report.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
-      .slice(0, 5); // Limit to 5 items
+      .slice(0, 5);
   }, [reports, searchQuery]);
 
   const handleAgentClick = (agentId: string) => {
@@ -113,7 +102,6 @@ export default function MeetingsSearch() {
   };
 
   const handleCreateMeeting = () => {
-    // Open the create meeting modal using the modal store
     onOpen("createMeeting", {
       reportId: undefined,
       agentId: undefined,
@@ -159,7 +147,6 @@ export default function MeetingsSearch() {
         <CommandList className="px-0 mx-0 max-h-[400px] overflow-y-auto shadow-inner">
           <CommandEmpty>No results found.</CommandEmpty>
 
-          {/* Quick Actions */}
           <CommandGroup heading="Quick Actions" className="mx-0 font-normal">
             <CommandItem onSelect={handleCreateMeeting}>
               <CalendarPlus className="mr-2 text-muted-foreground/70 size-4" />
@@ -177,9 +164,7 @@ export default function MeetingsSearch() {
             )}
           </CommandGroup>
 
-          {/* <CommandSeparator /> */}
 
-          {/* Agents */}
           {filteredAgents.length > 0 && (
             <CommandGroup heading="Agents" className="mx-0 font-normal">
               {filteredAgents.map((agent) => (
@@ -194,7 +179,6 @@ export default function MeetingsSearch() {
             </CommandGroup>
           )}
 
-          {/* Meetings */}
           {filteredMeetings.length > 0 && (
             <CommandGroup heading="Meetings" className="mx-0 font-normal">
               {filteredMeetings.map((meeting) => (
@@ -209,7 +193,6 @@ export default function MeetingsSearch() {
             </CommandGroup>
           )}
 
-          {/* Reports */}
           {filteredReports.length > 0 && (
             <CommandGroup heading="Reports" className="mx-0 font-normal">
               {filteredReports.map((report) => (
@@ -224,10 +207,8 @@ export default function MeetingsSearch() {
             </CommandGroup>
           )}
 
-          {/* Show all items when no search query */}
           {!searchQuery && !hasResults && (
             <>
-              {/* Recent Agents */}
               {agents && agents.length > 0 && (
                 <CommandGroup
                   heading="Recent Agents"
@@ -248,7 +229,6 @@ export default function MeetingsSearch() {
                 </CommandGroup>
               )}
 
-              {/* Recent Meetings */}
               {meetings && meetings.length > 0 && (
                 <CommandGroup
                   heading="Recent Meetings"
@@ -266,7 +246,6 @@ export default function MeetingsSearch() {
                 </CommandGroup>
               )}
 
-              {/* Recent Reports */}
               {reports && reports.length > 0 && (
                 <CommandGroup
                   heading="Recent Reports"

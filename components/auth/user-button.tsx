@@ -20,8 +20,10 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 import {
+  CreditCard,
   Loader,
   PlusCircle,
+  Shield,
   UserIcon,
   Zap,
 } from "lucide-react";
@@ -36,10 +38,11 @@ import { cn } from "@/lib/utils";
 import { ProfileSection } from "../helpers/user-button/profile-section";
 import { SecuritySection } from "../helpers/user-button/security/security-section";
 import { BillingSection } from "../helpers/user-button/billing/billing-section";
-import { Subscription } from "@better-auth/stripe";
+import { ConnectionsSection } from "../helpers/user-button/security/connections-section";
 import { Badge } from "../ui/badge";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { useSubscription } from "@/lib/subscription";
 
 export const UserButton = ({
   user,
@@ -58,7 +61,10 @@ export const UserButton = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [sessionSubscriptions, setSessionSubscriptions] = useState<Record<string, string>>({});
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"profile" | "security" | "billing">("profile");
+  const { data: subscription } = useSubscription();
 
   const { data: streakData } = useSWR("/api/user/streak", fetcher, {
     fallbackData: {
@@ -91,30 +97,44 @@ export const UserButton = ({
   const router = useRouter();
 
   useEffect(() => {
+    if (!isMenuOpen || sessions.length > 0) return;
+
     const getSessions = async () => {
       await authClient.multiSession.listDeviceSessions()
         // @ts-expect-error Just a simple type error
-        .then((res) => setSessions(res.data));
-    }
-    const getSubscription = async () => {
-      await authClient.subscription.list()
-        .then((res) => setSubscription(res?.data?.[0] ?? null));
-    }
+        .then(async (res) => {
+          setSessions(res.data);
+          try {
+            const userIds = res.data.map((s: any) => s.user.id);
+            const subRes = await fetch("/api/user/subscriptions", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userIds })
+            });
+            if (subRes.ok) {
+              const data = await subRes.json();
+              const subMap: Record<string, string> = {};
+              for (const [uid, sub] of Object.entries(data)) {
+                subMap[uid] = (sub as any).plan;
+              }
+              setSessionSubscriptions(subMap);
+            }
+          } catch (e) {
+            console.error("Failed to fetch session subscriptions", e);
+          }
+        });
+    };
+
     getSessions();
-    getSubscription();
-  }, []);
+  }, [isMenuOpen, sessions.length]);
 
   if (!user) {
     return "Unauthorized";
   }
 
   return (
-    <Dialog
-      onOpenChange={() => {
-        router.refresh();
-      }}
-    >
-      <DropdownMenu>
+    <Dialog>
+      <DropdownMenu onOpenChange={setIsMenuOpen}>
         <DropdownMenuTrigger
           className={cn(
             "inline-flex items-center focus-visible:outline-none active:ring-2 active:ring-ring/25 active:ring-offset-2 focus-visible:ring-2 focus-visible:ring-ring/25 rounded-full ring-offset-2 transition-all",
@@ -156,11 +176,10 @@ export const UserButton = ({
               )}
               {subscription?.status === "active" && (
                 <Badge
-                  className="ml-1 py-1 px-3 text-xs font-medium rounded-full bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white border border-white/20 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700"
+                  className="ml-1 py-1 px-3 text-xs font-medium rounded-full bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white border-0 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700"
                   variant="outline"
                 >
-                  {subscription?.plan.charAt(0).toUpperCase() +
-                    subscription?.plan?.slice(1)}
+                  {subscription?.plan?.charAt(0)?.toUpperCase() ?? ""}{subscription?.plan?.slice(1)}
                 </Badge>
               )}
               <br />
@@ -186,11 +205,10 @@ export const UserButton = ({
                   {user.name}
                   {subscription !== null && (
                     <Badge
-                      className="py-1 px-3 text-xs font-medium rounded-full bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white border border-white/20 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700"
+                      className="py-1 px-3 text-xs font-medium rounded-full bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white border-0 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700"
                       variant="outline"
                     >
-                      {subscription?.plan.charAt(0).toUpperCase() +
-                        subscription?.plan?.slice(1)}
+                      {subscription?.plan?.charAt(0)?.toUpperCase() ?? ""}{subscription?.plan?.slice(1)}
                     </Badge>
                   )}
                 </span>
@@ -271,12 +289,11 @@ export const UserButton = ({
           {sessions.length > 1 && (
             <>
               <DropdownMenuSeparator className="p-0 m-0" />
-              {sessions.map((session) => {
-                /* @ts-expect-error Just a simple type error */
+              {sessions.map((session: any) => {
                 const activeSession = session.user.id === user.id;
 
                 return (
-                  <>
+                  <div key={session.session.id}>
                     <DropdownMenuItem
                       className={cn(
                         "p-3 px-6 cursor-pointer",
@@ -286,7 +303,6 @@ export const UserButton = ({
                       onClick={async () => {
                         await authClient.multiSession.setActive(
                           {
-                            // @ts-expect-error Just a simple type error
                             sessionToken: session.session.token,
                           },
                           {
@@ -303,25 +319,30 @@ export const UserButton = ({
                     >
                       <div className="flex items-center gap-4">
                         <Avatar>
-                          {/* @ts-expect-error Just a simple type error */}
                           <AvatarImage src={session.user.image} />
                           <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
                             <UserIcon className="size-4" />
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <p className="text-sm font-[460]">
-                            {/* @ts-expect-error Just a simple type error */}
+                          <span className="text-sm font-[460] inline-flex items-center gap-2">
                             {session.user.name}
-                          </p>
+                            {sessionSubscriptions[session.user.id] && (
+                              <Badge
+                                className="py-0.5 px-2 text-[10px] leading-tight font-medium rounded-full bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white border-0 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700"
+                                variant="outline"
+                              >
+                                {sessionSubscriptions[session.user.id].charAt(0).toUpperCase()}{sessionSubscriptions[session.user.id].slice(1)}
+                              </Badge>
+                            )}
+                          </span>
                           <p className="text-xs font-[460]">
-                            {/* @ts-expect-error Just a simple type error */}
                             {session.user.email}
                           </p>
                         </div>
                       </div>
                     </DropdownMenuItem>
-                  </>
+                  </div>
                 );
               })}
             </>
@@ -383,20 +404,64 @@ export const UserButton = ({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <DialogContent className="md:min-w-[850px] max-h-[650px] overflow-y-auto overflow-x-hidden w-full">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Account Settings</DialogTitle>
-          <DialogDescription className="text-sm">
-            Manage your account settings.
-          </DialogDescription>
-        </DialogHeader>
-        <Separator className="bg-border/50" />
-        <div className="flex flex-col gap-3">
-          <ProfileSection user={user} />
-          <Separator className="h-[2px] bg-border/50" />
-          <SecuritySection user={user} />
-          <Separator className="h-[2px] bg-border/50" />
-          <BillingSection user={user} />
+      <DialogContent className="md:min-w-[850px] md:h-[620px] p-0 overflow-hidden w-full flex flex-col md:flex-row rounded-2xl gap-0 border border-zinc-200 dark:border-zinc-800 shadow-2xl bg-[#f9fafb] dark:bg-zinc-950">
+        {/* Sidebar */}
+        <div className="md:w-[260px] bg-transparent flex flex-col p-8 gap-6 h-auto md:h-full shrink-0">
+          <div>
+            <DialogTitle className="text-[22px] font-bold tracking-tight">Account</DialogTitle>
+            <DialogDescription className="text-[13px] text-muted-foreground mt-1.5">
+              Manage your account info.
+            </DialogDescription>
+          </div>
+          
+          <div className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+            <button 
+              onClick={() => setActiveTab('profile')} 
+              className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors shrink-0", activeTab === 'profile' ? "bg-black/5 dark:bg-white/10 text-foreground" : "hover:bg-black/5 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground")}
+            >
+              <UserIcon className="size-[18px]" />
+              Profile
+            </button>
+            <button 
+              onClick={() => setActiveTab('security')} 
+              className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors shrink-0", activeTab === 'security' ? "bg-black/5 dark:bg-white/10 text-foreground" : "hover:bg-black/5 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground")}
+            >
+              <Shield className="size-[18px]" />
+              Security
+            </button>
+            <button 
+              onClick={() => setActiveTab('billing')} 
+              className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors shrink-0", activeTab === 'billing' ? "bg-black/5 dark:bg-white/10 text-foreground" : "hover:bg-black/5 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground")}
+            >
+              <CreditCard className="size-[18px]" />
+              Billing
+            </button>
+          </div>
+        </div>
+        
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col px-10 py-8 overflow-y-auto relative w-full h-full bg-white dark:bg-[#0f0f0f] border-l border-zinc-200 dark:border-zinc-800 md:rounded-l-[24px] shadow-[-4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[-4px_0_24px_rgba(0,0,0,0.2)]">
+          <div className="max-w-[800px] w-full">
+            {activeTab === 'profile' && (
+              <div className="flex flex-col animate-in fade-in slide-in-from-right-2 duration-300">
+                <h3 className="text-lg font-semibold tracking-tight mb-6">Profile details</h3>
+                <ProfileSection user={user} />
+                <ConnectionsSection user={user} />
+              </div>
+            )}
+            {activeTab === 'security' && (
+              <div className="flex flex-col animate-in fade-in slide-in-from-right-2 duration-300">
+                <h3 className="text-lg font-semibold tracking-tight mb-6">Security</h3>
+                <SecuritySection user={user} />
+              </div>
+            )}
+            {activeTab === 'billing' && (
+              <div className="flex flex-col animate-in fade-in slide-in-from-right-2 duration-300">
+                <h3 className="text-lg font-semibold tracking-tight mb-6">Billing</h3>
+                <BillingSection user={user} />
+              </div>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

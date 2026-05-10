@@ -36,7 +36,7 @@ export const useAutoSubmit = <T extends FieldValues>({
 
   useEffect(() => {
     const subscription = watch((_data, info) => {
-      if (info?.type !== "change") return; // Detect only "change" events
+      if (info?.type !== "change") return;
       setIsSubmitting(true);
       trigger()
         .then((valid) => {

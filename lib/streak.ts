@@ -2,8 +2,6 @@ import prismadb from "@/lib/prismadb";
 
 export async function updateStreak(userId: string) {
   try {
-    // 1. Check if user has active Pro subscription
-    // We check for any active subscription that is "pro"
     const subscription = await prismadb.subscription.findFirst({
       where: {
         referenceId: userId,
@@ -16,7 +14,6 @@ export async function updateStreak(userId: string) {
       return;
     }
 
-    // 2. Get user's current streak info
     const user = await prismadb.user.findUnique({
       where: { id: userId },
       select: { streak: true, lastStreakUpdate: true },
@@ -32,7 +29,6 @@ export async function updateStreak(userId: string) {
     let newStreak = user.streak;
     
     if (!lastUpdate) {
-      // First time updating streak
       newStreak = 1;
     } else {
       const msDiff = now.getTime() - lastUpdate.getTime();
@@ -54,7 +50,6 @@ export async function updateStreak(userId: string) {
       }
     }
 
-    // 3. Update user
     await prismadb.user.update({
       where: { id: userId },
       data: {

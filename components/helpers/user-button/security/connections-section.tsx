@@ -93,17 +93,17 @@ export const ConnectionsSection = ({
   }
 
   return (
-    <div className="flex md:w-[72%] flex-col gap-10">
+    <div className="flex w-full flex-col gap-3 border-b border-zinc-200 dark:border-zinc-800 py-6">
+      <p ref={topRef} className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">
+        Connected Accounts
+      </p>
       <div
         ref={animate}
-        className="flex md:flex-row flex-col md:gap-0 gap-8 justify-between"
+        className="w-full"
       >
-        <p ref={topRef} className="text-sm font-medium">
-          Connected Accounts
-        </p>
         <div
           ref={animate}
-          className="flex flex-col gap-1 md:items-end md:w-[350px] md:ml-0 ml-4"
+          className="flex flex-col gap-4 items-start w-full"
         >
           {error && (
             <ErrorCard className="w-full -mt-2" size="sm" error={error} />
@@ -300,14 +300,11 @@ export const ConnectionsSection = ({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    className="w-full group"
+                    className="text-[13px] h-8 px-0 hover:bg-transparent"
                     variant="ghost"
                     size="sm"
                   >
-                    <span className="mr-auto w-full flex flex-row items-center text-start">
-                      Add connection
-                      <ArrowRight className="size-5 -ml-5 group-hover:flex text-transparent group-hover:ml-3 group-hover:text-zinc-400 transition-all" />
-                    </span>
+                    Add connection
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent

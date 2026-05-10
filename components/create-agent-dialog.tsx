@@ -26,16 +26,15 @@ import {
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { GeneratedAvatar } from "./generated-avatar";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Loader, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import axios from "axios";
 import { mutate } from "swr";
-import { Subscription } from "@better-auth/stripe";
-import { authClient } from "@/lib/auth-client";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Badge } from "./ui/badge";
+import { useSubscription } from "@/lib/subscription";
 
 const formSchema = z.object({
   name: z.string().min(1),
@@ -44,11 +43,11 @@ const formSchema = z.object({
 });
 
 export const CreateAgentDialog = () => {
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isPending, startTransition] = useTransition();
   const [instructionsType, setInstructionsType] = useState<"manual" | "linkedIn">("manual");
   const [open, setOpen] = useState(false);
   const [animate] = useAutoAnimate();
+  const { data: subscription } = useSubscription();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,16 +57,6 @@ export const CreateAgentDialog = () => {
       instructions: "",
     },
   });
-
-  useEffect(() => {
-    const getSubscription = async () => {
-      startTransition(async () => {
-        await authClient.subscription.list()
-          .then((res) => setSubscription(res?.data?.[0] ?? null));
-      });
-    }
-    getSubscription();
-  }, []);
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     if (instructionsType === "linkedIn" && !data.linkedInUrl) {
@@ -187,7 +176,7 @@ export const CreateAgentDialog = () => {
                   name="linkedInUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>LinkedIn job posting URL <Badge className="ml-2 bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white">Pro feature</Badge></FormLabel>
+                      <FormLabel>LinkedIn job posting URL <Badge className="ml-2 bg-gradient-to-r from-[#ffd43e] via-[#ea721b] to-[#2f2722] text-white border-0">Pro feature</Badge></FormLabel>
                       <FormControl>
                         <Input
                           {...field}

@@ -19,12 +19,11 @@ import { UserButton } from "./auth/user-button";
 import { authClient } from "@/lib/auth-client";
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
-import { Subscription } from "@better-auth/stripe";
 import { useMeetings } from "@/lib/meetings";
 import { Progress } from "./ui/progress";
 import { Skeleton } from "./ui/skeleton";
 import { useModalStore } from "@/hooks/use-modal-store";
+import { useSubscription } from "@/lib/subscription";
 
 const routes = [
   {
@@ -60,8 +59,8 @@ const routes = [
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const { isLoading: loadingMeetings, data: meetings, error } = useMeetings();
+  const { data: subscription } = useSubscription();
+  const { isLoading: loadingMeetings, data: meetings } = useMeetings();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -70,14 +69,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const session = authClient.useSession();
 
   const user = session.data?.user;
-
-  useEffect(() => {
-    const getSubscription = async () => {
-      await authClient.subscription.list()
-        .then((res) => setSubscription(res?.data?.[0] ?? null));
-    }
-    getSubscription();
-  }, []);
 
   return (
     <Sidebar {...props}>

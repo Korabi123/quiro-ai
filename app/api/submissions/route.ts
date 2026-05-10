@@ -34,14 +34,12 @@ export const POST = async (req: Request) => {
       return new NextResponse("Problem slug is required", { status: 400 });
     }
 
-    // Find or create the problem
     let problem = await prismadb.codingProblem.findUnique({
       where: { slug: problemSlug },
     });
 
     if (!problem) {
-      // Fetch problem title from LeetCode API
-      let problemTitle = problemSlug;
+        let problemTitle = problemSlug;
       let difficulty = "MEDIUM";
 
       try {
@@ -64,7 +62,6 @@ export const POST = async (req: Request) => {
       });
     }
 
-    // Save the submission
     const submission = await prismadb.codingAttempt.create({
       data: {
         userId: session.user.id,
@@ -82,7 +79,6 @@ export const POST = async (req: Request) => {
       },
     });
 
-    // Update user progress
     const existingProgress = await prismadb.userProblemProgress.findUnique({
       where: {
         userId_problemId: {
@@ -115,7 +111,6 @@ export const POST = async (req: Request) => {
       });
     }
 
-    // If solved, update streak
     if (isCorrect) {
       await updateStreak(session.user.id);
     }
@@ -151,7 +146,6 @@ export const GET = async (req: Request) => {
       return NextResponse.json({ attempts: [], totalCount: 0 });
     }
 
-    // Get total count separately for the hero stats
     const totalCount = await prismadb.codingAttempt.count({
       where: {
         userId: session.user.id,
@@ -167,9 +161,9 @@ export const GET = async (req: Request) => {
       orderBy: {
         createdAt: "desc",
       },
-      take: limit + 1, // Fetch one extra to determine if there's more
+      take: limit + 1,
       cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0, // Skip the cursor itself if provided
+      skip: cursor ? 1 : 0,
       include: {
         grading: true,
       },

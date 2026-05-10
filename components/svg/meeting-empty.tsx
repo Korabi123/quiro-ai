@@ -33,12 +33,9 @@ export const MeetingEmptySvg = () => {
           stroke-width="0.5"
         />
       </g>
-      {/* <!-- Light gray background box for camera --> */}
       <rect x="20" y="45" width="34" height="34" rx="6" fill="#F5F6F6" />
-      {/* <!-- Subtle gray video camera icon --> */}
       <rect x="28.5" y="56" width="13" height="10" rx="2" fill="#B0B3B2" />
       <path d="M41.5 58L45.5 56V66L41.5 64V58Z" fill="#B0B3B2" />
-      {/* <!-- Lines with brand accents --> */}
       <rect x="63" y="49" width="72" height="4" rx="2" fill="#F7D046" />{" "}
       <rect x="63" y="61" width="64" height="4" rx="2" fill="#E97627" />
       <rect x="63" y="73" width="94" height="4" rx="2" fill="#2E2420" />

@@ -11,6 +11,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import React from "react";
 
 interface Props {
   className?: string;
@@ -21,9 +22,9 @@ interface Props {
 export const MeetingsTable = ({ className, agentId, variant = "default" }: Props) => {
   const router = useRouter();
 
-  const [search, setSearch] = useQueryState("search");
-  const [status, setStatus] = useQueryState("status");
-  const [agent, setAgent] = useQueryState("agent");
+  const [search] = useQueryState("search");
+  const [status] = useQueryState("status");
+  const [agent] = useQueryState("agent");
   const { data: allMeetings, isLoading } = useMeetings();
   
   // Client-side filtering
@@ -31,7 +32,6 @@ export const MeetingsTable = ({ className, agentId, variant = "default" }: Props
     if (!allMeetings) return [];
     return searchMeetings(allMeetings, search || "", {
       status: status || undefined,
-      // Include agent filter properly
       agent: agent || undefined
     });
   }, [allMeetings, search, status, agent]);
@@ -55,10 +55,9 @@ export const MeetingsTable = ({ className, agentId, variant = "default" }: Props
         </div>
       )}
       {meetings?.map((meeting) => (
-        <>
+        <React.Fragment key={meeting.id}>
           <div
             onClick={() => router.push(`/meetings/${meeting.id}`)}
-            key={meeting.id}
             className="flex cursor-pointer hover:bg-muted-foreground/10 only:rounded-2xl first:rounded-t-2xl last:rounded-b-2xl transition-all items-center justify-between w-full p-5"
           >
             <div className="flex flex-col gap-2">
@@ -138,7 +137,7 @@ export const MeetingsTable = ({ className, agentId, variant = "default" }: Props
           {meeting.id !== meetings?.at(-1)?.id && (
             <Separator key={meeting.agentId} className="bg-border/60" />
           )}
-        </>
+        </React.Fragment>
       ))}
       {!isLoading && meetings?.length === 0 && (
         <div className="flex items-center justify-center w-full p-5">

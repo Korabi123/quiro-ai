@@ -24,7 +24,6 @@ import { cn } from "@/lib/utils"
  */
 
 export type CosmicButtonProps<E extends "a" | "button" = "a"> = {
-  /** The HTML element to render as. @default "a" */
   as?: E
 } & ComponentPropsWithoutRef<E>
 
@@ -33,7 +32,6 @@ export type CosmicButtonProps<E extends "a" | "button" = "a"> = {
  * Renders as an anchor by default; use `as="button"` for button behavior.
  *
  * @example
- * // As link (default)
  * <CosmicButton href="/about">About</CosmicButton>
  *
  * @example
@@ -57,12 +55,10 @@ export function CosmicButton<E extends "a" | "button" = "a">({
 
   const content = (
     <>
-      {/* Animated cosmic border - enlarges on hover */}
       <span className="absolute inset-0 overflow-hidden rounded-full transition-all duration-300 ease-out group-hover/cosmic:inset-[-3px] group-hover/cosmic:rounded-full">
         <span className="absolute inset-[-200%] animate-cosmic-spin bg-[conic-gradient(from_0deg,hsl(var(--brand)),hsl(var(--brand-foreground)),hsl(var(--brand)/0.25),hsl(var(--brand-foreground)),hsl(var(--brand)),hsl(var(--brand)))] opacity-80 blur-[0.5px]" />
       </span>
 
-      {/* Mosaic/mesh texture overlay (subtle tiles + blur + radial mask) */}
       <span className="absolute inset-0 overflow-hidden rounded-full opacity-35 mix-blend-soft-light transition-all duration-300 ease-out group-hover/cosmic:inset-[-3px] group-hover/cosmic:rounded-full dark:opacity-55 dark:mix-blend-overlay">
         <span
           className="absolute inset-[-200%] animate-cosmic-spin-slow blur-[1.5px]"
@@ -76,7 +72,6 @@ export function CosmicButton<E extends "a" | "button" = "a">({
         </span>
       </span>
 
-      {/* Theme-aware inner background */}
       <span className="relative z-10 flex items-center gap-3 rounded-full bg-muted px-5 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.72),inset_0_-1px_0_rgba(15,23,42,0.08),0_1px_1px_rgba(15,23,42,0.08),0_8px_24px_rgba(15,23,42,0.14)] transition-all duration-300 group-hover/cosmic:shadow-[inset_0_1px_0_rgba(255,255,255,0.82),inset_0_-1px_0_rgba(15,23,42,0.12),0_2px_6px_rgba(15,23,42,0.14),0_12px_34px_rgba(15,23,42,0.2)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(0,0,0,0.5),0_1px_1px_rgba(0,0,0,0.45),0_10px_28px_rgba(0,0,0,0.35)] dark:group-hover/cosmic:shadow-[inset_0_1px_0_rgba(255,255,255,0.16),inset_0_-1px_0_rgba(0,0,0,0.6),0_2px_6px_rgba(0,0,0,0.55),0_14px_34px_rgba(0,0,0,0.42)] active:scale-[0.98]">
         <span className="font-medium text-base tracking-wide text-black">
           {children ?? "Placeholder text"}

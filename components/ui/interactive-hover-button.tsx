@@ -20,16 +20,13 @@ export function InteractiveHoverButton({
       {...props}
     >
       <div className="flex items-center justify-center gap-2">
-        {/* Mosaic/mesh bloom (instead of a single dot) */}
         <span
           data-slot="interactive-hover-button-mosaic"
           aria-hidden
           className={cn(
             "relative grid h-3 w-3 shrink-0 grid-cols-3 grid-rows-3 gap-[1px] rounded-full",
             "transition-[transform,filter,opacity] duration-500 ease-out",
-            // Default: tiny mosaic
             "opacity-90",
-            // Hover: expands into a soft mosaic/mesh blur bloom
             "group-hover:scale-[46] group-hover:blur-[2px] group-hover:opacity-100"
           )}
         >
@@ -39,7 +36,6 @@ export function InteractiveHoverButton({
               data-slot="interactive-hover-button-mosaic-cell"
               className={cn(
                 "h-full w-full rounded-[2px] bg-primary/60",
-                // Slight variation helps it feel less flat without JS randomness
                 idx % 2 === 0 ? "opacity-90" : "opacity-70"
               )}
             />

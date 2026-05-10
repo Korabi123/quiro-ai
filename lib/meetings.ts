@@ -9,7 +9,7 @@ export const useMeetings = () => {
     `/api/meetings/get${queryString}`,
     fetcher,
     {
-      refreshInterval: 10000,
+      refreshInterval: 0,
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
       dedupingInterval: 5000,

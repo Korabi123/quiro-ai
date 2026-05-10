@@ -99,6 +99,9 @@ export const LoginCard = ({
     },
   });
 
+  const [twoFactorMethods, setTwoFactorMethods] = useState<string[]>([]);
+  const [selectedTwoFactorMethod, setSelectedTwoFactorMethod] = useState<"totp" | "email" | null>(null);
+
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setEmailState(form.getValues().email);
 
@@ -113,6 +116,23 @@ export const LoginCard = ({
         },
         onSuccess: async (ctx) => {
           if (ctx.data.twoFactorRedirect) {
+            let methods = ["totp"];
+            let defaultMethod: "totp" | "email" = "totp";
+            try {
+              const res = await axios.get(`/api/user/2fa-methods?email=${encodeURIComponent(data.email)}`);
+              if (res.data.methods && res.data.methods.length > 0) {
+                 methods = res.data.methods;
+                 defaultMethod = res.data.defaultMethod || methods[0];
+              }
+            } catch (e) {}
+
+            setTwoFactorMethods(methods);
+            setSelectedTwoFactorMethod(defaultMethod);
+            
+            if (defaultMethod === "email") {
+               await authClient.twoFactor.sendOtp();
+            }
+            
             setError("");
             setIsVerifyOtpBoxOpen(true);
             setIsLoading(false);
@@ -122,7 +142,7 @@ export const LoginCard = ({
               email: data.email,
               userAgent: window.navigator.userAgent,
               ip,
-            })
+            });
             if (redirectParam) {
               router.push(new URL(redirectParam).pathname);
             } else {
@@ -185,33 +205,43 @@ export const LoginCard = ({
   };
 
   const onVerifyOtpSubmit = async (data: z.infer<typeof verifySchema>) => {
-    await authClient.twoFactor.verifyTotp(
-      {
-        code: data.otp,
+    const handlers = {
+      onRequest: () => {
+        setIsLoading(true);
       },
-      {
-        onRequest: () => {
-          setIsLoading(true);
-        },
-        onSuccess: async () => {
-          setIsLoading(false);
-          await axios.post("/api/send/email/recent-login", {
-            email: emailState,
-            userAgent: window.navigator.userAgent,
-            ip,
-          });
-          if (redirectParam) {
-            router.push(new URL(redirectParam).pathname);
-          } else {
-            router.push(AFTER_LOGIN);
-          }
-        },
-        onError: (ctx) => {
-          setError(ctx.error.message);
-          setIsLoading(false);
-        },
-      }
-    );
+      onSuccess: async () => {
+        setIsLoading(false);
+        await axios.post("/api/send/email/recent-login", {
+          email: emailState,
+          userAgent: window.navigator.userAgent,
+          ip,
+        });
+        if (redirectParam) {
+          router.push(new URL(redirectParam).pathname);
+        } else {
+          router.push(AFTER_LOGIN);
+        }
+      },
+      onError: (ctx: any) => {
+        setError(ctx.error.message);
+        setIsLoading(false);
+      },
+    };
+
+    if (selectedTwoFactorMethod === "totp") {
+      await authClient.twoFactor.verifyTotp({ code: data.otp }, handlers);
+    } else {
+      await authClient.twoFactor.verifyOtp({ code: data.otp }, handlers);
+    }
+  };
+
+  const switchMethod = async (method: "totp" | "email") => {
+    setSelectedTwoFactorMethod(method);
+    if (method === "email") {
+      setIsLoading(true);
+      await authClient.twoFactor.sendOtp();
+      setIsLoading(false);
+    }
   };
 
   useAutoSubmit({
@@ -437,12 +467,26 @@ export const LoginCard = ({
                           />
                         </FormControl>
                         <FormDescription>
-                          Enter the code in your authenticator app.
+                          {selectedTwoFactorMethod === "totp" 
+                            ? "Enter the code in your authenticator app."
+                            : "Check your email for the 6-digit verification code."}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  {twoFactorMethods.length > 1 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="link"
+                      disabled={isLoading}
+                      className="text-xs text-muted-foreground mt-0 pt-0"
+                      onClick={() => switchMethod(selectedTwoFactorMethod === "totp" ? "email" : "totp")}
+                    >
+                      Use {selectedTwoFactorMethod === "totp" ? "Email verification" : "Authenticator app"} instead
+                    </Button>
+                  )}
                   <Button
                     effect={"ringHover"}
                     size="xs"

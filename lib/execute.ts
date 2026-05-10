@@ -80,11 +80,9 @@ export const getExecutionResult = async (token: string): Promise<ExecuteResult> 
     console.log("Poll result:", result.status.description, "attempt:", attempts + 1);
     
     if (result.status.id === 1 || result.status.id === 2) {
-      // In Queue (1) or Processing (2) - wait and poll again
       await new Promise(resolve => setTimeout(resolve, 1000));
       attempts++;
     } else {
-      // Done (3), Error (4), or other - return result
       break;
     }
   } while (attempts < maxAttempts);

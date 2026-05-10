@@ -8,7 +8,7 @@ export const useReports = () => {
   const { data, error, isLoading } = useSWR<Report[]>(
     `/api/reports/get${queryString}`,
     fetcher,
-    { 
+    {
       refreshInterval: 0,
       revalidateOnFocus: false,
       revalidateOnReconnect: true,

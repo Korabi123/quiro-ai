@@ -44,7 +44,6 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
     const vapiInstance = new Vapi(apiKey);
     setVapi(vapiInstance);
 
-    // Event listeners
     vapiInstance.on('call-start', () => {
       console.log('Call started');
       setIsConnected(true);

@@ -42,20 +42,20 @@ export const SubscriptionSection = ({ user }: Props) => {
   }, []);
 
   return (
-    <div suppressHydrationWarning className="flex md:w-[72%] flex-col gap-10">
-      <div ref={animate}>
-        <div ref={animate} className="flex items-start justify-between">
+    <div suppressHydrationWarning className="flex w-full flex-col gap-3 border-b border-zinc-200 dark:border-zinc-800 py-6">
+      <p ref={topRef} className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">
+        Subscription
+      </p>
+      <div ref={animate} className="w-full">
+        <div ref={animate} className="flex items-start justify-between w-full">
           {!isUpgradeBoxOpen ? (
             <div
               ref={animate}
-              className="flex md:flex-row md:gap-0 gap-6 flex-col items-start w-full justify-between"
+              className="w-full"
             >
-              <p ref={topRef} className="text-sm font-medium mt-3">
-                Subscription
-              </p>
 
               {!isManageBoxOpen ? (
-                <div className="flex flex-col gap-2 md:w-[65%] w-full pr-2">
+                <div className="flex-1 flex flex-col gap-2 w-full">
                   <div className="flex items-center p-2 px-4 bg-amber-50/5 rounded-xl border border-border/50 shadow-sm w-full justify-between">
                     <p className="text-sm font-medium">
                       quiro{" "}
@@ -142,7 +142,7 @@ export const SubscriptionSection = ({ user }: Props) => {
               ) : (
                 <Card
                   ref={bottomCardsRef}
-                  className="shadow-md md:w-[65%] w-full"
+                  className="shadow-md flex-1 w-full"
                 >
                   <CardHeader className="w-full flex flex-row items-center justify-between">
                     <CardTitle className="text-sm tracking-tight">

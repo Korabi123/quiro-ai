@@ -16,13 +16,11 @@ export const GET = async (req: Request) => {
       return NextResponse.json({ progress: null, attempts: [] });
     }
 
-    // First check if problem exists
     const problem = await prismadb.codingProblem.findUnique({
       where: { id },
     });
 
     if (!problem) {
-      // Try finding by slug instead
       const problemBySlug = await prismadb.codingProblem.findUnique({
         where: { slug: id },
       });
@@ -90,7 +88,6 @@ export const GET = async (req: Request) => {
       });
     }
 
-    // Problem exists by id
     const progress = await prismadb.userProblemProgress.findUnique({
       where: {
         userId_problemId: {

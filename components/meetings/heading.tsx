@@ -7,7 +7,6 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useState, useTransition, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,9 +24,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import Link from "next/link";
 import { useModalStore } from "@/hooks/use-modal-store";
-import { Subscription } from "@better-auth/stripe";
 import { useMeetings } from "@/lib/meetings";
-import { authClient } from "@/lib/auth-client";
+import { useSubscription } from "@/lib/subscription";
 
 interface Props {
   secondary?: boolean;
@@ -43,19 +41,10 @@ export const MeetingHeading = ({
   optionsHidden = false,
   meetingId,
 }: Props) => {
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const { data: subscription } = useSubscription();
   const meetings = useMeetings();
 
   const { onOpen } = useModalStore();
-
-  useEffect(() => {
-    const getSubscription = async () => {
-      await authClient.subscription
-        .list()
-        .then((res) => setSubscription(res?.data?.[0] ?? null));
-    };
-    getSubscription();
-  });
 
   return (
     <>

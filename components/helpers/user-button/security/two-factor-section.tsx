@@ -11,10 +11,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Ellipsis, Eye, EyeOff, Loader } from "lucide-react";
+import { Ellipsis, Eye, EyeOff, Loader, Mail } from "lucide-react";
 import { useState } from "react";
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
-import { User } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authClient } from "@/lib/auth-client";
@@ -39,8 +38,9 @@ const removeTwoFactorSchema = z.object({
 export const TwoFactorSection = ({
   user,
 }: {
-  user: User;
+  user: any; // Using any because custom prisma schema fields
 }) => {
+  const [localUser, setLocalUser] = useState(user);
   const [animate] = useAutoAnimate();
   const router = useRouter();
   const [isTwoFactorBoxOpen, setIsTwoFactorBoxOpen] = useState(false);
@@ -49,11 +49,57 @@ export const TwoFactorSection = ({
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [totpUri, setTotpUri] = useState("");
+  const [provider, setProvider] = useState<"totp" | "email">("totp");
   const toggleVisibility = () =>
     setIsPasswordVisible((prevState) => !prevState);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  const is2FAEnabled = user.twoFactorEnabled;
+  // Sync custom tracking fields
+  const sync2FAState = async (action: "enable" | "disable" | "setDefault", prov: "totp" | "email", pwd?: string) => {
+    // Optimistically update local UI state
+    setLocalUser((prev: any) => {
+      const next = { ...prev };
+      if (action === "enable") {
+        next.twoFactorEnabled = true;
+        if (prov === "totp") {
+          next.totpTwoFactorEnabled = true;
+          if (!next.defaultTwoFactorMethod) next.defaultTwoFactorMethod = "totp";
+        } else {
+          next.emailTwoFactorEnabled = true;
+          if (!next.defaultTwoFactorMethod) next.defaultTwoFactorMethod = "email";
+        }
+      } else if (action === "disable") {
+        if (prov === "totp") {
+           next.totpTwoFactorEnabled = false;
+           if (next.defaultTwoFactorMethod === "totp") {
+             next.defaultTwoFactorMethod = next.emailTwoFactorEnabled ? "email" : null;
+           }
+        } else {
+           next.emailTwoFactorEnabled = false;
+           if (next.defaultTwoFactorMethod === "email") {
+             next.defaultTwoFactorMethod = next.totpTwoFactorEnabled ? "totp" : null;
+           }
+        }
+        if (!next.totpTwoFactorEnabled && !next.emailTwoFactorEnabled) {
+          next.twoFactorEnabled = false;
+        }
+      } else if (action === "setDefault") {
+        next.defaultTwoFactorMethod = prov;
+      }
+      return next;
+    });
+
+    try {
+      await fetch("/api/user/update-2fa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, provider: prov, password: pwd }),
+      });
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const twoFactorForm = useForm<z.infer<typeof twoFactorPasswordSchema>>({
     resolver: zodResolver(twoFactorPasswordSchema),
@@ -79,7 +125,7 @@ export const TwoFactorSection = ({
   const onTwoFactorPasswordSubmit = async (
     data: z.infer<typeof twoFactorPasswordSchema>
   ) => {
-    const { data: totpUri } = await authClient.twoFactor.enable(
+    const res = await authClient.twoFactor.enable(
       {
         password: data.currentPassword,
       },
@@ -87,10 +133,6 @@ export const TwoFactorSection = ({
         onRequest: () => {
           setIsLoading(true);
         },
-        onSuccess: async () => {
-          setIsLoading(false);
-          setTwoFactorStage(2);
-        },
         onError: (ctx) => {
           setError(ctx.error.message);
           setIsLoading(false);
@@ -98,28 +140,43 @@ export const TwoFactorSection = ({
       }
     );
 
-    setTotpUri(totpUri?.totpURI!);
+    if (res.error) return;
+
+    if (provider === "totp") {
+      setTotpUri(res.data?.totpURI!);
+      setIsLoading(false);
+      setTwoFactorStage(2);
+    } else {
+      // Email OTP Provider
+      await sync2FAState("enable", "email");
+      setIsLoading(false);
+      setTwoFactorStage(4);
+      router.refresh();
+    }
   };
 
   const onTotpCodeSubmit = async (data: z.infer<typeof totpCodeSchema>) => {
-    await authClient.twoFactor.verifyTotp(
-      {
-        code: data.otp,
+    const handlers = {
+      onRequest: () => {
+        setIsLoading(true);
       },
-      {
-        onRequest: () => {
-          setIsLoading(true);
-        },
-        onSuccess: async () => {
-          setIsLoading(false);
-          setTwoFactorStage(4);
-        },
-        onError: (ctx) => {
-          setError(ctx.error.message);
-          setIsLoading(false);
-        },
-      }
-    );
+      onSuccess: async () => {
+        await sync2FAState("enable", "totp");
+        setIsLoading(false);
+        setTwoFactorStage(4);
+        router.refresh();
+      },
+      onError: (ctx: any) => {
+        setError(ctx.error.message);
+        setIsLoading(false);
+      },
+    };
+
+    if (provider === "totp") {
+      await authClient.twoFactor.verifyTotp({ code: data.otp }, handlers);
+    } else {
+      await authClient.twoFactor.verifyOtp({ code: data.otp }, handlers);
+    }
   };
 
   useAutoSubmit({
@@ -131,112 +188,179 @@ export const TwoFactorSection = ({
   const onRemoveTwoFactorSubmit = async (
     data: z.infer<typeof removeTwoFactorSchema>
   ) => {
-    await authClient.twoFactor.disable(
-      {
-        password: data.currentPassword,
-      },
-      {
-        onRequest: () => {
-          setIsLoading(true);
-        },
-        onSuccess: async () => {
-          setIsLoading(false);
-          setIsRemoveTwoFactorBoxOpen(false);
-          setTwoFactorStage(1);
-          router.refresh();
-        },
-        onError: (ctx) => {
-          setError(ctx.error.message);
-          setIsLoading(false);
-        },
+    setIsLoading(true);
+    // Determine if this is the ONLY method enabled
+    const isOnlyMethod = (provider === "email" && !user.totpTwoFactorEnabled) || 
+                         (provider === "totp" && !user.emailTwoFactorEnabled);
+
+    if (isOnlyMethod) {
+      // Use Better Auth native disable
+      const res = await authClient.twoFactor.disable({ password: data.currentPassword });
+      if (res.error) {
+         setError(res.error.message);
+         setIsLoading(false);
+         return;
       }
-    );
+    }
+    
+    // Call custom API to update fields
+    const updateRes = await fetch("/api/user/update-2fa", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "disable", provider, password: data.currentPassword }),
+    });
+
+    if (!updateRes.ok) {
+       setError("Invalid password");
+       setIsLoading(false);
+       return;
+    }
+
+    setIsLoading(false);
+    setIsRemoveTwoFactorBoxOpen(false);
+    setTwoFactorStage(1);
+    router.refresh();
   };
 
   return (
-    <div className="flex md:w-[72%] flex-col gap-10">
-      <div ref={animate}>
+    <div className="flex w-full flex-col gap-3 border-b border-zinc-200 dark:border-zinc-800 py-6">
+      <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">Two-step verification</p>
+      <div ref={animate} className="w-full">
         {!isTwoFactorBoxOpen && !isRemoveTwoFactorBoxOpen ? (
-          <div className="min-w-[350px]">
-            <DropdownMenu>
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Two-step verification</p>
-                {!is2FAEnabled ? (
-                  <DropdownMenuTrigger asChild>
-                    <Button variant={"ghost"} size={"sm"} className="text-sm">
-                      Add two-step verification
-                    </Button>
-                  </DropdownMenuTrigger>
-                ) : (
-                  <div className="flex items-center gap-2 min-w-[50%]">
-                    <svg
-                      fill="currentColor"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 16 16"
-                      className="text-zinc-700 size-5"
-                    >
-                      <path d="M7 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path>
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M4 2c-1.105 0-2 .895-2 2v8c0 1.105.895 2 2 2h8c1.105 0 2-.895 2-2V4c0-1.105-.895-2-2-2H4Zm3 9a3.002 3.002 0 0 0 2.906-2.25H12a.75.75 0 0 0 0-1.5H9.906A3.002 3.002 0 0 0 4 8c0 .941.438 1.785 1.117 2.336A2.985 2.985 0 0 0 7 11Z"
-                      ></path>
-                    </svg>
-                    <p className="text-xs text-zinc-600 mr-2">
-                      Authenticator app
-                    </p>
-                    <Badge variant={"outline"}>Default</Badge>
-                  </div>
-                )}
-                {is2FAEnabled && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant={"ghost"} size="icon" className="group">
-                        <Ellipsis className="h-4 w-4 text-zinc-400 group-hover:text-zinc-800 transition" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="center"
-                      className="rounded-xl shadow-lg py-1 px-3 min-w-fit"
-                    >
-                      <DropdownMenuItem
-                        className="cursor-pointer p-0"
-                        onClick={() => {
-                          setIsRemoveTwoFactorBoxOpen(true);
-                          setTwoFactorStage(10);
-                        }}
-                      >
-                        <p className="text-sm text-destructive">Remove</p>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-                <DropdownMenuContent
-                  align="center"
-                  className="rounded-xl shadow-lg p-0"
-                  onClick={() => {
-                    setIsTwoFactorBoxOpen(true);
-                  }}
-                >
-                  <DropdownMenuItem className="cursor-pointer">
-                    <svg
-                      fill="currentColor"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 16 16"
-                      className="text-zinc-700"
-                    >
-                      <path d="M7 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path>
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M4 2c-1.105 0-2 .895-2 2v8c0 1.105.895 2 2 2h8c1.105 0 2-.895 2-2V4c0-1.105-.895-2-2-2H4Zm3 9a3.002 3.002 0 0 0 2.906-2.25H12a.75.75 0 0 0 0-1.5H9.906A3.002 3.002 0 0 0 4 8c0 .941.438 1.785 1.117 2.336A2.985 2.985 0 0 0 7 11Z"
-                      ></path>
-                    </svg>
-                    <p className="text-sm text-zinc-600">Authenticator app</p>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </div>
-            </DropdownMenu>
+          <div className="flex items-start justify-between gap-4 w-full">
+            <div className="flex flex-col items-start gap-2 w-full">
+              {localUser.totpTwoFactorEnabled && (
+                <div className="flex items-center gap-2 group">
+                  <svg
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    className="text-zinc-700 size-4"
+                  >
+                    <path d="M7 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path>
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M4 2c-1.105 0-2 .895-2 2v8c0 1.105.895 2 2 2h8c1.105 0 2-.895 2-2V4c0-1.105-.895-2-2-2H4Zm3 9a3.002 3.002 0 0 0 2.906-2.25H12a.75.75 0 0 0 0-1.5H9.906A3.002 3.002 0 0 0 4 8c0 .941.438 1.785 1.117 2.336A2.985 2.985 0 0 0 7 11Z"
+                    ></path>
+                  </svg>
+                  <p className="text-[13px] text-zinc-600 mr-2">Authenticator app</p>
+                  {localUser.defaultTwoFactorMethod === "totp" && <Badge variant={"outline"} className="scale-[0.85]">Default</Badge>}
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant={"ghost"} size="icon" className="h-6 w-6">
+                            <Ellipsis className="h-4 w-4 text-zinc-400 group-hover:text-zinc-800 transition" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-xl shadow-lg py-0 px-0 min-w-fit">
+                          {localUser.defaultTwoFactorMethod !== "totp" && (
+                            <DropdownMenuItem
+                              className="cursor-pointer px-3 py-1 text-zinc-600 focus:text-zinc-800 transition-all"
+                              onClick={() => sync2FAState("setDefault", "totp")}
+                            >
+                              <p className="text-[13px]">Set as default</p>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            className="cursor-pointer px-3 py-1 text-zinc-600 focus:text-zinc-800 transition-all"
+                            onClick={() => {
+                              setProvider("totp");
+                              setIsRemoveTwoFactorBoxOpen(true);
+                              setTwoFactorStage(10);
+                            }}
+                          >
+                            <p className="text-[13px] text-destructive">Remove</p>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
+
+                  {localUser.emailTwoFactorEnabled && (
+                    <div className="flex items-center gap-2 group">
+                      <Mail className="text-zinc-700 size-4" />
+                      <p className="text-[13px] text-zinc-600 mr-2">Email verification</p>
+                      {localUser.defaultTwoFactorMethod === "email" && <Badge variant={"outline"} className="scale-[0.85]">Default</Badge>}
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant={"ghost"} size="icon" className="h-6 w-6">
+                            <Ellipsis className="h-4 w-4 text-zinc-400 group-hover:text-zinc-800 transition" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-xl shadow-lg py-0 px-0 min-w-fit">
+                          {localUser.defaultTwoFactorMethod !== "email" && (
+                            <DropdownMenuItem
+                              className="cursor-pointer px-3 py-1 text-zinc-600 focus:text-zinc-800 transition-all"
+                              onClick={() => sync2FAState("setDefault", "email")}
+                            >
+                              <p className="text-[13px]">Set as default</p>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            className="cursor-pointer px-3 py-1 text-zinc-600 focus:text-zinc-800 transition-all"
+                            onClick={() => {
+                              setProvider("email");
+                              setIsRemoveTwoFactorBoxOpen(true);
+                              setTwoFactorStage(10);
+                            }}
+                          >
+                            <p className="text-[13px] text-destructive">Remove</p>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
+
+                  {(!localUser.totpTwoFactorEnabled || !localUser.emailTwoFactorEnabled) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant={"ghost"} size={"sm"} className="text-[13px] h-8 px-0 hover:bg-transparent">
+                          {(!localUser.totpTwoFactorEnabled && !localUser.emailTwoFactorEnabled) ? "Add two-step verification" : "Add another method"}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="rounded-xl shadow-lg p-0">
+                        {!localUser.totpTwoFactorEnabled && (
+                          <DropdownMenuItem 
+                            className="cursor-pointer"
+                            onClick={() => {
+                              setProvider("totp");
+                              setIsTwoFactorBoxOpen(true);
+                            }}
+                          >
+                            <svg
+                              fill="currentColor"
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 16 16"
+                              className="text-zinc-700 mr-2 size-4"
+                            >
+                              <path d="M7 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path>
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M4 2c-1.105 0-2 .895-2 2v8c0 1.105.895 2 2 2h8c1.105 0 2-.895 2-2V4c0-1.105-.895-2-2-2H4Zm3 9a3.002 3.002 0 0 0 2.906-2.25H12a.75.75 0 0 0 0-1.5H9.906A3.002 3.002 0 0 0 4 8c0 .941.438 1.785 1.117 2.336A2.985 2.985 0 0 0 7 11Z"
+                              ></path>
+                            </svg>
+                            <p className="text-sm text-zinc-600">Authenticator app</p>
+                          </DropdownMenuItem>
+                        )}
+                        {!localUser.emailTwoFactorEnabled && (
+                          <DropdownMenuItem 
+                            className="cursor-pointer"
+                            onClick={() => {
+                              setProvider("email");
+                              setIsTwoFactorBoxOpen(true);
+                            }}
+                          >
+                            <Mail className="text-zinc-700 mr-2 size-4" />
+                            <p className="text-sm text-zinc-600">Email verification</p>
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
           </div>
         ) : (
           <>
@@ -245,9 +369,9 @@ export const TwoFactorSection = ({
                 <CardTitle className="text-sm tracking-tight">
                   {twoFactorStage === 1 && "First enter your current password"}
                   {twoFactorStage === 10 && "First enter your current password"}
-                  {twoFactorStage === 2 && "Add authenticator application"}
-                  {twoFactorStage === 3 && "Add authenticator application"}
-                  {twoFactorStage === 4 && "Add authenticator application"}
+                  {twoFactorStage === 2 && provider === "totp" && "Add authenticator application"}
+                  {twoFactorStage === 3 && (provider === "totp" ? "Add authenticator application" : "Enter Email Code")}
+                  {twoFactorStage === 4 && (provider === "totp" ? "Authenticator app enabled" : "Email Verification Enabled")}
                 </CardTitle>
                 {twoFactorStage === 2 && (
                   <CardDescription className="text-xs">
@@ -257,26 +381,27 @@ export const TwoFactorSection = ({
                 )}
                 {twoFactorStage === 10 && (
                   <CardDescription className="text-xs">
-                    To remove two-factor authentication, enter your current
-                    password.
+                    To remove {provider === "totp" ? "Authenticator app" : "Email verification"}, enter your current password.
                   </CardDescription>
                 )}
               </CardHeader>
               <CardContent>
-                {twoFactorStage === 1 && (
+                {(twoFactorStage === 1 || twoFactorStage === 10) && (
                   <>
                     <div ref={animate}>
                       {error && <ErrorCard size="sm" error={error} />}
                     </div>
-                    <Form {...twoFactorForm}>
+                    <Form {...(twoFactorStage === 10 ? removeTwoFactorForm : twoFactorForm)}>
                       <form
                         className="space-y-6"
-                        onSubmit={twoFactorForm.handleSubmit(
-                          onTwoFactorPasswordSubmit
-                        )}
+                        onSubmit={
+                          twoFactorStage === 10 
+                            ? removeTwoFactorForm.handleSubmit(onRemoveTwoFactorSubmit)
+                            : twoFactorForm.handleSubmit(onTwoFactorPasswordSubmit)
+                        }
                       >
                         <FormField
-                          control={twoFactorForm.control}
+                          control={twoFactorStage === 10 ? removeTwoFactorForm.control : twoFactorForm.control}
                           name="currentPassword"
                           render={({ field }) => (
                             <FormItem>
@@ -337,7 +462,9 @@ export const TwoFactorSection = ({
                             setIsTwoFactorBoxOpen(false);
                             setIsRemoveTwoFactorBoxOpen(false);
                             twoFactorForm.reset();
+                            removeTwoFactorForm.reset();
                             setError("");
+                            setTwoFactorStage(1);
                           }}
                         >
                           Cancel
@@ -418,7 +545,9 @@ export const TwoFactorSection = ({
                                 />
                               </FormControl>
                               <FormDescription className="text-xs">
-                                Enter the code in your authenticator app.
+                                {provider === "totp" 
+                                  ? "Enter the code in your authenticator app."
+                                  : "Check your email for the 6-digit verification code."}
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
@@ -465,9 +594,9 @@ export const TwoFactorSection = ({
                 {twoFactorStage === 4 && (
                   <div className="flex flex-col">
                     <CardDescription className="text-xs">
-                      Two-step verification is now enabled. When signing in, you
-                      will need to enter a verification code from this
-                      authenticator as an additional step.
+                      {provider === "totp" 
+                        ? "Two-step verification is now enabled. When signing in, you will need to enter a verification code from this authenticator as an additional step."
+                        : "Email verification is now enabled. When signing in, you will be sent a 6-digit code to your email address as an additional step."}
                     </CardDescription>
                     <Button
                       size={"sm"}
@@ -484,100 +613,6 @@ export const TwoFactorSection = ({
                       Finish
                     </Button>
                   </div>
-                )}
-                {twoFactorStage === 10 && (
-                  <>
-                    <div ref={animate}>
-                      {error && <ErrorCard size="sm" error={error} />}
-                    </div>
-                    <Form {...removeTwoFactorForm}>
-                      <form
-                        className="space-y-6"
-                        onSubmit={removeTwoFactorForm.handleSubmit(
-                          onRemoveTwoFactorSubmit
-                        )}
-                      >
-                        <FormField
-                          control={removeTwoFactorForm.control}
-                          name="currentPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm">
-                                Current Password
-                              </FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Input
-                                    {...field}
-                                    autoCorrect="off"
-                                    autoComplete="off"
-                                    disabled={isLoading}
-                                    type={
-                                      isPasswordVisible ? "text" : "password"
-                                    }
-                                    className="pe-9"
-                                  />
-                                  <button
-                                    className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/80 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                                    type="button"
-                                    onClick={toggleVisibility}
-                                    aria-label={
-                                      isPasswordVisible
-                                        ? "Hide password"
-                                        : "Show password"
-                                    }
-                                    aria-pressed={isPasswordVisible}
-                                    aria-controls="password"
-                                  >
-                                    {isPasswordVisible ? (
-                                      <EyeOff
-                                        size={16}
-                                        strokeWidth={2}
-                                        aria-hidden="true"
-                                      />
-                                    ) : (
-                                      <Eye
-                                        size={16}
-                                        strokeWidth={2}
-                                        aria-hidden="true"
-                                      />
-                                    )}
-                                  </button>
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          size={"sm"}
-                          variant={"ghost"}
-                          type="button"
-                          disabled={isLoading}
-                          className="mt-4 mr-2"
-                          onClick={() => {
-                            setIsTwoFactorBoxOpen(false);
-                            setIsRemoveTwoFactorBoxOpen(false);
-                            twoFactorForm.reset();
-                            setError("");
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          size={"sm"}
-                          type="submit"
-                          disabled={isLoading}
-                          className="mt-4"
-                        >
-                          {isLoading && (
-                            <Loader className="mr-1 size-2 text-muted-foreground animate-spin" />
-                          )}
-                          Save
-                        </Button>
-                      </form>
-                    </Form>
-                  </>
                 )}
               </CardContent>
             </Card>
