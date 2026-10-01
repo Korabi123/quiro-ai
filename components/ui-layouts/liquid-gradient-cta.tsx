@@ -42,7 +42,7 @@ export default function UILayoutsLiquidGradientCta() {
 
         <Link
           href="/sign-up"
-          className="relative mt-10 inline-flex h-14 min-w-[220px] items-center justify-center overflow-hidden rounded-full border border-white/10 bg-neutral-950 px-10 text-sm font-semibold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.04)]"
+          className="relative mt-10 inline-flex h-14 min-w-[220px] items-center justify-center overflow-hidden rounded-full border border-white/10 bg-neutral-950 px-10 text-sm font-semibold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.04)] transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-lg"
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         >

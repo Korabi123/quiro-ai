@@ -179,8 +179,8 @@ export default function BentoGrid({ items = itemsSample }: BentoGridProps) {
         style={{ scrollMarginTop: "20vh" }}
         className="mx-auto mb-12 max-w-2xl text-center"
       >
-        <h2 className="text-4xl font-extralight tracking-tight text-white sm:text-5xl">
-          Unlock Your Potential
+        <h2 className="text-4xl font-semibold tracking-tighter text-white sm:text-5xl">
+          Features
         </h2>
         <p className="mt-4 text-lg leading-8 text-gray-300">
           Explore the powerful features designed to help you ace your interviews

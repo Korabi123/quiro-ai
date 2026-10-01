@@ -67,12 +67,12 @@ export default function Pricing({
         {(title || description) && (
           <div className="flex flex-col items-center gap-4 px-4 text-center sm:gap-8">
             {title && (
-              <h2 className="text-3xl leading-tight font-extralight tracking-tight sm:text-5xl sm:leading-tight text-white">
+              <h2 className="text-3xl font-semibold tracking-tighter sm:text-5xl text-white">
                 {title}
               </h2>
             )}
             {description && (
-              <p className="text-md text-muted-foreground max-w-[600px] font-medium sm:text-xl">
+              <p className="mt-4 text-lg leading-none text-gray-300 max-w-[600px]">
                 {description}
               </p>
             )}

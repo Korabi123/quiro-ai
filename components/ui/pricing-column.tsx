@@ -16,10 +16,10 @@ const pricingColumnVariants = cva(
   {
     variants: {
       variant: {
-        default: "glass-1 to-transparent dark:glass-3 bg-black",
-        glow: "glass-2 to-trasparent dark:glass-3 after:content-[''] after:absolute after:-top-[128px] after:left-1/2 after:h-[128px] after:w-[100%] after:max-w-[960px] after:-translate-x-1/2 after:rounded-[50%] dark:after:bg-foreground/30 after:blur-[72px]",
+        default: "glass-1 to-transparent dark:glass-3 bg-black hover:transition-all",
+        glow: "glass-2 to-trasparent dark:glass-3 after:content-[''] after:absolute after:-top-[128px] after:left-1/2 after:h-[128px] after:w-[100%] after:max-w-[960px] after:-translate-x-1/2 after:rounded-[50%] dark:after:bg-foreground/30 after:blur-[72px] hover:transition-all",
         "glow-brand":
-          "glass-3 from-card/100 to-card/100 dark:glass-4 after:content-[''] after:absolute after:-top-[128px] after:left-1/2 after:h-[128px] after:w-[100%] after:max-w-[960px] after:-translate-x-1/2 after:rounded-[50%] after:bg-gradient-to-br after:from-orange-500/70 after:to-yellow-500/70 after:blur-[72px]",
+          "glass-3 from-card/100 to-card/100 dark:glass-4 after:content-[''] after:absolute after:-top-[128px] after:left-1/2 after:h-[128px] after:w-[100%] after:max-w-[960px] after:-translate-x-1/2 after:rounded-[50%] after:bg-gradient-to-br after:from-orange-500/70 after:to-yellow-500/70 after:blur-[72px] hover:transition-all",
 
       },
     },
