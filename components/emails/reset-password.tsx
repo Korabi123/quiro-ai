@@ -58,7 +58,7 @@ export const ResetPasswordEmail = ({
               Hi {userFirstName},
             </Heading>
             <Text style={paragraph}>
-              You've requested a password reset link for your Quiro AI account.
+              You&apos;ve requested a password reset link for your Quiro AI account.
             </Text>
 
             <Section style={buttonContainer}>
@@ -71,7 +71,7 @@ export const ResetPasswordEmail = ({
               If this was you, click the button above to reset your password.
             </Text>
             <Text style={paragraph}>
-              If this wasn't you, please ignore this email or reach out to support. We strongly recommend enabling 2FA.
+              If this wasn&apos;t you, please ignore this email or reach out to support. We strongly recommend enabling 2FA.
             </Text>
           </Section>
 

@@ -86,10 +86,10 @@ export const RecentLoginEmail = ({
             </Section>
 
             <Text style={paragraph}>
-              If this was you, there's nothing else you need to do.
+              If this was you, there&apos;s nothing else you need to do.
             </Text>
             <Text style={paragraph}>
-              If this wasn't you, please reset your password immediately and enable 2FA.
+              If this wasn&apos;t you, please reset your password immediately and enable 2FA.
             </Text>
           </Section>
 

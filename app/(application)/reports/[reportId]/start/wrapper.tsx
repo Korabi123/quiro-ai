@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { Textarea } from "@/components/ui/textarea";
-import { useQuestionsFromReport, useReport } from "@/lib/reports";
-import { Question } from "@prisma/client";
+import { useQuestionsFromReport, useReport, QuestionWithRubric } from "@/lib/reports";
+import { QuestionType } from "@prisma/client";
 import axios from "axios";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useTransition, useRef, useState } from "react";
+import { useEffect, useMemo, useTransition, useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { StreakSuccessDialog } from "@/components/dialogs/streak-success-dialog";
@@ -19,6 +19,19 @@ import { StreakSuccessDialog } from "@/components/dialogs/streak-success-dialog"
 interface Props {
   reportId: string;
 }
+
+/**
+ * One collected answer, posted verbatim to `/api/reports/grade`. The rubric is
+ * copied along with the answer so the grader has the scoring context even if the
+ * question row changes before grading runs.
+ */
+type ReportAnswer = {
+  content: string;
+  answer: string;
+  type: QuestionType;
+  id: string;
+  rubric: Pick<NonNullable<QuestionWithRubric["rubric"]>, "criteria" | "scoring" | "maxScore">;
+};
 
 export const Wrapper = ({ reportId }: Props) => {
   const [isPending, startTransition] = useTransition();
@@ -29,9 +42,6 @@ export const Wrapper = ({ reportId }: Props) => {
   const [streakCount, setStreakCount] = useState(0);
 
   const [onQuestion, setOnQuestion] = useState(0);
-  const [multipleChoiceOptions, setMultipleChoiceOptions] = useState<
-    Array<{ label: string; text: string }>
-  >([]);
 
   const { data: questions } = useQuestionsFromReport(reportId);
   const { data: report } = useReport(reportId);
@@ -39,14 +49,13 @@ export const Wrapper = ({ reportId }: Props) => {
   const router = useRouter();
   const hasRun = useRef(false);
 
-  const [answers, setAnswers] = useState<Array<any>>([]);
+  const [answers, setAnswers] = useState<ReportAnswer[]>([]);
 
   useEffect(() => {
     if (hasRun.current) return;
     hasRun.current = true;
 
     setLoadingText("Generating questions...");
-    // @ts-ignore
     if (!report?.summary && !questions) {
       startTransition(async () => {
         await axios.post(`/api/reports/generate?id=${reportId}`).finally(() => {
@@ -63,46 +72,46 @@ export const Wrapper = ({ reportId }: Props) => {
 
   const currentQuestion = questions?.[onQuestion];
 
-  useEffect(() => {
-    if (!currentQuestion) return;
-
-    if (currentQuestion.type === "MULTIPLE_CHOICE") {
-      const optionPatterns = [
-        /\s+[A-D][\)\.]\s+/i, // Space before option
-        /^[A-D][\)\.]\s+/i, // Option at start of string
-      ];
-
-      let firstOptionIndex = -1;
-      const options: Array<{ label: string; text: string }> = [];
-
-      for (const pattern of optionPatterns) {
-        const match = currentQuestion.content.match(pattern);
-        if (match && match.index !== undefined) {
-          firstOptionIndex = match.index;
-          break;
-        }
-      }
-
-      if (firstOptionIndex >= 0) {
-        const optionsText = currentQuestion.content.substring(firstOptionIndex);
-        const optionRegex =
-          /\s*([A-D])[\)\.](\s+)([^\n]+?)(?=\s*[A-D][\)\.](\s+)|$)/g;
-        let optionMatch;
-
-        while ((optionMatch = optionRegex.exec(optionsText)) !== null) {
-          options.push({
-            label: optionMatch[1].trim(), // Just the letter (A, B, C, D)
-            text: optionMatch[3].trim(), // Just the option text
-          });
-        }
-
-        setMultipleChoiceOptions(options);
-      } else {
-        setMultipleChoiceOptions([]);
-      }
-    } else {
-      setMultipleChoiceOptions([]);
+  //* Parsed from the question text rather than synced into state from an effect:
+  //* the options are a pure function of the current question.
+  const multipleChoiceOptions = useMemo(() => {
+    if (!currentQuestion || currentQuestion.type !== "MULTIPLE_CHOICE") {
+      return [];
     }
+
+    const optionPatterns = [
+      /\s+[A-D][\)\.]\s+/i, // Space before option
+      /^[A-D][\)\.]\s+/i, // Option at start of string
+    ];
+
+    let firstOptionIndex = -1;
+
+    for (const pattern of optionPatterns) {
+      const match = currentQuestion.content.match(pattern);
+      if (match && match.index !== undefined) {
+        firstOptionIndex = match.index;
+        break;
+      }
+    }
+
+    if (firstOptionIndex < 0) {
+      return [];
+    }
+
+    const optionsText = currentQuestion.content.substring(firstOptionIndex);
+    const optionRegex =
+      /\s*([A-D])[\)\.](\s+)([^\n]+?)(?=\s*[A-D][\)\.](\s+)|$)/g;
+    const options: Array<{ label: string; text: string }> = [];
+    let optionMatch;
+
+    while ((optionMatch = optionRegex.exec(optionsText)) !== null) {
+      options.push({
+        label: optionMatch[1].trim(), // Just the letter (A, B, C, D)
+        text: optionMatch[3].trim(), // Just the option text
+      });
+    }
+
+    return options;
   }, [currentQuestion]);
 
   const getQuestionTextWithoutOptions = (content: string) => {
@@ -131,7 +140,7 @@ export const Wrapper = ({ reportId }: Props) => {
   };
 
   const onAnswerSubmit = async (
-    question: Question,
+    question: QuestionWithRubric,
     answer?: string,
     selectedOption?: string
   ) => {
@@ -151,20 +160,17 @@ export const Wrapper = ({ reportId }: Props) => {
       return;
     }
 
-    const answerObj = {
+    const answerObj: ReportAnswer = {
       content: question.content,
       answer:
         question.type === "MULTIPLE_CHOICE" || question.type === "TRUE_FALSE"
-          ? selectedOption
-          : answer,
+          ? (selectedOption ?? "")
+          : (answer ?? ""),
       type: question.type,
       id: question.id,
       rubric: {
-        // @ts-ignore
         criteria: question.rubric.criteria,
-        // @ts-ignore
         scoring: question.rubric.scoring,
-        // @ts-ignore
         maxScore: question.rubric.maxScore,
       },
     };
@@ -172,8 +178,7 @@ export const Wrapper = ({ reportId }: Props) => {
     setAnswers([...answers, answerObj]);
     setValue("");
 
-    // @ts-ignore
-    if (onQuestion + 1 < questions?.length) {
+    if (onQuestion + 1 < (questions?.length ?? 0)) {
       setOnQuestion(onQuestion + 1);
     } else {
       const updatedAnswers = [...answers, answerObj];
@@ -227,8 +232,11 @@ export const Wrapper = ({ reportId }: Props) => {
               </h3>
               <Progress
                 className="mb-4"
-                // @ts-ignore
-                value={((onQuestion + 1) * 100) / questions?.length}
+                value={
+                  questions?.length
+                    ? ((onQuestion + 1) * 100) / questions.length
+                    : 0
+                }
               />
               {currentQuestion?.type === "MULTIPLE_CHOICE" &&
                 multipleChoiceOptions.length > 0 && (

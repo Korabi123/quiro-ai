@@ -217,18 +217,18 @@ export const HeroFooter = () => {
             </div>
 
             <nav className="grid grid-cols-2 gap-6 border-t border-border/15 py-10 text-sm font-medium text-gray-300 md:grid-cols-3 lg:grid-cols-6">
-              <a href="/meetings" className="transition-colors hover:text-white">
+              <Link href="/meetings" className="transition-colors hover:text-white">
                 Meetings
-              </a>
-              <a href="/agents" className="transition-colors hover:text-white">
+              </Link>
+              <Link href="/agents" className="transition-colors hover:text-white">
                 Agents
-              </a>
-              <a href="/reports" className="transition-colors hover:text-white">
+              </Link>
+              <Link href="/reports" className="transition-colors hover:text-white">
                 Skill reports
-              </a>
-              <a href="/coding-problems" className="transition-colors hover:text-white">
+              </Link>
+              <Link href="/coding-problems" className="transition-colors hover:text-white">
                 Coding problems
-              </a>
+              </Link>
               <a href="/legal/privacy-policy" className="transition-colors hover:text-white">
                 Privacy Policy
               </a>

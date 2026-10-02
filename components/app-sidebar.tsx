@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react"
+import Link from "next/link"
 import { ChevronsLeftRight, GalleryHorizontal, GalleryHorizontalEnd, GalleryVerticalEnd, Star, Video } from "lucide-react"
 
 import {
@@ -75,14 +76,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="p-2">
         <SidebarMenu>
           <SidebarMenuItem className="px-2">
-            <a href="/">
+            <Link href="/">
               <img
                 src="/branding/logo-png.png"
                 alt="Logo"
                 width={150}
                 height={150}
               />
-            </a>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -92,12 +93,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu className="gap-2">
             {routes.map((route) => (
               <SidebarMenuItem
+                key={route.title}
                 onClick={() => {
-                  if (route.title === "Tips" || route.title === "Project Grading") {
+                  if (route.title === "Tips") {
                     toast.info(
                       "Please be patient, we're working on this feature!"
                     );
-                  } else if ((route.title === "Skill Reports" || route.title === "Coding Problems") && subscription?.status !== "active") {
+                  } else if ((route.title === "Skill Reports" || route.title === "Coding Problems" || route.title === "Project Grading") && subscription?.status !== "active") {
                     onOpen("restrictionDialog", {
                       restrictionDialogData: {
                         dialogDescription:
@@ -113,8 +115,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   (pathname === route.url || pathname.startsWith(route.url + "/")) &&
                     "bg-[#ffd43e]/25 hover:bg-[#ffd43e]/35 transition-all text-black",
                   route.title === "Tips" && "cursor-not-allowed text-black/50 hover:bg-transparent",
-                  route.title === "Project Grading" && "cursor-not-allowed text-black/50 hover:bg-transparent",
                   route.title === "Coding Problems" && subscription?.status !== "active" && "cursor-not-allowed text-black/50 hover:bg-transparent",
+                  route.title === "Project Grading" && subscription?.status !== "active" && "cursor-not-allowed text-black/50 hover:bg-transparent",
                   route.title === "Skill Reports" && subscription?.status !== "active" && "cursor-not-allowed text-black/50 hover:bg-transparent"
                 )}
               >
@@ -125,12 +127,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     Coming Soon
                   </Badge>
                 )}
-                {route.title === "Project Grading" && (
+                {route.title === "Coding Problems" && subscription?.status !== "active" && (
                   <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">
-                    Coming Soon
+                    Pro Only
                   </Badge>
                 )}
-                {route.title === "Coding Problems" && subscription?.status !== "active" && (
+                {route.title === "Project Grading" && subscription?.status !== "active" && (
                   <Badge className="ml-auto text-xs font-medium bg-[#ffd43e] hover:bg-[#ffd43e]/80">
                     Pro Only
                   </Badge>
@@ -158,7 +160,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <p className="text-white text-sm">
                       {meetings?.length}/5 meetings
                     </p>
-                    <Progress value={(meetings?.length! / 5) * 100} />
+                    <Progress value={((meetings?.length ?? 0) / 5) * 100} />
                   </div>
                 </div>
               )}

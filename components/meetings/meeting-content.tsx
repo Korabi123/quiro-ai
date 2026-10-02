@@ -43,7 +43,6 @@ export const MeetingContent = ({ meetingId }: Props) => {
     "summary" | "transcript" | "recording" | "askAI"
   >("summary");
   const [content, setContent] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const endOfChatsRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -51,11 +50,14 @@ export const MeetingContent = ({ meetingId }: Props) => {
 
   const { data: chats } = useChats(meetingId);
 
-  const memoizedTranscript = useMemo(() => {
-    if (!meeting?.callTranscript) return null;
+  const user = session.data?.user;
+  const agentName = meeting?.agent?.name;
 
-    // @ts-ignore
-    const transcriptParts = meeting.callTranscript
+  const memoizedTranscript = useMemo(() => {
+    const callTranscript = meeting?.callTranscript;
+    if (!callTranscript) return null;
+
+    const transcriptParts = callTranscript
       .split(/\s*(AI:|User:)\s*/)
       .filter(Boolean);
     const structuredTranscript = [];
@@ -74,7 +76,7 @@ export const MeetingContent = ({ meetingId }: Props) => {
     if (filteredTranscript.length === 0) {
       return (
         <p className="text-center text-muted-foreground/70 mb-4">
-          No results found for "{searchQuery}".
+          No results found for &quot;{searchQuery}&quot;.
         </p>
       );
     }
@@ -86,13 +88,12 @@ export const MeetingContent = ({ meetingId }: Props) => {
           <div className="flex items-center gap-2 mb-2">
             {speaker === "AI" ? (
               <GeneratedAvatar
-                // @ts-ignore
                 seed={meeting?.agent?.name}
                 className="size-6"
               />
             ) : (
-              <Avatar className="size-6">
-                <AvatarImage src={session.data?.user.image!} />
+<Avatar className="size-6">
+                  <AvatarImage src={session.data?.user.image ?? undefined} />
                 <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
                   <UserIcon className="size-4" />
                 </AvatarFallback>
@@ -100,8 +101,7 @@ export const MeetingContent = ({ meetingId }: Props) => {
             )}
             <p className="text-md">
               {speaker === "AI"
-                ? // @ts-ignore
-                  meeting?.agent?.name
+                ? (meeting?.agent?.name ?? "AI")
                 : session?.data?.user.name || "User"}
             </p>
           </div>
@@ -126,10 +126,8 @@ export const MeetingContent = ({ meetingId }: Props) => {
   }, [
     meeting?.callTranscript,
     searchQuery,
-    session.data?.user.image,
-    session.data?.user.name,
-    // @ts-ignore
-    meeting?.agent?.name,
+    user,
+    agentName,
   ]);
 
   const [lastSentMessage, setLastSentMessage] = useState<string>("");
@@ -138,6 +136,12 @@ export const MeetingContent = ({ meetingId }: Props) => {
   const [pendingMessage, setPendingMessage] = useState<string>("");
 
   const onSubmit = () => {
+    const userId = session?.data?.user.id;
+    if (!userId) {
+      toast.error("You must be signed in to send a message");
+      return;
+    }
+
     // Add optimistic update
     const tempChat: Chat = {
       id: `temp-${Date.now()}`,
@@ -147,7 +151,7 @@ export const MeetingContent = ({ meetingId }: Props) => {
       reportId: null,
       createdAt: new Date(),
       updatedAt: new Date(),
-      userId: session?.data?.user.id!,
+      userId,
     };
 
     setOptimisticChats((prev) => [...prev, tempChat]);
@@ -173,7 +177,6 @@ export const MeetingContent = ({ meetingId }: Props) => {
           prev.filter((chat) => chat.id !== tempChat.id)
         );
         setPendingMessage("");
-        setIsTyping(false);
         setLastSentMessage("");
       }
     });
@@ -204,22 +207,16 @@ export const MeetingContent = ({ meetingId }: Props) => {
     });
   };
 
-  useEffect(() => {
-    if (chats && chats.length > 0) {
-      const lastMessage = chats[chats.length - 1];
+  const lastMessage = chats?.[chats.length - 1];
 
-      if (
-        lastSentMessage &&
-        lastMessage.type === "USER" &&
-        lastMessage.content === lastSentMessage
-      ) {
-        setIsTyping(true);
-        setLastSentMessage("");
-      } else if (lastMessage.type === "AI") {
-        setIsTyping(false);
-      }
-    }
-  }, [chats, lastSentMessage]);
+  //* Derived from the chat list instead of being synced in an effect. We are
+  //* waiting for the agent while the request is in flight, or once the server
+  //* has echoed our message back but has not answered yet.
+  const isTyping =
+    pendingMessage !== "" ||
+    (lastSentMessage !== "" &&
+      lastMessage?.type === "USER" &&
+      lastMessage.content === lastSentMessage);
 
   const displayChats = useMemo(() => {
     if (!chats) return optimisticChats;
@@ -356,12 +353,10 @@ export const MeetingContent = ({ meetingId }: Props) => {
                     <h1 className="text-2xl mt-2">{meeting?.title}</h1>
                     <div className="flex mt-2 items-center gap-2">
                       <GeneratedAvatar
-                        // @ts-ignore
                         seed={meeting?.agent?.name}
                         className="size-5"
                       />
                       <p className="text-sm underline">
-                        {/* @ts-ignore */}
                         {meeting?.agent?.name}
                       </p>
                       <p className="ml-1 text-sm">
@@ -401,17 +396,22 @@ export const MeetingContent = ({ meetingId }: Props) => {
                     </div>
                   </>
                 )}
-                {tab === "recording" && (
-                  <div className="flex flex-col gap-2">
-                    <h1 className="text-2xl mt-2">Recording</h1>
-                    <AudioPlayer
-                      src={meeting?.recordingURL!}
-                      controls
-                      autoPlay
-                      preload="auto"
-                    />
-                  </div>
-                )}
+                {tab === "recording" &&
+                  (meeting?.recordingURL ? (
+                    <div className="flex flex-col gap-2">
+                      <h1 className="text-2xl mt-2">Recording</h1>
+                      <AudioPlayer
+                        src={meeting.recordingURL}
+                        controls
+                        autoPlay
+                        preload="auto"
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground/70">
+                      No recording is available for this meeting.
+                    </p>
+                  ))}
                 {tab === "askAI" && (
                   <div className="flex flex-col gap-2 max-h-[450px] h-[450px]">
                     {displayChats?.length === 0 ? (
@@ -435,12 +435,10 @@ export const MeetingContent = ({ meetingId }: Props) => {
                               <>
                                 <div className="flex items-center gap-2">
                                   <GeneratedAvatar
-                                    // @ts-ignore
                                     seed={meeting?.agent?.name}
                                     className="size-6"
                                   />
                                   <p className="text-md">
-                                    {/* @ts-ignore */}
                                     {meeting?.agent?.name}
                                   </p>
                                 </div>
@@ -453,9 +451,9 @@ export const MeetingContent = ({ meetingId }: Props) => {
                               <>
                                 <div className="flex items-center gap-2">
                                   <Avatar className="size-6">
-                                    <AvatarImage
-                                      src={session.data?.user.image!}
-                                    />
+<AvatarImage
+                                        src={session.data?.user.image ?? undefined}
+                                      />
                                     <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
                                       <UserIcon className="size-4" />
                                     </AvatarFallback>
@@ -475,12 +473,10 @@ export const MeetingContent = ({ meetingId }: Props) => {
                           <div className="self-start flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4">
                             <div className="flex items-center gap-2">
                               <GeneratedAvatar
-                                // @ts-ignore
                                 seed={meeting?.agent?.name}
                                 className="size-6"
                               />
                               <p className="text-md">
-                                {/* @ts-ignore */}
                                 {meeting?.agent?.name}
                               </p>
                             </div>

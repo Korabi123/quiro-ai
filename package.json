@@ -6,7 +6,13 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "auth:encrypt-tokens": "tsx scripts/encrypt-oauth-tokens.ts",
+    "auth:encrypt-tokens:apply": "tsx scripts/encrypt-oauth-tokens.ts --apply",
+    "auth:verify-token-encryption": "tsx scripts/verify-oauth-token-encryption.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -74,6 +80,7 @@
     "dompurify": "^3.3.3",
     "embla-carousel-react": "^8.5.2",
     "framer-motion": "^12.23.24",
+    "inngest": "^4.21.0",
     "input-otp": "^1.4.2",
     "ipdata": "^2.2.4",
     "lenis": "^1.3.14",
@@ -119,12 +126,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "^14.2.24",
+    "eslint-config-next": "^16.3.8",
     "import-in-the-middle": "^1.15.0",
     "postcss": "^8",
     "prisma": "^6.3.1",
     "require-in-the-middle": "^7.5.2",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5.7.3"
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.3"
   }
 }

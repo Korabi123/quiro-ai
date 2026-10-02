@@ -35,10 +35,25 @@ const removeTwoFactorSchema = z.object({
   currentPassword: z.string().min(8),
 });
 
+/**
+ * The session user plus the custom 2FA tracking columns added to the Prisma
+ * schema. Typed explicitly so the optimistic updates below stay honest.
+ */
+type TwoFactorUser = {
+  id: string;
+  email?: string | null;
+  name?: string | null;
+  image?: string | null;
+  twoFactorEnabled?: boolean | null;
+  emailTwoFactorEnabled?: boolean | null;
+  totpTwoFactorEnabled?: boolean | null;
+  defaultTwoFactorMethod?: string | null;
+};
+
 export const TwoFactorSection = ({
   user,
 }: {
-  user: any; // Using any because custom prisma schema fields
+  user: TwoFactorUser;
 }) => {
   const [localUser, setLocalUser] = useState(user);
   const [animate] = useAutoAnimate();
@@ -57,7 +72,7 @@ export const TwoFactorSection = ({
   // Sync custom tracking fields
   const sync2FAState = async (action: "enable" | "disable" | "setDefault", prov: "totp" | "email", pwd?: string) => {
     // Optimistically update local UI state
-    setLocalUser((prev: any) => {
+    setLocalUser((prev: TwoFactorUser) => {
       const next = { ...prev };
       if (action === "enable") {
         next.twoFactorEnabled = true;
@@ -143,7 +158,15 @@ export const TwoFactorSection = ({
     if (res.error) return;
 
     if (provider === "totp") {
-      setTotpUri(res.data?.totpURI!);
+      // The TOTP enrolment URI is required to render the QR code, so a missing
+      // one is a real failure rather than something to skip past.
+      const totpURI = res.data?.totpURI;
+      if (!totpURI) {
+        setError("Could not start two-factor setup. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+      setTotpUri(totpURI);
       setIsLoading(false);
       setTwoFactorStage(2);
     } else {
@@ -156,7 +179,11 @@ export const TwoFactorSection = ({
   };
 
   const onTotpCodeSubmit = async (data: z.infer<typeof totpCodeSchema>) => {
-    const handlers = {
+    const handlers: {
+      onRequest: () => void;
+      onSuccess: () => Promise<void>;
+      onError: (ctx: { error: { message?: string } }) => void;
+    } = {
       onRequest: () => {
         setIsLoading(true);
       },
@@ -166,8 +193,8 @@ export const TwoFactorSection = ({
         setTwoFactorStage(4);
         router.refresh();
       },
-      onError: (ctx: any) => {
-        setError(ctx.error.message);
+onError: (ctx) => {
+        setError(ctx.error.message ?? "Something went wrong");
         setIsLoading(false);
       },
     };

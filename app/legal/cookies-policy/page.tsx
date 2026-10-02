@@ -13,7 +13,7 @@ export default function CookiesPolicy() {
 
         <section className="mb-8">
           <p>
-            This Cookies Policy explains how <strong>Quiro</strong> ("we", "us", or "our") uses
+            This Cookies Policy explains how <strong>Quiro</strong> (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) uses
             cookies and similar technologies on our website:{" "}
             <a href="https://quiro-ai-korabii.vercel.app" className="text-blue-600 underline">
               quiro-ai-korabii.vercel.app

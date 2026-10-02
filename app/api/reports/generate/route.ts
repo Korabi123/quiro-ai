@@ -472,7 +472,7 @@ export async function POST(req: Request) {
         data: {
           content: question.content,
           answer: question.answer,
-          type: question.type as any,
+          type: question.type,
           rubricId: rubric.id,
           reportId,
         },

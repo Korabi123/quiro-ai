@@ -25,6 +25,29 @@ export async function POST(req: Request) {
       return new NextResponse("Invalid request", { status: 400 });
     }
 
+    //* Ownership check. Without this any authenticated user could overwrite
+    //* any report's grade by passing someone else's reportId.
+    const report = await prismadb.report.findFirst({
+      where: {
+        id: reportId,
+        userId: session.user.id,
+      },
+      select: { id: true },
+    });
+
+    if (!report) {
+      return new NextResponse("Report not found", { status: 404 });
+    }
+
+    //* Snapshot the questions this run is allowed to write to. The IDs coming
+    //* back from the model are untrusted input, so every write is intersected
+    //* with this set rather than filtering by reportId in the update itself.
+    const ownedQuestions = await prismadb.question.findMany({
+      where: { reportId: report.id },
+      select: { id: true },
+    });
+    const ownedQuestionIds = new Set(ownedQuestions.map((q) => q.id));
+
     const ai = new OpenAI({
       apiKey: process.env.AI_SECRET!,
       baseURL: "https://router.huggingface.co/v1",
@@ -109,13 +132,41 @@ export async function POST(req: Request) {
       .replace(/```$/, "");
 
     //* Now parse
-    const responseJ = JSON.parse(cleanResponse!);
+    const responseJ: {
+      results?: {
+        id: string;
+        answer?: string | null;
+        feedback?: string | null;
+        score?: number | null;
+      }[];
+      overallScore?: number | null;
+      maxPossibleScore?: number | null;
+      summary?: string | null;
+      breakdown?: string | null;
+    } = JSON.parse(cleanResponse!);
 
     //* Persist results to DB
     if (responseJ?.results && Array.isArray(responseJ.results)) {
-      for (const result of responseJ.results) {
-        await prismadb.question.update({
-          where: { id: result.id },
+      const appliedResults = responseJ.results.filter((result) =>
+        ownedQuestionIds.has(result.id)
+      );
+
+      if (appliedResults.length !== responseJ.results.length) {
+        console.log(
+          `ERROR_GRADING_REPORT: dropped ${
+            responseJ.results.length - appliedResults.length
+          } result(s) with unrecognized question ids`
+        );
+      }
+
+      //* updateMany so a single bad row can't abort the whole grade, and so
+      //* this stays at one round-trip instead of one per question.
+      for (const result of appliedResults) {
+        await prismadb.question.updateMany({
+          where: {
+            id: result.id,
+            reportId: report.id,
+          },
           data: {
             answer: result.answer,
             feedback: result.feedback,
@@ -127,7 +178,9 @@ export async function POST(req: Request) {
 
     //* Persist overall grading summary at report level
     await prismadb.report.update({
-      where: { id: reportId },
+      where: {
+        id: report.id,
+      },
       data: {
         score: responseJ.overallScore,
         maxPossibleScore: responseJ.maxPossibleScore,

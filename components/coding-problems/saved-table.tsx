@@ -1,5 +1,7 @@
 "use client";
 
+import { Fragment } from "react";
+
 import { useSavedProblems } from "@/lib/saved-problems";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -254,13 +256,12 @@ export const SavedProblemsTable = ({ className }: { className?: string }) => {
             </p>
           </div>
         )}
-        {problems?.map((problem: any, index: number) => (
-          <>
-            <div
-              onClick={() => router.push(`/coding-problems/problem/${problem.id}`)}
-              key={problem.id + index}
-              className="flex cursor-pointer hover:bg-muted-foreground/10 only:rounded-2xl first:rounded-t-2xl last:rounded-b-2xl transition-all items-center justify-between w-full p-5"
-            >
+{problems?.map((problem) => (
+            <Fragment key={problem.id}>
+              <div
+                onClick={() => router.push(`/coding-problems/problem/${problem.id}`)}
+                className="flex cursor-pointer hover:bg-muted-foreground/10 only:rounded-2xl first:rounded-t-2xl last:rounded-b-2xl transition-all items-center justify-between w-full p-5"
+              >
               <div className="flex flex-col gap-2">
                 <span className="flex items-center gap-2 text-xs">
                   <p className="font-medium text-sm">{formatProblemTitle(problem.title)}</p>
@@ -312,12 +313,12 @@ export const SavedProblemsTable = ({ className }: { className?: string }) => {
                   </Button>
                 )}
               </div>
-            </div>
-            {problem.id !== problems?.at(-1)?.id && (
-              <Separator key={problem.id} className="bg-border/60" />
-            )}
-          </>
-        ))}
+              </div>
+              {problem.id !== problems?.at(-1)?.id && (
+                <Separator className="bg-border/60" />
+              )}
+            </Fragment>
+          ))}
         {!isLoading && problems?.length === 0 && (
           <div className="flex items-center justify-center w-full p-5">
             <p className="text-sm text-muted-foreground/70">

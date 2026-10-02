@@ -62,7 +62,7 @@ export function SubscriptionCancelledEmail({
               Hi {recipientName},
             </Text>
             <Text style={paragraph}>
-              We're sorry to see you go! Your Quiro Pro subscription has been successfully cancelled.
+              We&apos;re sorry to see you go! Your Quiro Pro subscription has been successfully cancelled.
             </Text>
             
             <Section style={gradientBox}>

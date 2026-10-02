@@ -25,8 +25,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Failed to set password:", error);
-    return new NextResponse(error.message || "Internal Error", { status: 500 });
+    const message =
+      error instanceof Error ? error.message : "Internal Error";
+    return new NextResponse(message, { status: 500 });
   }
 }

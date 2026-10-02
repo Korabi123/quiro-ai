@@ -54,6 +54,18 @@ export const auth = betterAuth({
     }
   },
 
+  account: {
+    //* Store OAuth tokens as AES-256-GCM ciphertext keyed off BETTER_AUTH_SECRET
+    //* instead of plaintext. A database leak or a backup dump then yields no
+    //* directly usable GitHub/Google credentials.
+    //*
+    //* Note: the Prisma adapter no longer stores readable tokens, so any code
+    //* that needs an access token must go through `auth.api.getAccessToken`
+    //* rather than reading `Account.accessToken` directly - see
+    //* `lib/github-server.ts`.
+    encryptOAuthTokens: true,
+  },
+
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,

@@ -1,9 +1,5 @@
 import { debounce } from "lodash";
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { type UseFormWatch, type FieldValues, type UseFormTrigger } from "react-hook-form";
 
@@ -27,11 +23,13 @@ export const useAutoSubmit = <T extends FieldValues>({
   debounceTime = 300,
 }: AutoSubmitProps<T>) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const debouncedSubmit = useCallback(
-    debounce((submitFn: () => void) => {
-      submitFn();
-    }, debounceTime),
-    [],
+
+  //* Rebuilt only when the delay changes. Building it inside `useEffect` would
+  //* mean the effect depends on the debounced function, so a new one every
+  //* render would resubscribe on every render.
+  const debouncedSubmit = useMemo(
+    () => debounce(onSubmit, debounceTime),
+    [onSubmit, debounceTime]
   );
 
   useEffect(() => {
@@ -40,14 +38,14 @@ export const useAutoSubmit = <T extends FieldValues>({
       setIsSubmitting(true);
       trigger()
         .then((valid) => {
-          if (valid) debouncedSubmit(onSubmit);
+          if (valid) debouncedSubmit();
           else onValidationFailed?.();
         })
         .finally(() => setIsSubmitting(false));
     });
 
     return () => subscription.unsubscribe();
-  }, [watch, onSubmit, onValidationFailed]);
+  }, [watch, trigger, debouncedSubmit, onValidationFailed]);
 
   return { isSubmitting };
 };

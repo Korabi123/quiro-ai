@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 
 import { Button } from "./button";
@@ -13,14 +12,28 @@ import {
 } from "./dropdown-menu";
 import { ChevronsUpDownIcon } from "lucide-react";
 
+/**
+ * Reports whether the component has hydrated on the client.
+ *
+ * Implemented with `useSyncExternalStore` rather than the usual
+ * `useEffect(() => setMounted(true), [])` so the value is known during the
+ * first client render instead of arriving one render later.
+ */
+function useIsMounted() {
+  return React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+}
+
 export function ModeToggle() {
-  const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
+  const mounted = useIsMounted();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  //* The resolved theme lives in localStorage, so the server cannot know it.
+  //* Returning nothing until after hydration keeps the markup identical on
+  //* both sides.
   if (!mounted) {
     return null;
   }

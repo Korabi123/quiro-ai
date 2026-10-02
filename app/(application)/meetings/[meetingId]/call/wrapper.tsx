@@ -12,7 +12,7 @@ import Vapi from "@vapi-ai/web";
 import axios from "axios";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface Props {
@@ -31,18 +31,20 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
   const session = authClient.useSession();
   const { data: meeting, isLoading } = useMeeting(meetingId);
 
-  const [vapi, setVapi] = useState<Vapi | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [transcript, setTranscript] = useState<Array<{role: string, text: string}>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showStreakDialog, setShowStreakDialog] = useState(false);
   const [streakCount, setStreakCount] = useState(0);
 
+  //* The client is only needed for imperative commands, so it lives in a ref
+  //* instead of state. Writing it during the effect body would cascade an extra
+  //* render on every mount for no rendering benefit.
+  const vapiRef = useRef<Vapi | null>(null);
+
   useEffect(() => {
     const vapiInstance = new Vapi(apiKey);
-    setVapi(vapiInstance);
 
     vapiInstance.on('call-start', () => {
       console.log('Call started');
@@ -95,10 +97,10 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
 
     vapiInstance.on('message', (message) => {
       if (message.type === 'transcript') {
-        setTranscript(prev => [...prev, {
-          role: message.role,
-          text: message.transcript
-        }]);
+        //* The transcript is persisted server-side from the call record, so the
+        //* live events are only logged here. Previously this appended to a state
+        //* value that was never read during render.
+        console.log(`[${message.role}] ${message.transcript}`);
       }
     });
 
@@ -106,14 +108,19 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
       console.error('Vapi error:', error);
     });
 
+    vapiRef.current = vapiInstance;
+
     return () => {
       vapiInstance?.stop();
+      vapiRef.current = null;
     };
   }, [apiKey]);
 
   const startCall = () => {
-    if (vapi) {
-      toast.promise(vapi.start(assistantId), {
+    const client = vapiRef.current;
+
+    if (client) {
+      toast.promise(client.start(assistantId), {
         loading: "Starting meeting...",
         success: () => {
           setIsSubmitting(false);
@@ -128,9 +135,7 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
   }
 
   const stopCall = () => {
-    if (vapi) {
-      vapi?.stop();
-    }
+    vapiRef.current?.stop();
   }
 
   if (isLoading) {
@@ -147,9 +152,9 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
       className="flex flex-col justify-center gap-5 items-cetermt-14 p-5 md:px-60 rounded-2xl border border-border/50"
     >
       <div className="relative md:min-h-[200px] flex items-center justify-center p-5 rounded-2xl border border-border/50 bg-[#ffd43e]/10">
-        <Avatar className="size-16">
-          <AvatarImage src={session.data?.user.image!} />
-        </Avatar>
+<Avatar className="size-16">
+              <AvatarImage src={session.data?.user.image ?? undefined} />
+            </Avatar>
         <div className="absolute p-1 px-3 bg-[#ea721b]/60 rounded-bl-2xl rounded-tr-2xl bottom-0 left-0">
           <p className="text-sm text-white">{session.data?.user.name}</p>
         </div>
@@ -164,11 +169,12 @@ export const Wrapper = ({  meetingId, apiKey, assistantId }: Props) => {
                 "ring-2 ring-offset-[2.5px] ring-[#ea721b]/50 rounded-bl-[20px]"
             )}
           >
-            {/* @ts-ignore */}
-            <GeneratedAvatar className="size-16" seed={meeting?.agent?.name} />
+            <GeneratedAvatar
+              className="size-16"
+              seed={meeting?.agent?.name ?? "Agent"}
+            />
             <div className="absolute p-1 px-3 bg-[#ea721b]/60 rounded-bl-2xl rounded-tr-2xl bottom-0 left-0">
               <p className="text-sm text-white">
-                {/* @ts-ignore */}
                 {meeting?.agent?.name}
               </p>
             </div>

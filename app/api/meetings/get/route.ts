@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import prismadb from "@/lib/prismadb";
 import { NextResponse } from "next/server";
+import { MeetingStatus, Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
   try {
@@ -20,9 +21,7 @@ export async function GET(req: Request) {
     }
 
     if (!idParam) {
-      const where: any = {
-        AND: [{ userId: session.user.id }],
-      };
+      const and: Prisma.MeetingWhereInput[] = [{ userId: session.user.id }];
 
       if (agentParam) {
         const agent = await prismadb.agent.findFirst({
@@ -33,19 +32,24 @@ export async function GET(req: Request) {
         });
 
         if (agent) {
-          where.AND.push({ agentId: agent.id });
+          and.push({ agentId: agent.id });
         } else {
           return NextResponse.json([]);
         }
       }
 
       if (status) {
-        // @ts-ignore
-        where.AND.push({ status: status.toUpperCase() });
+        //* The query string carries a lowercase status; the column is an enum.
+        //* An unrecognised value would throw at runtime, so validate it.
+        const normalizedStatus = status.toUpperCase() as MeetingStatus;
+
+        if (Object.values(MeetingStatus).includes(normalizedStatus)) {
+          and.push({ status: normalizedStatus });
+        }
       }
 
       if (search) {
-        const searchConditions: any[] = [
+        const or: Prisma.MeetingWhereInput[] = [
           {
             title: {
               contains: search,
@@ -55,7 +59,7 @@ export async function GET(req: Request) {
         ];
 
         if (!agentParam) {
-          searchConditions.push({
+          or.push({
             agent: {
               name: {
                 contains: search,
@@ -64,11 +68,11 @@ export async function GET(req: Request) {
             },
           });
         }
-        where.AND.push({ OR: searchConditions });
+        and.push({ OR: or });
       }
 
       const meetings = await prismadb.meeting.findMany({
-        where,
+        where: { AND: and },
         include: {
           agent: true,
           chats: true,

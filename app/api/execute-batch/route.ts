@@ -88,7 +88,7 @@ const wrapCodeForExecution = (code: string, language: string, testInput: string)
         if (val.startsWith('[') && val.endsWith(']')) {
           const inner = val.slice(1, -1);
           let depth = 0;
-          let parts = [];
+          const parts = [];
           let current = "";
           for (let i = 0; i < inner.length; i++) {
             if (inner[i] === '[') depth++;
@@ -168,7 +168,7 @@ public class Main {
 
     if (funcName && testInput) {
       let declarations = "";
-      let callArgs: string[] = [];
+      const callArgs: string[] = [];
       
       args.forEach((arg, i) => {
         const trimmed = arg.trim();
@@ -288,7 +288,7 @@ func main() {
       const paramsStr = funcMatch[3];
       
       let declarations = "";
-      let callArgs: string[] = [];
+      const callArgs: string[] = [];
       let argIdx = 0;
 
       const params = paramsStr.split(',').map(p => p.trim());

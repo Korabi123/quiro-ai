@@ -641,10 +641,12 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-  // Random width between 50 to 90%.
-  const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`
-  }, [])
+  //* `Math.random` is impure, so it is confined to a lazy `useState`
+  //* initialiser. That runs once on mount, which is also what keeps the skeleton
+  //* width stable instead of reshuffling on every render.
+  const [width] = React.useState(
+    () => `${Math.floor(Math.random() * 40) + 50}%`
+  )
 
   return (
     <div

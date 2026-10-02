@@ -57,9 +57,9 @@ export function createRateLimiter(options: RateLimitOptions) {
 /**
  * Creates a throttled function using lodash
  */
-export function createThrottledFunction<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-) {
+export function createThrottledFunction<T extends (...args: never[]) => unknown>(
+    func: T,
+    wait: number
+  ) {
   return throttle(func, wait, { trailing: false });
 }

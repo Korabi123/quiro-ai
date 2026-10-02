@@ -1,26 +1,40 @@
 'use client';
-import React, { useMemo, type JSX } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 
 export type TextShimmerProps = {
   children: string;
-  as?: React.ElementType;
+  as?: 'p' | 'span' | 'div' | 'h1' | 'h2' | 'h3' | 'h4';
   className?: string;
   duration?: number;
   spread?: number;
 };
 
+/**
+ * `motion.create` builds a component type, so calling it during render created a
+ * new component every pass, remounting the subtree and discarding the animation
+ * state. The supported tags are built once at module load instead, which also
+ * keeps the value out of render entirely.
+ */
+const MOTION_TAGS = {
+  p: motion.create('p'),
+  span: motion.create('span'),
+  div: motion.create('div'),
+  h1: motion.create('h1'),
+  h2: motion.create('h2'),
+  h3: motion.create('h3'),
+  h4: motion.create('h4'),
+} as const;
+
 function TextShimmerComponent({
   children,
-  as: Component = 'p',
+  as = 'p',
   className,
   duration = 2,
   spread = 2,
 }: TextShimmerProps) {
-  const MotionComponent = motion.create(
-    Component as keyof JSX.IntrinsicElements
-  );
+  const MotionComponent = MOTION_TAGS[as];
 
   const dynamicSpread = useMemo(() => {
     return children.length * spread;

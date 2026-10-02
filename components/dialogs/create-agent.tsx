@@ -191,9 +191,9 @@ export const CreateAgentDialog = () => {
                 <>
                   {instructionsType === "manual" && (
                     <div className="flex items-center gap-2 pb-4 -mt-8">
-                      <span className="text-xs text-muted-foreground">
-                        Can't string up instructions?
-                      </span>
+<span className="text-xs text-muted-foreground">
+                  Can&apos;t string up instructions?
+                </span>
                       <Button
                         type="button"
                         className="text-xs p-0 h-auto bg-transparent text-[#ffd43e]/70 hover:text-[#ffd43e] hover:bg-transparent transition-all"

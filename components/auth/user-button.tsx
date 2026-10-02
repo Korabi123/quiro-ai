@@ -60,7 +60,38 @@ export const UserButton = ({
   align?: "start" | "center" | "end";
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [sessions, setSessions] = useState<any[]>([]);
+  /**
+ * A session entry as returned by `authClient.multiSession.listDeviceSessions()`.
+ * The agent shape is opaque to this component, so it stays `unknown` and is only
+ * ever read for `id` and the display fields.
+ */
+type DeviceSessionUser = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+};
+
+type DeviceSession = {
+  session: {
+    id: string;
+    userId: string;
+    token: string;
+    expiresAt: string | Date;
+    createdAt: string | Date;
+    updatedAt: string | Date;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  };
+  user: DeviceSessionUser;
+};
+
+/** One entry of `/api/user/subscriptions`, keyed by user id. */
+type SubscriptionInfo = {
+  plan?: string | null;
+};
+
+const [sessions, setSessions] = useState<DeviceSession[]>([]);
   const [sessionSubscriptions, setSessionSubscriptions] = useState<Record<string, string>>({});
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "billing">("profile");
@@ -104,18 +135,18 @@ export const UserButton = ({
           const sessionsData = res.data || [];
           setSessions(sessionsData);
           try {
-            const userIds = sessionsData.map((s: any) => s.user.id);
+            const userIds = sessionsData.map((s) => s.user.id);
             const subRes = await fetch("/api/user/subscriptions", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ userIds })
             });
             if (subRes.ok) {
-              const data = await subRes.json();
-              const subMap: Record<string, string> = {};
-              for (const [uid, sub] of Object.entries(data)) {
-                subMap[uid] = (sub as any).plan;
-              }
+const data: Record<string, SubscriptionInfo> = await subRes.json();
+               const subMap: Record<string, string> = {};
+               for (const [uid, sub] of Object.entries(data)) {
+                 if (sub?.plan) subMap[uid] = sub.plan;
+               }
               setSessionSubscriptions(subMap);
             }
           } catch (e) {
@@ -237,11 +268,16 @@ export const UserButton = ({
           <DropdownMenuSeparator className="p-0 m-0" />
           <DropdownMenuItem
             onClick={() => {
+              const token = currentSession.data?.session.token;
+              if (!token) {
+                setIsLoading(false);
+                return;
+              }
               setIsLoading(true);
               setTimeout(() => {
                 authClient.multiSession.revoke(
                   {
-                    sessionToken: currentSession.data?.session.token!,
+                    sessionToken: token,
                   },
                   {
                     onRequest: () => {
@@ -286,7 +322,7 @@ export const UserButton = ({
           {sessions.length > 1 && (
             <>
               <DropdownMenuSeparator className="p-0 m-0" />
-              {sessions.map((session: any) => {
+              {sessions.map((session) => {
                 const activeSession = session.user.id === user.id;
 
                 return (

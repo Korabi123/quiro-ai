@@ -1,12 +1,38 @@
-import type { Agent } from "@prisma/client";
-import type { Meeting } from "@prisma/client";
+import type { Agent, Meeting, Prisma } from "@prisma/client";
 import type { Report } from "@prisma/client";
+
+type MeetingWithAgent = Prisma.MeetingGetPayload<{
+  include: { agent: true };
+}>;
+
+/**
+ * The filter values this helper understands. Callers pass strings, a list of
+ * accepted values, or a date range; `undefined`/`null` mean "do not filter".
+ */
+type FilterValue =
+  | string
+  | ReadonlyArray<unknown>
+  | { from?: string; to?: string }
+  | undefined
+  | null;
+
+/** Narrows a filter value to a date range without trusting `typeof`. */
+function isDateRange(
+  value: FilterValue
+): value is { from?: string; to?: string } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    ("from" in value || "to" in value)
+  );
+}
 
 export function searchItems<T>(
   items: T[],
   searchTerm: string,
   searchFields: (keyof T)[],
-  filters?: Record<string, any>
+  filters?: Record<string, FilterValue>
 ): T[] {
   if (!items || items.length === 0) return [];
 
@@ -31,10 +57,12 @@ export function searchItems<T>(
         return value.length === 0 || value.includes(itemValue);
       }
 
-      if (key.includes('Date') && typeof value === 'object' && (value.from || value.to)) {
+      const range = isDateRange(value) ? value : undefined;
+
+      if (key.includes('Date') && range && (range.from || range.to)) {
         const itemDate = new Date(itemValue as string);
-        const fromDate = value.from ? new Date(value.from) : null;
-        const toDate = value.to ? new Date(value.to) : null;
+        const fromDate = range.from ? new Date(range.from) : null;
+        const toDate = range.to ? new Date(range.to) : null;
 
         if (fromDate && itemDate < fromDate) return false;
         if (toDate && itemDate > toDate) return false;
@@ -52,29 +80,28 @@ export function searchItems<T>(
 }
 
 export function searchMeetings(
-  meetings: Meeting[],
+  meetings: MeetingWithAgent[],
   searchTerm: string,
   filters?: {
     status?: string;
     date?: { from?: string; to?: string };
     agent?: string;
   }
-): Meeting[] {
+): MeetingWithAgent[] {
   if (filters?.agent) {
-    const searchFiltered = searchItems<Meeting>(
+    const searchFiltered = searchItems<MeetingWithAgent>(
       meetings,
       searchTerm,
       ['title', 'status'],
       Object.fromEntries(Object.entries(filters).filter(([key]) => key !== 'agent'))
     );
 
-    return searchFiltered.filter(meeting =>
-      // @ts-expect-error - We know agent has a name property
-      meeting.agent?.name === filters.agent
+    return searchFiltered.filter(
+      (meeting) => meeting.agent?.name === filters.agent
     );
   }
 
-  return searchItems<Meeting>(
+  return searchItems<MeetingWithAgent>(
     meetings,
     searchTerm,
     ['title', 'status'],

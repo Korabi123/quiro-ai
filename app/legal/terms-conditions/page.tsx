@@ -13,7 +13,7 @@ export default function TermsOfService() {
 
         <section className="mb-8">
           <p>
-            By accessing or using <strong>Quiro</strong> ("we", "us", or "our"), you agree to be
+            By accessing or using <strong>Quiro</strong> (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), you agree to be
             bound by these Terms and Conditions. If you do not agree, please do not use our Service.
           </p>
         </section>
@@ -70,7 +70,7 @@ export default function TermsOfService() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-2">7. Disclaimer</h2>
           <p>
-            The service is provided "as is." We make no guarantees about its reliability or
+            The service is provided &quot;as is.&quot; We make no guarantees about its reliability or
             availability.
           </p>
         </section>

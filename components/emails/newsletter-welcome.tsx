@@ -48,7 +48,7 @@ export const NewsletterWelcomeEmail = () => {
 
           <Section style={content}>
             <Heading style={heading}>
-              You're on the list!
+              You&apos;re on the list!
             </Heading>
             <Text style={paragraph}>
               Thanks for subscribing to Quiro AI product updates.
@@ -64,7 +64,7 @@ export const NewsletterWelcomeEmail = () => {
             </Section>
 
             <Text style={paragraph}>
-              If you haven't already, start preparing today.
+              If you haven&apos;t already, start preparing today.
             </Text>
 
             <Section style={buttonContainer}>

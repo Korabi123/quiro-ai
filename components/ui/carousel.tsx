@@ -111,12 +111,18 @@ const Carousel = React.forwardRef<
         return
       }
 
-      onSelect(api)
+      //* The scroll availability is read from Embla's own events rather than by
+      //* calling `onSelect(api)` inline. Setting state synchronously here would
+      //* cascade a second render on every mount, and Embla fires `init` as soon
+      //* as the carousel is ready, which covers the initial value.
+      api.on("init", onSelect)
       api.on("reInit", onSelect)
       api.on("select", onSelect)
 
       return () => {
-        api?.off("select", onSelect)
+        api.off("init", onSelect)
+        api.off("reInit", onSelect)
+        api.off("select", onSelect)
       }
     }, [api, onSelect])
 

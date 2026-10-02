@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import { fetcher } from "./fetcher";
 
-interface SavedProblem {
+export interface SavedProblem {
   id: string;
   slug: string;
   title: string;

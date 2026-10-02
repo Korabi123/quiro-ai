@@ -16,7 +16,9 @@ export async function POST(req: Request) {
       }
     });
 
-    const subscriptionMap = subscriptions.reduce((acc: any, sub) => {
+    const subscriptionMap = subscriptions.reduce<
+      Record<string, (typeof subscriptions)[number]>
+    >((acc, sub) => {
       acc[sub.referenceId] = sub;
       return acc;
     }, {});

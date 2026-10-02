@@ -41,24 +41,11 @@ const formSchema = z.object({
 
 export const EditAgentDialog = () => {
   const [isPending, startTransition] = useTransition();
-  const [isFetching, setIsFetching] = useState(false);
 
   const { isOpen, type, data, onClose } = useModalStore();
   const isModalOpen = isOpen && type === "editAgent";
 
   const { data: agentById, isLoading } = useAgent(data.agentId!);
-
-  useEffect(() => {
-    if (isModalOpen) {
-      if (!agentById || isLoading) {
-        setIsFetching(true);
-      } else {
-        setIsFetching(false);
-        form.setValue("name", agentById.name);
-        form.setValue("instructions", agentById.instructions);
-      }
-    }
-  }, [agentById, isLoading, isModalOpen]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,6 +54,24 @@ export const EditAgentDialog = () => {
       instructions: "",
     },
   });
+
+  //* Derived rather than stored: the modal is fetching exactly while it is open
+  //* and the record has not arrived, so there is no state to keep in sync.
+  const isFetching = isModalOpen && (!agentById || isLoading);
+
+  //* `reset` is the React-appropriate way to seed a form from async data. The
+  //* values live in an object that only changes when `agentById` does, so the
+  //* effect does not re-run on every render.
+  const loadedAgent = agentById;
+
+  useEffect(() => {
+    if (isModalOpen && loadedAgent) {
+      form.reset({
+        name: loadedAgent.name,
+        instructions: loadedAgent.instructions,
+      });
+    }
+  }, [isModalOpen, loadedAgent, form]);
 
   const onSubmit = (formData: z.infer<typeof formSchema>) => {
     startTransition(async () => {

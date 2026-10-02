@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -135,21 +134,21 @@ model Report {
 }
 
 model CodingProblem {
-  id          String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  slug        String   @unique
-  title       String
-  difficulty  Difficulty
+  slug       String     @unique
+  title      String
+  difficulty Difficulty
 
-  source      String?
-  externalId  String?
+  source     String?
+  externalId String?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  attempts    CodingAttempt[]
-  progress    UserProblemProgress[]
-  User        User?                 @relation(fields: [userId], references: [id])
-  userId      String?
+  attempts CodingAttempt[]
+  progress UserProblemProgress[]
+  User     User?                 @relation(fields: [userId], references: [id])
+  userId   String?
 }
 
 enum Difficulty {
@@ -159,45 +158,45 @@ enum Difficulty {
 }
 
 model CodingAttempt {
-  id            String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  userId        String
-  problemId     String
+  userId    String
+  problemId String
 
-  language      String
-  code          String
+  language String
+  code     String
 
   executionOutput String?
   expectedOutput  String?
 
-  passedTests   Boolean
-  
-  executionTime  String?
-  memoryUsage    String?
-  
-  visiblePassedCount  Int?
+  passedTests Boolean
+
+  executionTime String?
+  memoryUsage   String?
+
+  visiblePassedCount Int?
   visibleTotalCount  Int?
   hiddenPassedCount  Int?
-  hiddenTotalCount  Int?
+  hiddenTotalCount   Int?
 
-  createdAt     DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  grading       CodeGrading?
+  grading CodeGrading?
 
-  problem       CodingProblem @relation(fields: [problemId], references: [id])
+  problem CodingProblem @relation(fields: [problemId], references: [id])
 
   @@index([userId])
   @@index([problemId])
 }
 
 model CodeGrading {
-  id                String  @id @default(cuid())
+  id String @id @default(cuid())
 
-  attemptId         String  @unique
-  attempt           CodingAttempt @relation(fields: [attemptId], references: [id])
+  attemptId String        @unique
+  attempt   CodingAttempt @relation(fields: [attemptId], references: [id])
 
-  isCorrect         Boolean
-  passedTests       Boolean
+  isCorrect   Boolean
+  passedTests Boolean
 
   correctnessScore  Int
   efficiencyScore   Int
@@ -205,31 +204,128 @@ model CodeGrading {
   bestPracticeScore Int
   totalScore        Int
 
-  timeComplexity    String?
-  spaceComplexity   String?
+  timeComplexity  String?
+  spaceComplexity String?
 
-  summary           String
-  strengths         Json
-  improvements      Json
+  summary      String
+  strengths    Json
+  improvements Json
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model UserProblemProgress {
-  id          String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  userId      String
-  problemId   String
+  userId    String
+  problemId String
 
-  attempts    Int      @default(0)
-  solved      Boolean  @default(false)
-  bestScore   Int?
+  attempts  Int     @default(0)
+  solved    Boolean @default(false)
+  bestScore Int?
 
   lastAttempt DateTime?
 
-  problem     CodingProblem @relation(fields: [problemId], references: [id])
+  problem CodingProblem @relation(fields: [problemId], references: [id])
 
   @@unique([userId, problemId])
+}
+
+enum GradeRunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum FindingSeverity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Repository {
+  id String @id @default(cuid())
+
+  githubId Int
+  fullName String
+  name     String
+  owner    String
+
+  description   String?
+  language      String?
+  defaultBranch String  @default("main")
+  isFork        Boolean @default(false)
+  stars         Int     @default(0)
+
+  pushedAt     DateTime?
+  lastSyncedAt DateTime  @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  runs GradeRun[]
+
+  @@unique([userId, githubId])
+  @@index([userId])
+}
+
+model GradeRun {
+  id String @id @default(cuid())
+
+  userId       String
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  commitSha String
+  status    GradeRunStatus @default(PENDING)
+  stage     String?
+
+  overallScore Int?
+  letterGrade  String?
+  summary      String?
+
+  grade    Json?
+  analysis Json?
+
+  error      String?
+  durationMs Int?
+  llmCalls   Int     @default(0)
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  findings GradeFinding[]
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([repositoryId, commitSha])
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model GradeFinding {
+  id String @id @default(cuid())
+
+  runId String
+  run   GradeRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  category String
+  severity FindingSeverity @default(MEDIUM)
+  title    String
+  detail   String?
+  fix      String?
+
+  path String?
+  line Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([runId])
+  @@index([severity])
 }
 
 model User {
@@ -243,12 +339,12 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  twoFactorEnabled Boolean?
-  emailTwoFactorEnabled Boolean? @default(false)
-  totpTwoFactorEnabled  Boolean? @default(false)
+  twoFactorEnabled       Boolean?
+  emailTwoFactorEnabled  Boolean? @default(false)
+  totpTwoFactorEnabled   Boolean? @default(false)
   defaultTwoFactorMethod String?
 
-  twofactors       TwoFactor[]
+  twofactors TwoFactor[]
 
   passkeys Passkey[]
 
@@ -259,6 +355,8 @@ model User {
   createdAgents   Agent[]
   createdReports  Report[]
   codingProblems  CodingProblem[]
+  repositories    Repository[]
+  gradeRuns       GradeRun[]
 
   normalizedEmail String?
 
@@ -266,8 +364,8 @@ model User {
   lastStreakUpdate DateTime?
 
   @@unique([email])
-  @@map("user")
   @@unique([normalizedEmail])
+  @@map("user")
 }
 
 model Session {

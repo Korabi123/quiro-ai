@@ -163,7 +163,10 @@ const MotionDrawer: React.FC<SideMenuProps> = ({
     }
   };
 
-  const handleDragEnd = (_event: any, info: any) => {
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: { offset: { x: number; y: number } }
+  ) => {
     if (!enableDrag) return;
 
     const threshold = width * dragThreshold;

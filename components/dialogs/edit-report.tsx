@@ -144,7 +144,6 @@ const SecondaryModal = ({
 
 export const EditReportDialog = () => {
   const [isPending, startTransition] = useTransition();
-  const [isFetching, setIsFetching] = useState(false);
 
   const { isOpen, type, data, onClose } = useModalStore();
   const isModalOpen = isOpen && type === "editReport";
@@ -156,22 +155,6 @@ export const EditReportDialog = () => {
 
   const { onOpen } = useModalStore();
 
-  useEffect(() => {
-    if (isModalOpen) {
-      if (!existingReport || isLoading) {
-        setIsFetching(true);
-      } else {
-        setIsFetching(false);
-        form.setValue("name", existingReport.name);
-        form.setValue("field", existingReport.field!);
-        form.setValue("type", existingReport.type);
-        if (existingReport.type === "CUSTOM" && existingReport.customType) {
-          form.setValue("customType", existingReport.customType);
-        }
-      }
-    }
-  }, [existingReport, isLoading, isModalOpen]);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -180,6 +163,24 @@ export const EditReportDialog = () => {
       customType: "",
     },
   });
+
+  //* Derived, not stored: the dialog is fetching exactly while it is open and
+  //* the report has not arrived yet.
+  const isFetching = isModalOpen && (!existingReport || isLoading);
+
+  //* Aliasing to a stable local keeps the effect below from re-running on every
+  //* render while still reacting when the record actually changes.
+  const loadedReport = existingReport;
+
+  useEffect(() => {
+    if (isModalOpen && loadedReport) {
+      form.reset({
+        name: loadedReport.name,
+        field: loadedReport.field ?? "",
+        customType: loadedReport.customType ?? "",
+      });
+    }
+  }, [isModalOpen, loadedReport, form]);
 
   const onSubmit = (formData: z.infer<typeof formSchema>) => {
     startTransition(async () => {
@@ -195,8 +196,8 @@ export const EditReportDialog = () => {
           report: {
             name: existingReport?.name,
             type: existingReport?.type,
-            field: existingReport?.field!,
-            customType: existingReport?.customType!,
+            field: existingReport?.field ?? "",
+            customType: existingReport?.customType ?? "",
           }
         });
       } else {

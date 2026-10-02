@@ -55,8 +55,6 @@ export const EditMeetingDialog = () => {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  const [isFetching, setIsFetching] = useState(false);
-
   const { data: agents } = useAgents();
   const meetingById = useMeeting(meetingData.meetingId!);
 
@@ -72,19 +70,24 @@ export const EditMeetingDialog = () => {
     },
   });
 
-  useEffect(() => {
-    if (isOpen && type === "editMeeting") {
-      if (!meetingById.data && existingAgent) {
-        setIsFetching(true);
-      } else if (!form.getValues().meetingTitle || !form.getValues().agentName) {
-        setIsFetching(false);
-        form.setValue("meetingTitle", meetingById.data?.title!);
-        form.setValue("agentName", existingAgent?.name!);
-      }
-    }
-  });
+  const isEditing = isOpen && type === "editMeeting";
 
-  const isModalOpen = isOpen && type === "editMeeting";
+  //* Derived rather than stored: the dialog is still loading until both the
+  //* meeting and its agent have arrived.
+  const isFetching =
+    isEditing && (!meetingById.data || !existingAgent);
+
+  const loadedMeeting = meetingById.data;
+  const loadedAgent = existingAgent;
+
+  useEffect(() => {
+    if (isEditing && loadedMeeting && loadedAgent) {
+      form.reset({
+        meetingTitle: loadedMeeting.title,
+        agentName: loadedAgent.name,
+      });
+    }
+  }, [isEditing, loadedMeeting, loadedAgent, form]);
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     startTransition(async () => {
@@ -107,7 +110,7 @@ export const EditMeetingDialog = () => {
 
   return (
     <Dialog
-      open={isModalOpen}
+      open={isEditing}
       onOpenChange={() => {
         useModalStore.getState().onClose();
       }}

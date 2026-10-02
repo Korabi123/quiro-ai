@@ -47,7 +47,10 @@ export const PasswordSection = () => {
         if (listAccountsFn) {
           const res = await listAccountsFn();
           if (res?.data) {
-            const hasCredential = res.data.some((acc: any) => acc.providerId === "credential" || acc.provider === "credential");
+            // The account list uses `provider` as the column name.
+              const hasCredential = res.data.some(
+                (acc) => acc.provider === "credential"
+              );
             setHasPassword(hasCredential);
             return;
           }
@@ -123,9 +126,9 @@ export const PasswordSection = () => {
         setHasPassword(true);
         setPasswordForm.reset();
       }
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
+} catch (e) {
+        setError(e instanceof Error ? e.message : "Something went wrong");
+      } finally {
       setIsLoading(false);
     }
   };

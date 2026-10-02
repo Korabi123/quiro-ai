@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 import { ReportEmptySvg } from "../svg/report-empty";
 import { Button } from "../ui/button";
-import { useEffect, useRef, useState, useTransition, useMemo } from "react";
+import { useEffect, useRef, useState, useTransition, useMemo, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Response } from "../ai-elements/response";
-import { Chat, Question } from "@prisma/client";
+import { Chat } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { GeneratedAvatar } from "../generated-avatar";
@@ -39,7 +39,6 @@ export const ReportContent = ({ reportId }: Props) => {
     "summary"
   );
   const [content, setContent] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const endOfChatsRef = useRef<HTMLDivElement>(null);
 
   const { data: chats } = useChats(undefined, report?.id);
@@ -47,8 +46,12 @@ export const ReportContent = ({ reportId }: Props) => {
   const router = useRouter();
   let badgeColor = "";
 
-  if (report !== undefined) {
-    // @ts-ignore
+  if (
+    report !== undefined &&
+    report.score !== null &&
+    report.maxPossibleScore !== null &&
+    report.maxPossibleScore > 0
+  ) {
     const scorePercentage = (report.score / report.maxPossibleScore) * 100;
 
     if (scorePercentage < 50) {
@@ -66,6 +69,12 @@ export const ReportContent = ({ reportId }: Props) => {
   const [pendingMessage, setPendingMessage] = useState<string>("");
 
   const onSubmit = () => {
+    const userId = session?.data?.user.id;
+    if (!userId) {
+      toast.error("You must be signed in to send a message");
+      return;
+    }
+
     // Add optimistic update
     const tempChat: Chat = {
       id: `temp-${Date.now()}`,
@@ -75,7 +84,7 @@ export const ReportContent = ({ reportId }: Props) => {
       reportId: reportId,
       createdAt: new Date(),
       updatedAt: new Date(),
-      userId: session?.data?.user.id!,
+      userId,
     };
 
     setOptimisticChats((prev) => [...prev, tempChat]);
@@ -89,8 +98,7 @@ export const ReportContent = ({ reportId }: Props) => {
           reportId: report?.id,
           content,
           type: "USER",
-          // @ts-ignore
-          transcript: `SUMMARY: ${report?.summary}\nBREAKDOWN: ${report?.breakdown}\nQUESTIONS AND FEEDBACK:\n${report?.questions.map((question: Question) => `${question.content}: ${question.answer}\n${question.feedback}\n`).join("\n")}`,
+          transcript: `SUMMARY: ${report?.summary}\nBREAKDOWN: ${report?.breakdown}\nQUESTIONS AND FEEDBACK:\n${report?.questions.map((question) => `${question.content}: ${question.answer}\n${question.feedback}\n`).join("\n")}`,
         });
         setOptimisticChats((prev) =>
           prev.filter((chat) => chat.id !== tempChat.id)
@@ -102,7 +110,6 @@ export const ReportContent = ({ reportId }: Props) => {
           prev.filter((chat) => chat.id !== tempChat.id)
         );
         setPendingMessage("");
-        setIsTyping(false);
         setLastSentMessage("");
       }
     });
@@ -123,22 +130,16 @@ export const ReportContent = ({ reportId }: Props) => {
     return () => document.removeEventListener("keydown", down);
   }, [onSubmit]);
 
-  useEffect(() => {
-    if (chats && chats.length > 0) {
-      const lastMessage = chats[chats.length - 1];
+  const lastMessage = chats?.[chats.length - 1];
 
-      if (
-        lastSentMessage &&
-        lastMessage.type === "USER" &&
-        lastMessage.content === lastSentMessage
-      ) {
-        setIsTyping(true);
-        setLastSentMessage("");
-      } else if (lastMessage.type === "AI") {
-        setIsTyping(false);
-      }
-    }
-  }, [chats, lastSentMessage]);
+  //* Derived from the chat list instead of being synced in an effect. We are
+  //* waiting for the assistant while the request is in flight, or once the
+  //* server has echoed our message back but has not answered yet.
+  const isTyping =
+    pendingMessage !== "" ||
+    (lastSentMessage !== "" &&
+      lastMessage?.type === "USER" &&
+      lastMessage.content === lastSentMessage);
 
   const displayChats = useMemo(() => {
     if (!chats) return optimisticChats;
@@ -312,24 +313,19 @@ export const ReportContent = ({ reportId }: Props) => {
                       Individual Question Breakdown
                     </h1>
                     <div className="mt-2 flex flex-col gap-2">
-                      {/* @ts-ignore */}
-                      {report?.questions.map((question: Question) => (
-                        <>
-                          <div
-                            key={question.id}
-                            className="border rounded-2xl p-3 bg-card"
-                          >
+                      {report?.questions.map((question) => (
+                        <Fragment key={question.id}>
+                          <div className="border rounded-2xl p-3 bg-card">
                             <div className="flex items-center justify-between gap-2 mb-4">
                               <p className="text-md">{question.content}</p>
                               <p className="text-xs">
-                                {/* @ts-ignore */}
                                 {question.score} / {question.rubric?.maxScore}{" "}
                                 points
                               </p>
                             </div>
                             <div className="mt-2 ml-2 flex items-start gap-2 mb-2">
                               <Avatar className="size-6">
-                                <AvatarImage src={session.data?.user.image!} />
+                                <AvatarImage src={session.data?.user.image ?? undefined} />
                                 <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
                                   <UserIcon className="size-4" />
                                 </AvatarFallback>
@@ -340,7 +336,6 @@ export const ReportContent = ({ reportId }: Props) => {
                             </div>
                             <div className="flex ml-2 items-center gap-2 mb-2">
                               <GeneratedAvatar
-                                // @ts-ignore
                                 seed="AnswerAI"
                                 className="size-6"
                               />
@@ -349,7 +344,7 @@ export const ReportContent = ({ reportId }: Props) => {
                               </p>
                             </div>
                           </div>
-                        </>
+                        </Fragment>
                       ))}
                     </div>
                   </>
@@ -377,12 +372,10 @@ export const ReportContent = ({ reportId }: Props) => {
                               <>
                                 <div className="flex items-center gap-2">
                                   <GeneratedAvatar
-                                    // @ts-ignore
                                     seed={report?.name}
                                     className="size-6"
                                   />
                                   <p className="text-md">
-                                    {/* @ts-ignore */}
                                     {`${report?.name} AI`}
                                   </p>
                                 </div>
@@ -396,7 +389,7 @@ export const ReportContent = ({ reportId }: Props) => {
                                 <div className="flex items-center gap-2">
                                   <Avatar className="size-6">
                                     <AvatarImage
-                                      src={session.data?.user.image!}
+                                      src={session.data?.user.image ?? undefined}
                                     />
                                     <AvatarFallback className="bg-gradient-to-b from-gray-700 via-gray-900 to-black text-white">
                                       <UserIcon className="size-4" />
@@ -417,12 +410,10 @@ export const ReportContent = ({ reportId }: Props) => {
                           <div className="self-start flex flex-col gap-2 rounded-2xl border border-border/50 bg-card p-4">
                             <div className="flex items-center gap-2">
                               <GeneratedAvatar
-                                // @ts-ignore
                                 seed={report?.name}
                                 className="size-6"
                               />
                               <p className="text-md">
-                                {/* @ts-ignore */}
                                 {`${report?.name} AI`}
                               </p>
                             </div>

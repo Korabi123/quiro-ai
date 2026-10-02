@@ -2,9 +2,22 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prismadb";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { Prisma } from "@prisma/client";
 import TwoFactorAddedEmail from "@/components/emails/two-factor-added";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+/**
+ * The mutable 2FA columns on User. Only these fields are ever written, so the
+ * update payload is typed to the model rather than left as `any`.
+ */
+type TwoFactorUpdateData = Pick<
+  Prisma.UserUpdateInput,
+  | "emailTwoFactorEnabled"
+  | "totpTwoFactorEnabled"
+  | "twoFactorEnabled"
+  | "defaultTwoFactorMethod"
+>;
 
 export async function POST(req: Request) {
   try {
@@ -38,13 +51,14 @@ export async function POST(req: Request) {
            if (!verifyRes || ("twoFactorRedirect" in verifyRes) === false && verifyRes.user?.id !== user.id) {
              return new NextResponse("Invalid password", { status: 400 });
            }
-        } catch (err: any) {
-           return new NextResponse(err.message || "Invalid password", { status: 400 });
-        }
+} catch (err) {
+            const message = err instanceof Error ? err.message : "Invalid password";
+            return new NextResponse(message, { status: 400 });
+         }
       }
     }
 
-    let updateData: any = {};
+    const updateData: TwoFactorUpdateData = {};
 
     if (action === "enable") {
       if (provider === "email") {
@@ -100,8 +114,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, updateData });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Failed to update 2FA state:", error);
-    return new NextResponse(error.message || "Internal Error", { status: 500 });
+    const message = error instanceof Error ? error.message : "Internal Error";
+    return new NextResponse(message, { status: 500 });
   }
 }

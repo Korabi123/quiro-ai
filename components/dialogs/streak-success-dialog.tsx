@@ -35,7 +35,7 @@ export function StreakSuccessDialog({
         return Math.random() * (max - min) + min;
       };
 
-      const interval: any = setInterval(function () {
+      const interval: ReturnType<typeof setInterval> = setInterval(function () {
         const timeLeft = animationEnd - Date.now();
 
         if (timeLeft <= 0) {
@@ -87,7 +87,7 @@ export function StreakSuccessDialog({
             Streak Kept Alive!
           </DialogTitle>
           <DialogDescription className="text-center text-lg">
-            You're on fire! You've maintained your
+            You&apos;re on fire! You&apos;ve maintained your
             <motion.span
               initial={{ color: "#9ca3af" }}
               animate={{ color: "#ea580c" }}

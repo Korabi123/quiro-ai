@@ -54,8 +54,8 @@ export const AgentContent = ({ agentId }: Props) => {
                 <Skeleton className="size-5 w-[300px]" />
               ) : (
                 <>
-                  <GeneratedAvatar seed={agent?.name!} className="size-5" />
-                  <p className="text-sm underline">{agent?.name}</p>
+<GeneratedAvatar seed={agent?.name ?? "Agent"} className="size-5" />
+                     <p className="text-sm underline">{agent?.name}</p>
                   <p className="ml-1 text-sm">
                     Created at{" "}
                     {agent?.createdAt

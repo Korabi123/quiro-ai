@@ -103,8 +103,11 @@ export const ReportsTable = ({ className, variant = "default" }: Props) => {
                 {report.summary &&
                   (() => {
                     const scorePercentage =
-                      // @ts-ignore
-                      (report.score / report.maxPossibleScore) * 100;
+                      report.score !== null &&
+                      report.maxPossibleScore !== null &&
+                      report.maxPossibleScore > 0
+                        ? (report.score / report.maxPossibleScore) * 100
+                        : 0;
                     let badgeColor = "";
 
                     if (scorePercentage < 50) {

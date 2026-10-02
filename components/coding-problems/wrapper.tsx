@@ -229,13 +229,19 @@ export default function ProblemWrapper({ slug }: { slug: string }) {
 
   const initialCode = useMemo(() => {
     return generateCodeTemplate(language, formatProblemTitle(data?.title || "Problem"));
-  }, [data?.title]);
+  }, [data?.title, language]);
 
   const [editorCode, setEditorCode] = useState(initialCode);
 
-  useEffect(() => {
-    setEditorCode(generateCodeTemplate(language, formatProblemTitle(data?.title || "Problem")));
-  }, [data?.title, language]);
+  //* Reset the editor when the generated template changes (new language or title)
+  //* using the documented "adjust state during render" pattern rather than an
+  //* effect, which would show the previous language's code for one extra frame.
+  const [lastInitialCode, setLastInitialCode] = useState(initialCode);
+
+  if (lastInitialCode !== initialCode) {
+    setLastInitialCode(initialCode);
+    setEditorCode(initialCode);
+  }
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
@@ -263,11 +269,8 @@ export default function ProblemWrapper({ slug }: { slug: string }) {
   const sampleOutput = data?.testCases?.[0]?.output || "";
   const allTestCases = data?.testCases || [];
 
-  useEffect(() => {
-    if (gradingResult) {
-      setTab("ai-grade");
-    }
-  }, [gradingResult]);
+  //* `gradingResult` is always written from this component's own submit handler,
+  //* so the tab is switched there rather than synced back out of an effect.
 
   const handleTest = async () => {
     const testCases = data?.testCases;
@@ -433,6 +436,7 @@ export default function ProblemWrapper({ slug }: { slug: string }) {
       const response = await gradingPromise;
       const grading = await response.json();
       setGradingResult(grading);
+      setTab("ai-grade");
     } catch (error) {
       console.error("Grading error:", error);
     } finally {

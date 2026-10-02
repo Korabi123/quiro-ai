@@ -205,7 +205,11 @@ export const LoginCard = ({
   };
 
   const onVerifyOtpSubmit = async (data: z.infer<typeof verifySchema>) => {
-    const handlers = {
+    const handlers: {
+      onRequest: () => void;
+      onSuccess: () => Promise<void>;
+      onError: (ctx: { error: { message?: string } }) => void;
+    } = {
       onRequest: () => {
         setIsLoading(true);
       },
@@ -222,8 +226,8 @@ export const LoginCard = ({
           router.push(AFTER_LOGIN);
         }
       },
-      onError: (ctx: any) => {
-        setError(ctx.error.message);
+onError: (ctx) => {
+        setError(ctx.error.message ?? "Something went wrong");
         setIsLoading(false);
       },
     };

@@ -64,10 +64,11 @@ export const MeetingsTable = ({ className, agentId, variant = "default" }: Props
               <p className="font-medium text-sm">{meeting.title}</p>
               <span className="flex items-center gap-2 text-xs text-muted-foreground/70">
                 <CornerDownRight className="size-3 text-muted-foreground/60" />
-                {/* @ts-expect-error Just a simple type error */}
-                {meeting.agent.name}
-                {/* @ts-expect-error Just a simple type error */}
-                <GeneratedAvatar seed={meeting.agent.name} className="size-5" />
+                {meeting.agent?.name ?? "Agent"}
+                <GeneratedAvatar
+                  seed={meeting.agent?.name ?? "Agent"}
+                  className="size-5"
+                />
                 <Badge
                   variant={"outline"}
                   className="text-muted-foreground/70 font-normal"

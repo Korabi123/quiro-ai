@@ -8,7 +8,7 @@
 
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import { useMemo } from "react";
+import { useState } from "react";
 
 export interface SparklesProps {
   className?: string;
@@ -37,17 +37,19 @@ export function Sparkles({
 }: SparklesProps) {
   const count = Math.min(240, Math.max(48, Math.floor(density / 2)));
 
-  const dots = useMemo(
-    () =>
-      Array.from({ length: count }, (_, i) => ({
-        id: i,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        delay: Math.random() * 4,
-        duration: 3 + Math.random() * 5,
-        scale: (size / 1.2) * (0.55 + Math.random() * 0.95),
-      })),
-    [count, size]
+  //* `Math.random` is impure, so it cannot run during render. A lazy
+  //* `useState` initialiser runs exactly once, on mount, which also gives the
+  //* stable sparkle positions the animation loop depends on - re-rolling them
+  //* on every render would make the field jump.
+  const [dots] = useState(() =>
+    Array.from({ length: count }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      delay: Math.random() * 4,
+      duration: 3 + Math.random() * 5,
+      scale: (size / 1.2) * (0.55 + Math.random() * 0.95),
+    }))
   );
 
   const yAxis =

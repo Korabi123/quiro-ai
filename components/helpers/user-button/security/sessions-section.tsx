@@ -42,9 +42,9 @@ export const SessionsSection = ({
             setSessions(res.data);
           }
         })
-        .catch((err: any) => {
-          console.error(err);
-        });
+.catch((err: unknown) => {
+            console.error(err);
+          });
     };
     getSessions();
   }, []);
@@ -56,8 +56,10 @@ export const SessionsSection = ({
       await authClient.revokeSession({ token });
       setSessions((prev) => prev.filter((s) => s.token !== token));
       setIsRevokeBoxOpen(false);
-    } catch (e: any) {
-      setError(e.message || "Failed to revoke session");
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Failed to revoke session"
+      );
     } finally {
       setIsLoading(false);
     }

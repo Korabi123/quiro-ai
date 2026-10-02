@@ -337,6 +337,12 @@ export const ConnectionsSection = ({
                       await authClient.linkSocial(
                         {
                           provider: "github",
+                          //* Project Grading needs to enumerate repos and read
+                          //* file contents. Better Auth merges these additively
+                          //* with the provider defaults, so existing scopes are
+                          //* preserved. Users who linked GitHub before this
+                          //* feature shipped must unlink and relink to get them.
+                          scopes: ["repo", "read:org"],
                           callbackURL: AFTER_LOGIN,
                         },
                         {
