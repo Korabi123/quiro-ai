@@ -41,6 +41,70 @@ export const inngest = new Inngest({
       repositoryId: z.string().min(1),
       fullName: z.string().min(3).max(200),
     }),
+
+    /* Reports: question generation, then grading the answers. */
+    "reports/generate": z.object({
+      reportId: z.string().min(1),
+      userId: z.string().min(1),
+    }),
+    "reports/grade": z.object({
+      reportId: z.string().min(1),
+      userId: z.string().min(1),
+      //* The submitted answers travel with the event rather than being re-read
+      //* from the database, because the client has them in memory and they are
+      //* not persisted until grading succeeds. Bounded so a malformed client
+      //* cannot push an unbounded payload into the queue.
+      answers: z
+        .array(
+          z.object({
+            id: z.string().min(1),
+            content: z.string().max(5000),
+            answer: z.string().max(5000),
+            type: z.string().max(50),
+            rubric: z.object({
+              criteria: z.string().max(2000),
+              scoring: z.string().max(4000),
+              maxScore: z.number(),
+            }),
+          })
+        )
+        .min(1)
+        .max(50),
+    }),
+
+    /* Coding problems: test execution and AI grading of a submission. */
+    "submissions/execute-batch": z.object({
+      executionId: z.string().min(1),
+      userId: z.string().min(1),
+    }),
+    "submissions/grade": z.object({
+      attemptId: z.string().min(1),
+      userId: z.string().min(1),
+    }),
+
+    /* Chat: generate the assistant reply for a user message. */
+    "chats/reply": z.object({
+      userChatId: z.string().min(1),
+      userId: z.string().min(1),
+      meetingId: z.string().min(1).nullable(),
+      reportId: z.string().min(1).nullable(),
+    }),
+
+    /* Agents: turn a LinkedIn URL into Vapi interviewer instructions. */
+    "agents/instructions": z.object({
+      requestId: z.string().min(1),
+      userId: z.string().min(1),
+      linkedInUrl: z.string().min(1).max(2000),
+      role: z.string().min(1).max(200),
+      agentId: z.string().min(1).nullable(),
+    }),
+
+    /* Meetings: fetch the finished call artifact from Vapi once it exists. */
+    "meetings/details": z.object({
+      meetingId: z.string().min(1),
+      userId: z.string().min(1),
+      vapiAgent: z.string().min(1),
+    }),
   },
 });
 
@@ -54,4 +118,26 @@ export const gradingEventId = (runId: string): string =>
 
 export const PROJECT_GRADING_RUN_EVENT = "project-grading/run" as const;
 
-export { RUN_CANCELLED_ERROR } from "@/lib/grading/types";
+export { RUN_CANCELLED_ERROR } from "@/lib/inngest/jobs";
+
+/* ------------------------------------------------------------------ */
+/* Event ids                                                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Idempotency keys, one per flow.
+ *
+ * Inngest deduplicates on this key inside a 24h window, so a double-clicked
+ * button, a retried fetch, or a flaky mobile connection that replays the
+ * request cannot start a second run and bill the model twice. Every enqueue
+ * site must pass one of these.
+ */
+export const eventIds = {
+  reportGenerate: (reportId: string) => `reports/generate:${reportId}`,
+  reportGrade: (reportId: string) => `reports/grade:${reportId}`,
+  codeGrade: (attemptId: string) => `submissions/grade:${attemptId}`,
+  codeExecuteBatch: (executionId: string) => `submissions/execute-batch:${executionId}`,
+  chatReply: (chatId: string) => `chats/reply:${chatId}`,
+  agentInstructions: (key: string) => `agents/instructions:${key}`,
+  meetingDetails: (meetingId: string) => `meetings/details:${meetingId}`,
+} as const;

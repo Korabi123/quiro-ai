@@ -4,6 +4,7 @@ import { Suspense, useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { CodingProblemHeading } from "./heading";
 import { useProblem } from "../../lib/problems";
+import { runBatchAndWait } from "@/lib/problems/execution-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -284,21 +285,14 @@ export default function ProblemWrapper({ slug }: { slug: string }) {
     setTab("test-cases");
 
     const testPromise = (async () => {
-      const response = await fetch("/api/execute-batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: editorCode,
-          language,
-          testCases: testCases,
-        }),
+      //* Starts an Inngest job and polls until it settles. This previously
+      //* awaited the results directly, which meant holding the request open for
+      //* the whole batch - several minutes for a 33-case run.
+      const result = await runBatchAndWait({
+        code: editorCode,
+        language,
+        testCases: testCases,
       });
-
-      const result = await response.json();
-
-      if (response.ok && result.error) {
-        throw new Error(result.error);
-      }
 
       setTestCaseResults(result.results || []);
 
@@ -333,23 +327,13 @@ export default function ProblemWrapper({ slug }: { slug: string }) {
     setTab("test-cases");
 
     const submitPromise = (async () => {
-      const response = await fetch("/api/execute-batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: editorCode,
-          language,
-          testCases: testCases,
-          problemContent: data?.content || "",
-          generateHidden: true,
-        }),
+      const result = await runBatchAndWait({
+        code: editorCode,
+        language,
+        testCases: testCases,
+        problemContent: data?.content || "",
+        generateHidden: true,
       });
-
-      const result = await response.json();
-
-      if (response.ok && result.error) {
-        throw new Error(result.error);
-      }
 
       setTestCaseResults(result.results || []);
 

@@ -103,11 +103,11 @@ export const RADAR_DOMAIN: [number, number] = [0, 100];
  * job - without those checks the pipeline would keep spending tokens and then
  * overwrite the cancelled row as COMPLETED.
  *
- * Defined here rather than in `@/lib/inngest/client` because this module is
- * imported by client components, and that file pulls in the Inngest SDK.
- * `lib/inngest/client.ts` re-exports it so server call sites keep one name.
+ * Lives in `@/lib/inngest/jobs` rather than here because it is shared by every
+ * migrated flow, not just grading. That module has no Inngest SDK import, so it
+ * stays safe for client components.
  */
-export const RUN_CANCELLED_ERROR = "Cancelled by user";
+export { RUN_CANCELLED_ERROR } from "@/lib/inngest/jobs";
 
 export const sortBySeverity = <T extends { severity: string }>(
   findings: T[]

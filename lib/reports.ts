@@ -1,6 +1,21 @@
 import useSWR from "swr";
 import { fetcher } from "./fetcher";
 import { Prisma } from "@prisma/client";
+import { isActiveStatus } from "./inngest/jobs";
+
+/**
+ * How often to re-check while a report job is in flight.
+ *
+ * Generation and grading are Inngest functions now, so the endpoints that start
+ * them return 202 immediately and the result arrives later. These hooks poll
+ * only while `jobStatus` is PENDING/RUNNING and stop the moment it settles, so
+ * an idle report costs nothing.
+ */
+const JOB_POLL_MS = 2000;
+
+/** Poll while the latest payload shows an unfinished job, otherwise never. */
+const pollWhileActive = <T extends { jobStatus?: string | null }>(latest?: T): number =>
+  latest && isActiveStatus(latest.jobStatus) ? JOB_POLL_MS : 0;
 
 /**
  * `/api/reports/get?id=...` returns the report with its questions and each
@@ -60,7 +75,10 @@ export const useReport = (reportId: string) => {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      dedupingInterval: 5000,
+      //* Below the poll interval, otherwise SWR dedupes away the very
+      //* revalidations refreshInterval asks for.
+      dedupingInterval: 500,
+      refreshInterval: pollWhileActive,
     }
   );
 
@@ -78,7 +96,7 @@ export const useQuestionsFromReport = (reportId: string) => {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      dedupingInterval: 5000,
+      dedupingInterval: 500,
     }
   );
 
@@ -88,3 +106,30 @@ export const useQuestionsFromReport = (reportId: string) => {
     isLoading,
   };
 }
+
+/**
+ * Polls question generation until it produces questions or fails.
+ *
+ * Returns `status` rather than just the data so the caller can distinguish
+ * "still working" from "finished with an error" - the old inline flow could
+ * only ever resolve one way, so a failed generation looked like a hang.
+ */
+export const useQuestionGeneration = (reportId: string) => {
+  const report = useReport(reportId);
+  const { data: questions, error, isLoading } = useQuestionsFromReport(reportId);
+
+  const jobStatus = report.data?.jobStatus ?? "IDLE";
+
+  return {
+    questions,
+    error,
+    isLoading,
+    jobStatus,
+    isGenerating: isActiveStatus(jobStatus) && !questions,
+    //* Generation is only done once questions exist *and* the job settled.
+    //* Questions may briefly be empty while the job is still running.
+    isComplete: jobStatus === "COMPLETED" && !!questions?.length,
+    isFailed: jobStatus === "FAILED",
+    reportError: report.data?.jobError ?? null,
+  };
+};

@@ -5,6 +5,18 @@ import { runGradingPipeline, type PipelineEvent } from "@/lib/grading/pipeline";
 import { buildGradePayload } from "@/lib/grading/schema";
 import { updateStreak } from "@/lib/streak";
 import { inngest, RUN_CANCELLED_ERROR } from "@/lib/inngest/client";
+import { generateReport, gradeReport } from "@/lib/inngest/reports";
+import { executeTestBatch } from "@/lib/inngest/problems";
+import { gradeSubmission } from "@/lib/inngest/grading";
+import { generateChatReplyJob } from "@/lib/inngest/chats";
+import { generateAgentInstructionsJob } from "@/lib/inngest/agents";
+import { fetchMeetingDetails } from "@/lib/inngest/meetings";
+
+const reportFunctions = [generateReport, gradeReport];
+const problemFunctions = [executeTestBatch, gradeSubmission];
+const chatFunctions = [generateChatReplyJob];
+const agentFunctions = [generateAgentInstructionsJob];
+const meetingFunctions = [fetchMeetingDetails];
 
 /**
  * Returns true when the user cancelled this run while it was in flight.
@@ -212,4 +224,17 @@ export const gradeRepository = inngest.createFunction(
   }
 );
 
-export const inngestFunctions = [gradeRepository];
+/**
+ * Every function served by `/api/inngest`.
+ *
+ * `tests/inngest/config.test.ts` asserts this list's contents rather than its
+ * length, so adding a flow here does not require editing a count.
+ */
+export const inngestFunctions = [
+  gradeRepository,
+  ...reportFunctions,
+  ...problemFunctions,
+  ...chatFunctions,
+  ...agentFunctions,
+  ...meetingFunctions,
+];

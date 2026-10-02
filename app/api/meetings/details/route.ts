@@ -1,21 +1,15 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
-
-import { VapiClient } from "@vapi-ai/server-sdk";
 import prismadb from "@/lib/prismadb";
-import { updateStreak } from "@/lib/streak";
+import { inngest, eventIds } from "@/lib/inngest/client";
 
+/**
+ * Enqueues fetching of completed meeting artifacts from Vapi.
+ */
 export async function PATCH(req: Request) {
-  const vapi = new VapiClient({
-    token: process.env.VAPI_TOKEN!,
-  });
-
   try {
     const { searchParams } = new URL(req.url);
-
-    const session = await auth.api.getSession({
-      headers: req.headers,
-    });
+    const session = await auth.api.getSession({ headers: req.headers });
 
     const meetingId = searchParams.get("meetingId");
     const vapiAgent = searchParams.get("vapiAgent");
@@ -28,35 +22,37 @@ export async function PATCH(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const vapiMeetingsByAgent = await vapi.calls.list({
-      assistantId: vapiAgent,
-      limit: 1,
+    const meeting = await prismadb.meeting.findFirst({
+      where: { id: meetingId, userId: session.user.id },
+      select: { id: true, jobStatus: true },
     });
 
-    const vapiMeeting = vapiMeetingsByAgent[0];
+    if (!meeting) {
+      return new NextResponse("Meeting not found", { status: 404 });
+    }
 
-    console.log("transcript: ", vapiMeeting.artifact?.transcript);
-    console.log("summary: ", vapiMeeting.analysis?.summary);
+    if (meeting.jobStatus === "COMPLETED") {
+      return NextResponse.json({ status: "COMPLETED", alreadyCompleted: true }, { status: 200 });
+    }
 
-    const meeting = await prismadb.meeting.update({
-      where: {
-        id: meetingId,
-        userId: session.user.id,
-      },
-      data: {
-        callTranscript: vapiMeeting.artifact?.transcript,
-        transcript: vapiMeeting.artifact?.transcript,
-        summary: vapiMeeting.analysis?.summary,
-        status: "COMPLETED",
-        recordingURL: vapiMeeting.artifact?.stereoRecordingUrl,
-      }
+    if (meeting.jobStatus === "PENDING" || meeting.jobStatus === "RUNNING") {
+      return NextResponse.json({ status: meeting.jobStatus, alreadyQueued: true }, { status: 202 });
+    }
+
+    await prismadb.meeting.update({
+      where: { id: meetingId },
+      data: { jobStatus: "PENDING", jobStage: "queued", jobError: null },
     });
 
-    await updateStreak(session.user.id);
+    await inngest.send({
+      name: "meetings/details",
+      data: { meetingId, userId: session.user.id, vapiAgent },
+      id: eventIds.meetingDetails(meetingId),
+    });
 
-    return NextResponse.json(meeting);
+    return NextResponse.json({ status: "PENDING" }, { status: 202 });
   } catch (error) {
-    console.log("ERROR_UPDATING_MEETING: ", error);
+    console.log("ERROR QUEUING MEETING DETAILS: ", error);
     return new NextResponse("Internal server error", { status: 500 });
   }
 }

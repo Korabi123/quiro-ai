@@ -16,14 +16,14 @@ export async function GET(req: Request) {
     if (search) {
       const reports = await prismadb.report.findMany({
         where: {
-          OR: [
-            {
-              name: {
-                contains: search,
-                mode: "insensitive"
-              },
-            },
-          ],
+          //* Scoped to the caller. This branch previously searched every report
+          //* in the table, so any authenticated user could read other users'
+          //* report names, scores, summaries and question text by passing `search`.
+          userId: session.user.id,
+          name: {
+            contains: search,
+            mode: "insensitive"
+          },
         },
         orderBy: {
           createdAt: "desc",

@@ -27,6 +27,26 @@ enum MeetingStatus {
   ACTIVE
   PROCESSING
   CANCELED
+
+  // Added with the Inngest migration. `meetings/details` used to be
+  // client-triggered with a hardcoded 2.5s sleep and no error path, so a
+  // meeting whose transcript fetch failed stayed PROCESSING forever with no
+  // way to tell that apart from one still in flight.
+  FAILED
+}
+
+/**
+ * Shared job lifecycle for Inngest-backed work.
+ *
+ * Mirrors `GradeRunStatus` so every migrated flow reports progress the same
+ * way. `IDLE` is the resting state for a row that owns no in-flight job.
+ */
+enum JobStatus {
+  IDLE
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
 }
 
 model Meeting {
@@ -46,6 +66,12 @@ model Meeting {
   summary        String?
   chats          Chat[]
   status         MeetingStatus @default(UPCOMING)
+
+  // Job lifecycle for the `meetings/details` Inngest function, which waits for
+  // the Vapi transcript to become available and then persists it.
+  jobStatus JobStatus @default(IDLE)
+  jobStage  String?
+  jobError  String?
 
   @@map("meeting")
 }
@@ -131,6 +157,20 @@ model Report {
   type       ReportType
   field      String?
   customType String?
+
+  // Job lifecycle for the two Inngest-backed flows that touch this row:
+  // question generation and answer grading. Before this, completion was
+  // inferred from `questions.length > 0` and `summary != null`, which cannot
+  // represent "failed" at all - a report whose generation threw looked
+  // identical to one that had never been started, and a partial write looked
+  // complete.
+  jobStatus    JobStatus @default(IDLE)
+  jobStage     String?
+  jobError     String?
+  jobStartedAt DateTime?
+  jobEndedAt   DateTime?
+
+  @@index([userId, jobStatus])
 }
 
 model CodingProblem {
@@ -185,8 +225,30 @@ model CodingAttempt {
 
   problem CodingProblem @relation(fields: [problemId], references: [id])
 
+  // Two independent jobs can target an attempt, sequentially: run the test
+  // batch, then grade the result. They are tracked with separate field sets
+  // rather than one shared `jobStatus` because a single field cannot describe
+  // both "tests are running" and "grading is running", and collapsing them
+  // would make the client poll ambiguous.
+  //
+  // `testStatus` replaces an inline loop that made up to 33 sequential Judge0
+  // requests inside a single HTTP request (~11 min).
+  testStatus  JobStatus @default(IDLE)
+  testStage   String?
+  testError   String?
+
+  // `gradeStatus` replaces an inline LLM call that had no status at all.
+  // `CodeGrading` itself stays result-only and all-non-nullable, and is created
+  // only once grading succeeds, so consumers of those score fields do not have
+  // to handle a half-populated row.
+  gradeStatus  JobStatus @default(IDLE)
+  gradeStage   String?
+  gradeError   String?
+
   @@index([userId])
   @@index([problemId])
+  @@index([userId, testStatus])
+  @@index([userId, gradeStatus])
 }
 
 model CodeGrading {
@@ -229,6 +291,48 @@ model UserProblemProgress {
   problem CodingProblem @relation(fields: [problemId], references: [id])
 
   @@unique([userId, problemId])
+}
+
+/**
+ * One run of a candidate solution against a set of test cases.
+ *
+ * `/api/execute-batch` used to hold its results only in the HTTP response: it
+ * made up to 33 sequential Judge0 calls inside the request and returned them
+ * straight to the browser. There was no row, so nothing could poll for progress,
+ * nothing survived a refresh, and a client that disconnected after two minutes
+ * paid for the whole batch and got nothing back.
+ *
+ * A row exists so the work can be queued and the result fetched later. It is
+ * deliberately *not* tied to a `CodingAttempt` - test runs and submissions are
+ * separate acts, and a user can run tests many times before submitting once.
+ */
+model CodeExecution {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  code     String
+  language String
+
+  testCases      Json
+  problemContent String?
+  //* When set, the batch includes model-generated hidden cases.
+  generateHidden Boolean @default(false)
+
+  jobStatus  JobStatus @default(PENDING)
+  jobStage   String?
+  jobError   String?
+  jobEndedAt DateTime?
+
+  //* Null until the batch finishes. Both are written in the same update so a
+  //* poller can never see results without a matching summary.
+  results Json?
+  summary Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("code_execution")
 }
 
 enum GradeRunStatus {
@@ -357,6 +461,7 @@ model User {
   codingProblems  CodingProblem[]
   repositories    Repository[]
   gradeRuns       GradeRun[]
+  codeExecutions  CodeExecution[]
 
   normalizedEmail String?
 

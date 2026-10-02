@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { Textarea } from "@/components/ui/textarea";
-import { useQuestionsFromReport, useReport, QuestionWithRubric } from "@/lib/reports";
+import { useQuestionsFromReport, useReport, useQuestionGeneration, QuestionWithRubric } from "@/lib/reports";
 import { QuestionType } from "@prisma/client";
 import axios from "axios";
 import { ArrowRight } from "lucide-react";
@@ -45,11 +45,14 @@ export const Wrapper = ({ reportId }: Props) => {
 
   const { data: questions } = useQuestionsFromReport(reportId);
   const { data: report } = useReport(reportId);
+  const { isGenerating } = useQuestionGeneration(reportId);
 
   const router = useRouter();
   const hasRun = useRef(false);
 
   const [answers, setAnswers] = useState<ReportAnswer[]>([]);
+  const [gradeStatus, setGradeStatus] = useState<"idle" | "queued" | "failed">("idle");
+  const handledGrade = useRef(false);
 
   useEffect(() => {
     if (hasRun.current) return;
@@ -57,11 +60,16 @@ export const Wrapper = ({ reportId }: Props) => {
 
     setLoadingText("Generating questions...");
     if (!report?.summary && !questions) {
+      //* Starts an Inngest job and returns 202. The questions arrive later via
+      //* the polling hook, so there is nothing to await here - the transition
+      //* spinner is replaced by the same loader the poll drives.
       startTransition(async () => {
-        await axios.post(`/api/reports/generate?id=${reportId}`).finally(() => {
-          mutate(`/api/questions/get?reportId=${reportId}`);
-          router.refresh();
+        await axios.post(`/api/reports/generate?id=${reportId}`).catch(() => {
+          toast.error("Could not start question generation");
         });
+
+        mutate(`/api/questions/get?reportId=${reportId}`);
+        mutate(`/api/reports/get?id=${reportId}`);
       });
     } else if (questions) {
       return;
@@ -69,6 +77,39 @@ export const Wrapper = ({ reportId }: Props) => {
       router.push(`/reports/${reportId}`);
     }
   }, [report, reportId]);
+
+  //* Grading is also an Inngest job now. Watch the report row until it settles,
+  //* then run the streak check and move on. Previously this was the `finally`
+  //* of the POST, which only worked because grading happened inline.
+  const gradeFailed = gradeStatus === "queued" && report?.jobStatus === "FAILED";
+  const gradeSettled =
+    gradeStatus === "queued" &&
+    report?.jobStatus === "COMPLETED" &&
+    !!report?.summary;
+
+  useEffect(() => {
+    //* A ref rather than state: this must fire exactly once when grading
+    //* settles, and flipping a state flag here would re-render the whole
+    //* assessment view a second time for no visual gain.
+    if (!gradeSettled || handledGrade.current) return;
+    handledGrade.current = true;
+
+    void (async () => {
+      await mutate("/api/user/streak");
+
+      try {
+        const { data: streakData } = await axios.get("/api/user/streak");
+        if (streakData && streakData.streak > 0) {
+          setStreakCount(streakData.streak);
+          setShowStreakDialog(true);
+        } else {
+          router.push(`/reports/${reportId}`);
+        }
+      } catch {
+        router.push(`/reports/${reportId}`);
+      }
+    })();
+  }, [gradeSettled, reportId, router]);
 
   const currentQuestion = questions?.[onQuestion];
 
@@ -184,37 +225,37 @@ export const Wrapper = ({ reportId }: Props) => {
       const updatedAnswers = [...answers, answerObj];
       setLoadingText("Grading report...");
       toast.success("You have completed the report");
-      startTransition(async () => {
-        await axios.post(`/api/reports/grade?id=${reportId}`, {
-          answers: updatedAnswers,
-        }).finally(async () => {
-          await mutate("/api/user/streak");
+      setGradeStatus("queued");
 
-          try {
-            const { data: streakData } = await axios.get("/api/user/streak");
-            if (streakData && streakData.streak > 0) {
-              setStreakCount(streakData.streak);
-              setShowStreakDialog(true);
-            } else {
-              router.push(`/reports/${reportId}`);
-            }
-          } catch (error) {
-            router.push(`/reports/${reportId}`);
-          }
-        });
+      startTransition(async () => {
+        await axios
+          .post(`/api/reports/grade?id=${reportId}`, { answers: updatedAnswers })
+          .catch(() => setGradeStatus("failed"));
+
+        //* Pick up the PENDING status so the polling hook starts.
+        mutate(`/api/reports/get?id=${reportId}`);
       });
     }
   };
 
   return (
     <>
-      {isPending ? (
+      {isPending || isGenerating || (gradeStatus === "queued" && !gradeSettled && !showStreakDialog) ? (
         <div className="flex flex-col mt-[10%] h-full w-full items-center justify-center">
           <AnimatedLoader className="w-[600px]" />
-          <TextShimmer className="text-lg -mt-12">{loadingText}</TextShimmer>
+          <TextShimmer className="text-lg -mt-12">
+            {gradeFailed ? "Grading failed" : loadingText}
+          </TextShimmer>
           <p className="text-muted-foreground/80 text-xs">
-            Please wait, this may take a few minutes.
+            {gradeFailed
+              ? "Something went wrong while grading this report."
+              : "Please wait, this may take a few minutes."}
           </p>
+          {gradeFailed && (
+            <Button className="mt-6" onClick={() => router.push(`/reports/${reportId}`)}>
+              Back to reports
+            </Button>
+          )}
         </div>
       ) : (
         <div className="flex flex-col w-full gap-4">
