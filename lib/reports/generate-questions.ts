@@ -58,9 +58,10 @@ export const generateReportQuestions = async (report: {
     if (report.field !== "Generated from a LinkedIn job posting") {
       response = await ai.chat.completions.create({
         model: "deepseek-ai/DeepSeek-V3-0324",
+        max_tokens: 8192,
         messages: [
           {
-            role: "system",
+            role: "user",
             content: `
           Act as an expert career coach and interviewer.
 
@@ -165,13 +166,32 @@ export const generateReportQuestions = async (report: {
         ],
       });
     } else {
-      const jobInfo = await fetch(`https://extract-quiro.netlify.app/.netlify/functions/worker?url=${report.customType}`).then(res => res.json());
+      const jobInfoRaw = await fetch(`https://extract-quiro.netlify.app/.netlify/functions/worker?url=${report.customType}`).then(res => res.json());
+      let jobInfo: any = {};
+      if (typeof jobInfoRaw === "string") {
+        try {
+          const trimmed = jobInfoRaw.trim();
+          if (trimmed === "undefined" || trimmed === '"undefined"') {
+            jobInfo = {};
+          } else {
+            const parsed = JSON.parse(trimmed);
+            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+              jobInfo = parsed;
+            }
+          }
+        } catch (e) {
+          // ignore parse error, fall back to empty object
+        }
+      } else if (jobInfoRaw && typeof jobInfoRaw === "object" && !Array.isArray(jobInfoRaw)) {
+        jobInfo = jobInfoRaw;
+      }
 
       response = await ai.chat.completions.create({
         model: "deepseek-ai/DeepSeek-V3-0324",
+        max_tokens: 8192,
         messages: [
           {
-            role: "system",
+            role: "user",
             content: `
             Act as an expert technical interviewer and career coach.
 
@@ -185,7 +205,7 @@ export const generateReportQuestions = async (report: {
 
             JOB LISTING DATA (JSON)
 
-            {{JOB_JSON: ${JSON.stringify(jobInfo)}}}
+            {{JOB_JSON: ${JSON.stringify(jobInfo).replace(/</g, "\\u003c").replace(/>/g, "\\u003e")}}}
 
             Example structure:
 
@@ -450,19 +470,65 @@ export const generateReportQuestions = async (report: {
       });
     }
 
-const finalResponse = response.choices[0].message.content;
+const finalResponse = response.choices?.[0]?.message?.content;
 
-let cleanResponse = finalResponse?.trim();
+if (!finalResponse || typeof finalResponse !== "string" || finalResponse.trim().length === 0) {
+  const reason = response.choices?.[0]?.finish_reason || "unknown";
+  const msg = response.choices?.[0]?.message as any;
+  console.error("ERROR_GENERATING_REPORT: empty model response", JSON.stringify({
+    finish_reason: reason,
+    refusal: msg?.refusal,
+    hasToolCalls: !!msg?.tool_calls,
+    rawMessage: msg,
+    choicesLength: response.choices?.length,
+    usage: (response as any).usage,
+  }, null, 2));
+  throw new Error(`Model returned empty response (finish_reason=${reason})`);
+}
+
+let cleanResponse = finalResponse.trim();
 
 cleanResponse = cleanResponse
-      ?.replace(/^```json\s*/, "")
-      .replace(/```$/, "");
+  .replace(/^```json\s*/i, "")
+  .replace(/^```\s*/i, "")
+  .replace(/```$/g, "")
+  .trim();
 
-const responseJ = JSON.parse(cleanResponse!) as GeneratedQuestion[];
+if (!cleanResponse) {
+  console.error("ERROR_GENERATING_REPORT: empty after cleanup", { preview: finalResponse.slice(0, 200) });
+  throw new Error("Model returned empty response after cleanup");
+}
 
-if (!Array.isArray(responseJ)) {
+let responseJ: GeneratedQuestion[];
+try {
+  const parsed = JSON.parse(cleanResponse);
+
+  //* The router may wrap the array in an object, e.g. `{ "questions": [...] }`
+  //* when json_object mode is active or when the model follows a stricter
+  //* JSON-object schema. Unwrap by taking the first array-valued property.
+  if (Array.isArray(parsed)) {
+    responseJ = parsed as GeneratedQuestion[];
+  } else if (parsed && typeof parsed === "object") {
+    const arrayProp = Object.values(parsed).find((v) => Array.isArray(v));
+    if (arrayProp) {
+      responseJ = arrayProp as GeneratedQuestion[];
+    } else {
+      console.error("ERROR_GENERATING_REPORT: response is not array and no array property found", {
+        keys: Object.keys(parsed),
+        preview: cleanResponse.slice(0, 200),
+      });
       throw new Error("Invalid response format: model did not return an array");
     }
+  } else {
+    throw new Error("Invalid response format: model did not return an array or object");
+  }
+} catch (error) {
+  if (!(error instanceof SyntaxError)) throw error;
+  console.error("ERROR_GENERATING_REPORT: failed to parse model response", {
+    preview: cleanResponse.slice(0, 400),
+  });
+  throw error;
+}
 
 const uniqueQuestions = responseJ.filter(
       (q, i, arr) => i === arr.findIndex(other => other.content.trim() === q.content.trim())

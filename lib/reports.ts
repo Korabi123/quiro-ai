@@ -90,6 +90,11 @@ export const useReport = (reportId: string) => {
 }
 
 export const useQuestionsFromReport = (reportId: string) => {
+  //* The report hook is the source-of-truth for job state. We reuse it here
+  //* (rather than duplicating another SWR call) so questions poll in
+  //* automatically once the Inngest function writes them.
+  const { data: report } = useReport(reportId);
+
   const { data, error, isLoading } = useSWR<QuestionWithRubric[]>(
     `/api/questions/get?reportId=${reportId}`,
     fetcher,
@@ -97,6 +102,9 @@ export const useQuestionsFromReport = (reportId: string) => {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
       dedupingInterval: 500,
+      //* Poll while the job is active so questions appear as soon as Inngest
+      //* writes them. Stops automatically once the job settles.
+      refreshInterval: () => isActiveStatus(report?.jobStatus) ? JOB_POLL_MS : 0,
     }
   );
 
@@ -125,7 +133,9 @@ export const useQuestionGeneration = (reportId: string) => {
     error,
     isLoading,
     jobStatus,
-    isGenerating: isActiveStatus(jobStatus) && !questions,
+    //* questions can be [] (empty array) while the Inngest job is still running.
+    //* ![] === false, so we must check length, not presence, to detect "no questions yet".
+    isGenerating: isActiveStatus(jobStatus) && !questions?.length,
     //* Generation is only done once questions exist *and* the job settled.
     //* Questions may briefly be empty while the job is still running.
     isComplete: jobStatus === "COMPLETED" && !!questions?.length,

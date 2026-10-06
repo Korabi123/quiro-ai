@@ -45,11 +45,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ status: "COMPLETED", alreadyGenerated: true }, { status: 200 });
   }
 
-  if (report.jobStatus === "PENDING" || report.jobStatus === "RUNNING") {
-    //* A job is already in flight. Inngest dedupes on the event id too, but
-    //* short-circuiting here avoids a pointless queue write.
-    return NextResponse.json({ status: report.jobStatus, alreadyQueued: true }, { status: 202 });
-  }
 
   try {
     await prismadb.report.update({
@@ -60,7 +55,11 @@ export async function POST(req: Request) {
     await inngest.send({
       name: "reports/generate",
       data: { reportId, userId: session.user.id },
-      id: eventIds.reportGenerate(reportId),
+      //* Append a timestamp so a manual retry of a stuck report is never
+      //* deduplicated by Inngest's 24h event-id window. A fresh attempt on an
+      //* already-completed job is already blocked above, so uniqueness here is
+      //* safe.
+      id: `${eventIds.reportGenerate(reportId)}:${Date.now()}`,
     });
 
     return NextResponse.json({ status: "PENDING" }, { status: 202 });

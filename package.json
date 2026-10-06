@@ -13,7 +13,8 @@
     "auth:encrypt-tokens": "tsx scripts/encrypt-oauth-tokens.ts",
     "auth:encrypt-tokens:apply": "tsx scripts/encrypt-oauth-tokens.ts --apply",
     "auth:verify-token-encryption": "tsx scripts/verify-oauth-token-encryption.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "dev:inngest": "pnpm dlx inngest-cli@latest dev -u http://localhost:3000/api/inngest"
   },
   "dependencies": {
     "@better-auth/stripe": "^1.2.8",

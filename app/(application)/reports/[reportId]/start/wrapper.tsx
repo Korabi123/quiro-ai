@@ -59,7 +59,7 @@ export const Wrapper = ({ reportId }: Props) => {
     hasRun.current = true;
 
     setLoadingText("Generating questions...");
-    if (!report?.summary && !questions) {
+    if (!report?.summary && !questions?.length) {
       //* Starts an Inngest job and returns 202. The questions arrive later via
       //* the polling hook, so there is nothing to await here - the transition
       //* spinner is replaced by the same loader the poll drives.
